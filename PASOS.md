@@ -87,11 +87,14 @@ En Vercel, **Settings → Environment Variables**, cargá cuatro más:
 | `R2_BUCKET` | `fuego-tiene` |
 
 Después **Deployments → ⋯ en el último → Redeploy**. Cuando termina, el
-sitio deja el modo demo solo. **/estado** ahora dice "R2 conectado" y abajo
-los 24 capítulos figuran como "no está en el bucket", que es lo esperado.
+sitio deja el modo demo solo. **/estado** ahora dice "R2 conectado", prueba
+el bucket y, si responde, abajo los 24 capítulos figuran como "no está en el
+bucket", que es lo esperado porque todavía no subiste nada.
 
-Si en cambio /estado muestra un error en rojo en cada fila, lo más común es
-que alguna de las cuatro variables tenga un espacio de más o esté cortada.
+Si el bucket "no responde", el mismo /estado dice por qué: credenciales
+rechazadas (revisar las dos claves del token), bucket inexistente (revisar
+`R2_BUCKET` y `R2_ACCOUNT_ID`) o error de red. Lo más común es un espacio de
+más al pegar una variable.
 
 ## 5. Subir un solo capítulo con Cyberduck
 
@@ -117,7 +120,7 @@ cosas, y qué hacer:
 | **sin sonido** | el audio es AC-3 o DTS: se ve pero no se escucha en Chrome. | Hay que convertir el audio a AAC. Avisame y vemos la opción más simple. |
 | **arranque lento** | el índice del video está al final del archivo: tarda en arrancar y saltar en la barra se traba. | Hay que remuxar con `+faststart`. Es rápido, no recomprime. Avisame. |
 | **no se reproduce** | es .avi, .mkv, DivX/Xvid o H.264 de 10 bits. | Hay que convertirlo. Avisame con lo que dice la fila. |
-| **no está en el bucket** | el nombre no coincide. | Fijate el nombre en Cyberduck, o pasámelo para que cambie el `key`. |
+| **no está en el bucket** | el nombre no coincide. | Arriba de la tabla, /estado lista los archivos "sueltos" del bucket, con el nombre exacto que tienen. Renombralo en Cyberduck, o pasame el nombre para que cambie el `key`. |
 
 Cualquier conversión necesita ffmpeg en alguna compu. No lo demos por hecho
 hasta ver el veredicto: puede que tus archivos anden tal cual.

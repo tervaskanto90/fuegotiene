@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { EstadoCapitulo } from "@/app/api/estado/[id]/route";
+import type { EstadoBucket } from "@/app/api/estado/route";
 import { codigo, type Episodio } from "@/lib/episodes";
 
 type Props = { episodios: Episodio[]; modo: "r2" | "demo" };
-type Fila = { estado: "esperando" | "revisando" | "listo" | "fallo"; datos?: EstadoCapitulo; error?: string };
+type Fila = { estado: "esperando" | "revisando" | "listo" | "fallo" | "omitido"; datos?: EstadoCapitulo; error?: string };
 
 const EN_PARALELO = 3;
 
@@ -18,6 +19,7 @@ function peso(bytes: number | null): string {
 
 function chip(d: EstadoCapitulo | undefined, fila: Fila): { clase: string; texto: string } {
   if (fila.estado === "esperando") return { clase: "chip--falta", texto: "en cola" };
+  if (fila.estado === "omitido") return { clase: "chip--falta", texto: "sin revisar" };
   if (fila.estado === "revisando") return { clase: "chip--falta", texto: "revisando…" };
   if (fila.estado === "fallo" || !d) return { clase: "chip--mal", texto: "no pude revisar" };
   if (d.error) return { clase: "chip--mal", texto: "error" };
@@ -41,11 +43,31 @@ export default function Estado({ episodios, modo }: Props) {
     Object.fromEntries(episodios.map((e) => [e.id, { estado: "esperando" as const }])),
   );
   const [ronda, setRonda] = useState(0);
+  const [bucket, setBucket] = useState<EstadoBucket | "cargando" | "fallo">("cargando");
   const cancelado = useRef(false);
 
   const revisar = useCallback(async () => {
     cancelado.current = false;
     setFilas(Object.fromEntries(episodios.map((e) => [e.id, { estado: "esperando" as const }])));
+    setBucket("cargando");
+
+    // Primero el bucket entero: si las credenciales o el nombre están mal,
+    // no tiene sentido revisar 24 veces lo mismo.
+    let general: EstadoBucket | null = null;
+    try {
+      const res = await fetch("/api/estado", { cache: "no-store" });
+      if (!res.ok) throw new Error(`respuesta ${res.status}`);
+      general = (await res.json()) as EstadoBucket;
+      setBucket(general);
+    } catch {
+      setBucket("fallo");
+    }
+    if (cancelado.current) return;
+    if (general && general.modo === "r2" && general.acceso !== "ok") {
+      setFilas(Object.fromEntries(episodios.map((e) => [e.id, { estado: "omitido" as const }])));
+      return;
+    }
+
     const cola = [...episodios];
     const trabajador = async () => {
       while (cola.length && !cancelado.current) {
@@ -77,15 +99,56 @@ export default function Estado({ episodios, modo }: Props) {
     (f) => f.datos && (f.datos.error || (f.datos.existe && f.datos.analisis && f.datos.analisis.veredicto !== "ok")),
   ).length;
   const pendientes = Object.values(filas).filter((f) => f.estado === "esperando" || f.estado === "revisando").length;
+  const omitidos = Object.values(filas).filter((f) => f.estado === "omitido").length;
+  const bucketMal = typeof bucket === "object" && bucket.modo === "r2" && bucket.acceso !== "ok";
 
   return (
     <section className="seccion" style={{ marginTop: 0 }}>
+      {modo === "r2" && (
+        <div className="resumen" style={{ marginBottom: 20 }}>
+          <dl>
+            <dt>bucket</dt>
+            <dd>
+              {bucket === "cargando" && <span className="muted">consultando…</span>}
+              {bucket === "fallo" && <span>No pude consultar el bucket. Probá de nuevo en un rato.</span>}
+              {typeof bucket === "object" && (
+                <>
+                  <span className={`chip ${bucketMal ? "chip--mal" : "chip--ok"}`} style={{ marginRight: 8 }}>
+                    {bucketMal ? "no responde" : "responde"}
+                  </span>
+                  {bucket.mensaje}
+                </>
+              )}
+            </dd>
+            {typeof bucket === "object" && bucket.sueltos.length > 0 && (
+              <>
+                <dt>sueltos</dt>
+                <dd>
+                  Hay {bucket.sueltos.length} {bucket.sueltos.length === 1 ? "archivo" : "archivos"} en el bucket que no
+                  {bucket.sueltos.length === 1 ? " corresponde" : " corresponden"} a ningún capítulo. Renombralos en
+                  Cyberduck, o pasame los nombres para que cambie el campo key en data/episodes.json.
+                  <ul className="narrow" style={{ margin: "8px 0 0", paddingLeft: 18 }}>
+                    {bucket.sueltos.slice(0, 40).map((o) => (
+                      <li key={o.key}>
+                        {o.key} <span className="muted">{peso(o.tamano)}</span>
+                      </li>
+                    ))}
+                    {bucket.sueltos.length > 40 && <li className="muted">y {bucket.sueltos.length - 40} más</li>}
+                  </ul>
+                </dd>
+              </>
+            )}
+          </dl>
+        </div>
+      )}
       <h2 className="seccion__titulo">
         capítulos en {modo === "r2" ? "el bucket" : "modo demo"}
         <span className="num">
-          {pendientes > 0
-            ? `revisando ${episodios.length - pendientes}/${episodios.length}`
-            : `${listos} listos, ${conProblemas} con problemas, ${faltan} faltan`}
+          {omitidos > 0
+            ? "sin revisar hasta que el bucket responda"
+            : pendientes > 0
+              ? `revisando ${episodios.length - pendientes}/${episodios.length}`
+              : `${listos} listos, ${conProblemas} con problemas, ${faltan} faltan`}
         </span>
         <button className="boton boton--chico" style={{ marginLeft: "auto" }} onClick={() => setRonda((r) => r + 1)} disabled={pendientes > 0}>
           revisar de nuevo

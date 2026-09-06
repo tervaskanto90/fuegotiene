@@ -55,7 +55,10 @@ se mira `/estado`.
 
 ## La página /estado reemplaza a ffprobe
 
-`/estado` revisa cada capítulo en el bucket. Para cada uno dice si el archivo
+`/estado` primero prueba el bucket con un listado corto (`/api/estado`) y
+distingue credenciales rechazadas, bucket inexistente y archivos subidos con
+nombres que no coinciden con ningún capítulo. Después revisa cada capítulo
+(`/api/estado/[id]`). Para cada uno dice si el archivo
 está, cuánto pesa, qué códecs trae y si el navegador lo va a reproducir. Lo
 hace `lib/mp4.ts`: lee el archivo con pedidos parciales (la cabecera y el
 índice `moov`, un par de MB como mucho, nunca el video entero) y entiende
@@ -117,6 +120,7 @@ app/api/entrar            valida el código y pone la cookie
 app/api/salir             borra la cookie
 app/api/stream/[id]       firma la URL de R2 y redirige (302)
 app/api/stream/[id]/sub   subtítulos .vtt, devueltos desde acá
+app/api/estado            prueba el bucket y lista los archivos sueltos
 app/api/estado/[id]       HEAD + lectura parcial del archivo -> JSON
 components/Biblioteca.tsx destacado + grilla por temporada
 components/Tarjeta.tsx    una tarjeta de capítulo

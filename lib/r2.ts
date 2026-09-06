@@ -75,3 +75,66 @@ export async function pedirR2(
     headers: init.headers,
   });
 }
+
+export type ObjetoR2 = { key: string; tamano: number };
+export type Listado = { objetos: ObjetoR2[]; truncado: boolean };
+
+const ENTIDADES: Record<string, string> = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&apos;": "'" };
+
+function desentidar(s: string): string {
+  return s
+    .replace(/&(amp|lt|gt|quot|apos);/g, (m) => ENTIDADES[m] ?? m)
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)));
+}
+
+/** Lee la respuesta XML de ListObjectsV2 sin parser: sólo Key, Size e IsTruncated. */
+export function parsearListado(xml: string): Listado {
+  const objetos: ObjetoR2[] = [];
+  const re = /<Contents>([\s\S]*?)<\/Contents>/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(xml))) {
+    const key = /<Key>([\s\S]*?)<\/Key>/.exec(m[1])?.[1];
+    const size = /<Size>(\d+)<\/Size>/.exec(m[1])?.[1];
+    if (key !== undefined) objetos.push({ key: desentidar(key), tamano: Number(size ?? 0) });
+  }
+  const truncado = /<IsTruncated>true<\/IsTruncated>/.test(xml);
+  return { objetos, truncado };
+}
+
+export type AccesoBucket =
+  | { acceso: "ok"; listado: Listado }
+  | { acceso: "credenciales" | "bucket" | "error"; mensaje: string };
+
+/** Prueba el bucket con un listado corto y explica qué falla, si falla. */
+export async function probarBucket(config: ConfigR2, maximo = 200): Promise<AccesoBucket> {
+  const url = new URL(`https://${config.accountId}.r2.cloudflarestorage.com`);
+  url.pathname = "/" + encodeURIComponent(config.bucket);
+  url.searchParams.set("list-type", "2");
+  url.searchParams.set("max-keys", String(maximo));
+  let res: Response;
+  try {
+    res = await cliente(config).fetch(url.toString(), { method: "GET" });
+  } catch (e) {
+    return {
+      acceso: "error",
+      mensaje: `No pude conectarme a R2: ${e instanceof Error ? e.message : "error de red"}. Revisá R2_ACCOUNT_ID: tiene que ser la tira de 32 caracteres.`,
+    };
+  }
+  if (res.status === 403) {
+    return {
+      acceso: "credenciales",
+      mensaje: "R2 rechazó las credenciales (403). Revisá R2_ACCESS_KEY_ID y R2_SECRET_ACCESS_KEY, y que el token tenga permiso Object Read & Write sobre este bucket.",
+    };
+  }
+  if (res.status === 404) {
+    return {
+      acceso: "bucket",
+      mensaje: `R2 dice que el bucket "${config.bucket}" no existe en esa cuenta (404). Revisá R2_BUCKET y R2_ACCOUNT_ID.`,
+    };
+  }
+  if (!res.ok) {
+    return { acceso: "error", mensaje: `R2 respondió ${res.status} al listar el bucket.` };
+  }
+  return { acceso: "ok", listado: parsearListado(await res.text()) };
+}
