@@ -96,9 +96,21 @@ rechazadas (revisar las dos claves del token), bucket inexistente (revisar
 `R2_BUCKET` y `R2_ACCOUNT_ID`) o error de red. Lo más común es un espacio de
 más al pegar una variable.
 
-## 5. Subir un solo capítulo con Cyberduck
+## 5. Subir un solo capítulo
 
-Está explicado paso a paso en **SUBIR-CON-CYBERDUCK.md**. Lo importante:
+Hay tres formas, y las tres dejan el archivo en el mismo lugar:
+
+- **El panel de Cloudflare**: entrás al bucket, **Upload**, arrastrás. Sirve
+  para archivos de hasta 300 MB. Los más grandes los rechaza.
+- **La página /subir del sitio**: arrastrás los archivos y van del navegador
+  directo a R2, sin límite de 300 MB y sin instalar nada. La primera vez hay
+  que pegar una política CORS en el bucket; la página la muestra lista para
+  copiar y dice dónde va (Cloudflare, el bucket, **Settings**, **CORS
+  Policy**, **Add CORS policy**). Se hace una sola vez.
+- **Cyberduck**, un programa con ventanas. Está explicado paso a paso en
+  **SUBIR-CON-CYBERDUCK.md**.
+
+Lo importante, en cualquiera de las tres:
 
 - el archivo se tiene que llamar exactamente como el sitio lo busca:
   `s01e01.mp4` para el primero de la primera temporada, `s02e11.mp4` para el

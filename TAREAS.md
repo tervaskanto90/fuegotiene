@@ -55,6 +55,12 @@ capítulo en una compu normal.
       bucket real. Si el primer capítulo da 403 en el navegador, `/estado`
       lo dice; la alternativa es agregar `@aws-sdk/s3-request-presigner`
       (el SDK de AWS ya está como devDependency para `scripts/upload.mjs`).
+- [ ] **Subida desde el navegador.** `/subir` usa URLs firmadas de PUT
+      (aws4fetch) y exige una política CORS en el bucket. Se probó con un
+      R2 simulado; la primera subida real confirma la firma y la política.
+      Cualquier persona con un código puede subir: es un sitio de
+      confianza entre conocidos. Si eso molesta, se puede limitar a un
+      código concreto.
 - [ ] Vercel elige como rama de producción `main`, después `master`, después
       la rama por defecto del repo. Hoy la única rama es
       `claude/fuego-tiene-project-q2crcs`. Si se renombra a `main` en

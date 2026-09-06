@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { sitio } from "@/lib/site";
 
-type Props = { activa?: "capitulos" | "estado" };
+type Props = { activa?: "capitulos" | "subir" | "estado" };
 
 export default function Cabecera({ activa }: Props) {
   return (
@@ -13,6 +13,9 @@ export default function Cabecera({ activa }: Props) {
       <nav className="nav" aria-label="secciones">
         <Link href="/" aria-current={activa === "capitulos" ? "page" : undefined}>
           capítulos
+        </Link>
+        <Link href="/subir" aria-current={activa === "subir" ? "page" : undefined}>
+          subir
         </Link>
         <Link href="/estado" aria-current={activa === "estado" ? "page" : undefined}>
           estado

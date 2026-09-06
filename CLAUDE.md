@@ -20,6 +20,11 @@ ruta en un proxy (leer el objeto y devolverlo en el response) rompe los Range
 requests, mata el seek de la barra y quema ancho de banda de Vercel. Es el
 error más fácil de cometer acá.
 
+**Las subidas tampoco pasan por Vercel.** `/subir` pide a `/api/subir` una
+URL firmada de PUT y el navegador manda el archivo directo a R2. Para eso el
+bucket necesita una política CORS que nombre al sitio; la página la genera.
+Sin esa política, la subida falla en el navegador y la página lo explica.
+
 **Los subtítulos sí pasan por Vercel, a propósito.** `/api/stream/[id]/sub`
 lee el .vtt de R2 y lo devuelve. Un `<track>` sólo acepta archivos del mismo
 origen (o con CORS), así que un redirect a R2 lo bloquearía en silencio. Son
@@ -42,8 +47,10 @@ los archivos de prueba de `tests/fixtures/` (unos 30 KB cada uno).
 
 ## Cómo suben los archivos
 
-El dueño del proyecto usa **Cyberduck**. Ver `SUBIR-CON-CYBERDUCK.md`, y
-`PASOS.md` para el recorrido entero desde cero.
+El dueño del proyecto sube desde el panel de Cloudflare (hasta 300 MB por
+archivo), desde la página `/subir` del sitio (sin límite, con CORS en el
+bucket) o con **Cyberduck**. Ver `SUBIR-CON-CYBERDUCK.md`, y `PASOS.md`
+para el recorrido entero desde cero.
 
 `scripts/upload.mjs` y `scripts/prepare-videos.mjs` siguen en el repo y
 sirven para quien sí tenga Node y ffmpeg, pero no los propongas como camino
@@ -117,6 +124,8 @@ app/page.tsx              portada (server) -> Biblioteca (client)
 app/entrar/page.tsx       login. Form HTML común, sin JS obligatorio.
 app/ver/[id]/page.tsx     reproductor
 app/estado/page.tsx       estado de la configuración y de cada archivo
+app/subir/page.tsx        subida al bucket desde el navegador -> Subida (client)
+app/api/subir             firma una URL de PUT para un nombre válido
 app/api/entrar            valida el código y pone la cookie
 app/api/salir             borra la cookie
 app/api/stream/[id]       firma la URL de R2 y redirige (302)
@@ -128,6 +137,7 @@ components/Tarjeta.tsx    una tarjeta de capítulo
 components/Arte.tsx       imagen del capítulo o trama con el número
 components/Reproductor.tsx video, progreso, atajos, siguiente, errores
 components/Estado.tsx     tabla de /estado, revisa de a tres
+components/Subida.tsx     cola de subidas con progreso y ayuda de CORS
 components/Cabecera.tsx   wordmark, secciones, salir
 data/episodes.json        títulos, fechas, duraciones, keys de R2
 scripts/                  Node (.mjs), opcionales

@@ -7,6 +7,12 @@ retoma si se corta.
 
 Ninguna terminal. Esto reemplaza a `npm run upload`.
 
+La otra opción sin instalar nada es la página **/subir** del propio sitio,
+que manda los archivos del navegador directo al bucket. Necesita una
+política CORS en el bucket, que la misma página muestra lista para pegar.
+Cyberduck sigue siendo útil si preferís un programa aparte o si querés
+renombrar o borrar archivos ya subidos.
+
 ## 1. Sacar las credenciales de R2
 
 Está en detalle en `PASOS.md`, paso 3. En resumen, en **dash.cloudflare.com**

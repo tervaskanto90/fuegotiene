@@ -738,6 +738,90 @@ kbd {
   }
 }
 
+/* subir */
+.zona {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 38px 20px;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--radio);
+  background: var(--ink-2);
+  color: var(--muted);
+  text-align: center;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+.zona--activa {
+  border-color: var(--bone);
+  background: #173540;
+}
+.subidas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.subida {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radio);
+  background: var(--ink-2);
+  animation: entrar 260ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.subida__fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.subida__nombre {
+  flex: 1;
+  min-width: 160px;
+  word-break: break-all;
+}
+.progreso {
+  margin-top: 10px;
+  height: 4px;
+  background: var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progreso__lleno {
+  height: 100%;
+  background: var(--mint);
+  transition: width 220ms ease;
+}
+.cors {
+  margin-top: 32px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radio);
+  color: var(--bone);
+}
+.cors summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+.cors[open] summary {
+  color: var(--bone);
+}
+.codigo {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radio);
+  background: var(--ink);
+  font-family: var(--fuente-narrow);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-x: auto;
+  white-space: pre;
+  user-select: all;
+}
+
 /* movimiento */
 .pagina {
   animation: entrar 260ms cubic-bezier(0.2, 0.7, 0.2, 1) both;

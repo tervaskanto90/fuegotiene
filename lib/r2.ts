@@ -62,7 +62,7 @@ export function urlObjeto(config: ConfigR2, key: string): URL {
 export async function firmarUrl(
   config: ConfigR2,
   key: string,
-  opciones: { metodo?: "GET" | "HEAD"; expiraS?: number } = {},
+  opciones: { metodo?: "GET" | "HEAD" | "PUT"; expiraS?: number } = {},
 ): Promise<string> {
   const url = urlObjeto(config, key);
   url.searchParams.set("X-Amz-Expires", String(opciones.expiraS ?? EXPIRA_URL_S));
@@ -175,4 +175,35 @@ export async function probarBucket(config: ConfigR2, maximo = 200): Promise<Acce
     return { acceso: "error", mensaje: `R2 respondió ${res.status} al listar el bucket.` };
   }
   return { acceso: "ok", listado: parsearListado(await res.text()) };
+}
+
+/** Extensiones que tiene sentido subir: video (aunque el navegador no lo reproduzca, /estado lo diagnostica), subtítulos e imágenes. */
+const EXTENSIONES_SUBIBLES = /\.(mp4|m4v|mov|webm|mkv|avi|vtt|jpg|jpeg|png)$/i;
+
+/** Nombre de objeto aceptable para subir desde el sitio: sin barras, sin caracteres de control, con extensión conocida. */
+export function nombreDeObjetoValido(nombre: string): boolean {
+  if (typeof nombre !== "string" || nombre.length === 0 || nombre.length > 180) return false;
+  if (/[\u0000-\u001f\u007f\\/?#%]/.test(nombre)) return false;
+  if (nombre.startsWith(".") || nombre.trim() !== nombre) return false;
+  return EXTENSIONES_SUBIBLES.test(nombre);
+}
+
+/** Tamaño máximo de una subida en una sola pieza (límite de R2 para PUT). */
+export const MAX_SUBIDA_BYTES = 5 * 1024 * 1024 * 1024;
+
+/** Política CORS que necesita el bucket para aceptar subidas desde el navegador. */
+export function politicaCors(origen: string): string {
+  return JSON.stringify(
+    [
+      {
+        AllowedOrigins: [origen],
+        AllowedMethods: ["PUT", "GET", "HEAD"],
+        AllowedHeaders: ["*"],
+        ExposeHeaders: ["ETag"],
+        MaxAgeSeconds: 3600,
+      },
+    ],
+    null,
+    2,
+  );
 }

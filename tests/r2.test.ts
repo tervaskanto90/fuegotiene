@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { faltantesR2, leerR2, parsearListado, revisarConfigR2, urlObjeto } from "../lib/r2.ts";
+import { faltantesR2, leerR2, nombreDeObjetoValido, parsearListado, politicaCors, revisarConfigR2, urlObjeto } from "../lib/r2.ts";
 
 const config = { accountId: "0123456789abcdef0123456789abcdef", accessKeyId: "k", secretAccessKey: "s", bucket: "fuego-tiene" };
 
@@ -45,4 +45,19 @@ test("revisarConfigR2 detecta los valores cruzados", () => {
   assert.match(revisarConfigR2({ accountId: "fuego-tiene", accessKeyId: key, secretAccessKey: secret, bucket: "x" }) ?? "", /R2_ACCOUNT_ID/);
   assert.match(revisarConfigR2({ accountId: id, accessKeyId: id, secretAccessKey: secret, bucket: "x" }) ?? "", /mismo valor/);
   assert.match(revisarConfigR2({ accountId: id, accessKeyId: key, secretAccessKey: "corto", bucket: "x" }) ?? "", /R2_SECRET_ACCESS_KEY.*64/);
+});
+
+test("nombreDeObjetoValido acepta nombres razonables y rechaza rutas y basura", () => {
+  for (const ok of ["s01e01.mp4", "Los Simuladores 1x01 - Tarjeta de Navidad.mp4", "capítulo (1).mkv", "s01e01.vtt", "s01e01.jpg"]) {
+    assert.ok(nombreDeObjetoValido(ok), ok);
+  }
+  for (const mal of ["", "../s01e01.mp4", "carpeta/s01e01.mp4", ".oculto.mp4", "s01e01.exe", "s01e01.mp4 ", "a?b.mp4", "x".repeat(200) + ".mp4", "s01e01"]) {
+    assert.ok(!nombreDeObjetoValido(mal), JSON.stringify(mal));
+  }
+});
+
+test("politicaCors es JSON válido con el origen del sitio", () => {
+  const p = JSON.parse(politicaCors("https://fuegotiene.vercel.app"));
+  assert.deepEqual(p[0].AllowedOrigins, ["https://fuegotiene.vercel.app"]);
+  assert.ok(p[0].AllowedMethods.includes("PUT"));
 });
