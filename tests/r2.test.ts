@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { faltantesR2, leerR2, parsearListado, urlObjeto } from "../lib/r2.ts";
+import { faltantesR2, leerR2, parsearListado, revisarConfigR2, urlObjeto } from "../lib/r2.ts";
 
 const config = { accountId: "0123456789abcdef0123456789abcdef", accessKeyId: "k", secretAccessKey: "s", bucket: "fuego-tiene" };
 
@@ -34,4 +34,15 @@ test("parsearListado lee Key, Size e IsTruncated", () => {
   const r = parsearListado(xml);
   assert.deepEqual(r, { objetos: [{ key: "s01e01.mp4", tamano: 987654321 }, { key: "Marcela & Paul.mp4", tamano: 12 }], truncado: false });
   assert.deepEqual(parsearListado("<ListBucketResult><IsTruncated>true</IsTruncated></ListBucketResult>"), { objetos: [], truncado: true });
+});
+
+test("revisarConfigR2 detecta los valores cruzados", () => {
+  const id = "c2e8fa43edb2da85c1350e2d0dc5d13b";
+  const key = "0123456789abcdef0123456789abcdef";
+  const secret = "a".repeat(64);
+  assert.equal(revisarConfigR2({ accountId: id, accessKeyId: key, secretAccessKey: secret, bucket: "fuego-tiene" }), null);
+  assert.match(revisarConfigR2({ accountId: id, accessKeyId: key, secretAccessKey: secret, bucket: id }) ?? "", /R2_BUCKET.*32/);
+  assert.match(revisarConfigR2({ accountId: "fuego-tiene", accessKeyId: key, secretAccessKey: secret, bucket: "x" }) ?? "", /R2_ACCOUNT_ID/);
+  assert.match(revisarConfigR2({ accountId: id, accessKeyId: id, secretAccessKey: secret, bucket: "x" }) ?? "", /mismo valor/);
+  assert.match(revisarConfigR2({ accountId: id, accessKeyId: key, secretAccessKey: "corto", bucket: "x" }) ?? "", /R2_SECRET_ACCESS_KEY.*64/);
 });

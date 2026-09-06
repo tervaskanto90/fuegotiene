@@ -114,8 +114,37 @@ export type AccesoBucket =
   | { acceso: "ok"; listado: Listado }
   | { acceso: "credenciales" | "bucket" | "error"; mensaje: string };
 
+const HEX32 = /^[0-9a-f]{32}$/i;
+const HEX64 = /^[0-9a-f]{64}$/i;
+
+/**
+ * Errores de carga típicos, detectables antes de hablar con R2: el Account
+ * ID y el Access Key ID son dos tiras de 32 caracteres que se confunden, y
+ * el nombre del bucket a veces termina en el lugar equivocado.
+ */
+export function revisarConfigR2(config: ConfigR2): string | null {
+  if (HEX32.test(config.bucket)) {
+    return "R2_BUCKET tiene una tira de 32 caracteres, que parece un Account ID o un Access Key ID. Ahí va el nombre del bucket, por ejemplo fuego-tiene.";
+  }
+  if (!HEX32.test(config.accountId)) {
+    return `R2_ACCOUNT_ID tiene que ser el Account ID de 32 letras y números que figura en Account Details de R2; ahora tiene ${config.accountId.length} caracteres.`;
+  }
+  if (!HEX32.test(config.accessKeyId)) {
+    return `R2_ACCESS_KEY_ID tiene que ser el Access Key ID del token, 32 letras y números; ahora tiene ${config.accessKeyId.length} caracteres.`;
+  }
+  if (config.accessKeyId.toLowerCase() === config.accountId.toLowerCase()) {
+    return "R2_ACCESS_KEY_ID y R2_ACCOUNT_ID tienen el mismo valor. El Access Key ID es el que muestra la pantalla del token, no el Account ID.";
+  }
+  if (!HEX64.test(config.secretAccessKey)) {
+    return `R2_SECRET_ACCESS_KEY tiene que ser el Secret Access Key del token, 64 letras y números; ahora tiene ${config.secretAccessKey.length} caracteres.`;
+  }
+  return null;
+}
+
 /** Prueba el bucket con un listado corto y explica qué falla, si falla. */
 export async function probarBucket(config: ConfigR2, maximo = 200): Promise<AccesoBucket> {
+  const pista = revisarConfigR2(config);
+  if (pista) return { acceso: "credenciales", mensaje: pista };
   const url = new URL(`https://${config.accountId}.r2.cloudflarestorage.com`);
   url.pathname = "/" + encodeURIComponent(config.bucket);
   url.searchParams.set("list-type", "2");
@@ -130,10 +159,10 @@ export async function probarBucket(config: ConfigR2, maximo = 200): Promise<Acce
       mensaje: "No pude conectarme a R2. Revisá R2_ACCOUNT_ID: tiene que ser la tira de 32 caracteres, sin espacios. Si está bien, probá de nuevo en un rato.",
     };
   }
-  if (res.status === 403) {
+  if (res.status === 401 || res.status === 403) {
     return {
       acceso: "credenciales",
-      mensaje: "R2 rechazó las credenciales (403). Revisá R2_ACCESS_KEY_ID y R2_SECRET_ACCESS_KEY, y que el token tenga permiso Object Read & Write sobre este bucket.",
+      mensaje: `R2 rechazó las credenciales (${res.status}). Revisá que R2_ACCESS_KEY_ID y R2_SECRET_ACCESS_KEY sean los del token, que R2_BUCKET sea el nombre del bucket y que el token tenga permiso Object Read & Write sobre ese bucket.`,
     };
   }
   if (res.status === 404) {
