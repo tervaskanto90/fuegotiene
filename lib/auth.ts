@@ -74,9 +74,9 @@ async function hmac(secret: string, datos: string): Promise<string> {
   return base64url(new Uint8Array(firma));
 }
 
-async function idDeCodigo(codigo: string): Promise<string> {
-  const hash = await crypto.subtle.digest("SHA-256", enc.encode(codigo));
-  return base64url(new Uint8Array(hash)).slice(0, 16);
+/** Identificador del código para la cookie: HMAC con el secreto, así la cookie no permite adivinar el código por fuerza bruta. */
+async function idDeCodigo(codigo: string, secret: string): Promise<string> {
+  return (await hmac(secret, `id:${codigo}`)).slice(0, 16);
 }
 
 /** Comparación en tiempo constante para strings del mismo largo. */
@@ -99,7 +99,7 @@ export async function crearSesion(
     if (iguales(c, codigo)) encontrado = c;
   }
   if (encontrado === null) return null;
-  const id = await idDeCodigo(encontrado);
+  const id = await idDeCodigo(encontrado, config.secret);
   const vence = Math.floor(ahoraMs / 1000) + DURACION_SESION_S;
   const cuerpo = `v1.${id}.${vence}`;
   return `${cuerpo}.${await hmac(config.secret, cuerpo)}`;
@@ -121,7 +121,7 @@ export async function verificarSesion(
   const esperada = await hmac(config.secret, `v1.${id}.${vence}`);
   if (!iguales(firma, esperada)) return null;
   for (const c of config.codigos) {
-    if ((await idDeCodigo(c)) === id) return { id, vence };
+    if ((await idDeCodigo(c, config.secret)) === id) return { id, vence };
   }
   return null;
 }
@@ -136,10 +136,23 @@ export function opcionesCookie(segura: boolean) {
   };
 }
 
-/** Sólo acepta rutas relativas internas para volver después de entrar. */
+/**
+ * Sólo acepta rutas relativas internas para volver después de entrar.
+ * Se canonicaliza con el parser de URL en vez de mirar los primeros
+ * caracteres: "/\t/evil.com" parece interno pero el navegador le saca el
+ * tab y lo manda a otro dominio.
+ */
 export function rutaSegura(valor: unknown): string {
-  if (typeof valor !== "string") return "/";
-  if (!valor.startsWith("/") || valor.startsWith("//") || valor.includes("\\")) return "/";
-  if (valor.startsWith("/api/") || valor.startsWith("/entrar")) return "/";
-  return valor;
+  if (typeof valor !== "string" || !valor.startsWith("/")) return "/";
+  // eslint-disable-next-line no-control-regex
+  if (/[\u0000-\u001f\u007f\\]/.test(valor)) return "/";
+  let url: URL;
+  try {
+    url = new URL(valor, "http://interno");
+  } catch {
+    return "/";
+  }
+  if (url.origin !== "http://interno" || url.username || url.password) return "/";
+  if (url.pathname === "/api" || url.pathname.startsWith("/api/") || url.pathname.startsWith("/entrar")) return "/";
+  return url.pathname + url.search;
 }

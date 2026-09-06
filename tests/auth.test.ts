@@ -4,6 +4,7 @@ import {
   crearSesion,
   iguales,
   leerConfig,
+  opcionesCookie,
   parsearCodigos,
   rutaSegura,
   verificarSesion,
@@ -86,5 +87,26 @@ test("rutaSegura sólo acepta rutas internas", () => {
   assert.equal(rutaSegura("//otro.sitio"), "/");
   assert.equal(rutaSegura("/api/stream/x"), "/");
   assert.equal(rutaSegura("/entrar?error=1"), "/");
+  assert.equal(rutaSegura("/api"), "/");
   assert.equal(rutaSegura(null), "/");
+  assert.equal(rutaSegura({}), "/");
+  // caracteres de control: el navegador los saca y "/\t/evil.com" pasa a ser "//evil.com"
+  assert.equal(rutaSegura("/\t/evil.com"), "/");
+  assert.equal(rutaSegura("/\n/evil.com"), "/");
+  assert.equal(rutaSegura("/\r/evil.com"), "/");
+  assert.equal(rutaSegura("/\\evil.com"), "/");
+  assert.equal(rutaSegura("/ver/s01e01?seguir=1"), "/ver/s01e01?seguir=1");
+  assert.equal(rutaSegura("/ver/s01e01#x"), "/ver/s01e01");
+});
+
+test("la cookie no deja adivinar el código: el id depende del secreto", async () => {
+  const a = (await crearSesion("codigo-de-mama", config))!.split(".")[1];
+  const b = (await crearSesion("codigo-de-mama", { ...config, secret: secret + "otro" }))!.split(".")[1];
+  assert.notEqual(a, b);
+  assert.equal(a.length, 16);
+});
+
+test("opcionesCookie", () => {
+  assert.deepEqual(opcionesCookie(true), { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: DURACION_SESION_S });
+  assert.equal(opcionesCookie(false).secure, false);
 });

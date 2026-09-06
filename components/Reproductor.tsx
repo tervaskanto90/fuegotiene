@@ -37,6 +37,8 @@ export default function Reproductor({ ep, sig, ant }: Props) {
   const [diagnostico, setDiagnostico] = useState<string | null>(null);
   const [cuenta, setCuenta] = useState<number | null>(null);
   const [duracion, setDuracion] = useState(0);
+  const [sinSesion, setSinSesion] = useState(false);
+  const reintentado = useRef(false);
   const ultimoGuardado = useRef(0);
   const decidido = useRef(false);
   const guardadoInicial = useRef<number | null>(null);
@@ -187,11 +189,34 @@ export default function Reproductor({ ep, sig, ant }: Props) {
   const alError = async () => {
     const v = video.current;
     if (!v) return;
+    // Si ya venía andando y falla, lo más probable es que la URL firmada
+    // haya vencido tras una pausa larga: se recarga una vez (eso pide una
+    // firma nueva) y se sigue desde el mismo punto.
+    if (!reintentado.current && v.currentTime > 0) {
+      reintentado.current = true;
+      const t = v.currentTime;
+      v.addEventListener(
+        "loadedmetadata",
+        () => {
+          v.currentTime = t;
+          v.play().catch(() => {});
+        },
+        { once: true },
+      );
+      v.load();
+      return;
+    }
     setFase("error");
     setError(describirError(v));
     setDiagnostico("Revisando el archivo…");
     try {
       const res = await fetch(`/api/estado/${ep.id}`, { cache: "no-store" });
+      if (res.status === 401) {
+        setError("Tu sesión venció o tu código ya no está cargado.");
+        setDiagnostico("Entrá de nuevo con tu código y seguís desde donde estabas.");
+        setSinSesion(true);
+        return;
+      }
       if (!res.ok) throw new Error();
       const d = await res.json();
       if (d.error) setDiagnostico(d.error);
@@ -300,20 +325,29 @@ export default function Reproductor({ ep, sig, ant }: Props) {
             <p className="capa__titulo">{error}</p>
             {diagnostico && <p>{diagnostico}</p>}
             <div className="capa__acciones">
-              <button
-                className="boton"
-                onClick={() => {
-                  setError(null);
-                  setDiagnostico(null);
-                  setFase("viendo");
-                  video.current?.load();
-                }}
-              >
-                probar de nuevo
-              </button>
-              <Link className="boton" href="/estado">
-                ver el estado de todos
-              </Link>
+              {sinSesion ? (
+                <Link className="boton boton--acento" href={`/entrar?a=/ver/${ep.id}`}>
+                  entrar de nuevo
+                </Link>
+              ) : (
+                <>
+                  <button
+                    className="boton"
+                    onClick={() => {
+                      setError(null);
+                      setDiagnostico(null);
+                      reintentado.current = false;
+                      setFase("viendo");
+                      video.current?.load();
+                    }}
+                  >
+                    probar de nuevo
+                  </button>
+                  <Link className="boton" href="/estado">
+                    ver el estado de todos
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}

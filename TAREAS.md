@@ -60,9 +60,10 @@ capítulo en una compu normal.
       `claude/fuego-tiene-project-q2crcs`. Si se renombra a `main` en
       GitHub, revisar en Vercel: Settings → Environments → Production →
       Branch Tracking.
-- [ ] Las imágenes de `public/art/` y el clip de `public/demo/` quedan
-      afuera del middleware (son públicas). El video real nunca: sólo se
-      llega con URL firmada.
+- [ ] Sólo el clip de `public/demo/` queda afuera del middleware. Las
+      imágenes de `public/art/` piden sesión como todo lo demás, y al video
+      real sólo se llega con URL firmada, que dura un día; si vence con la
+      pestaña abierta, el reproductor recarga una vez y sigue solo.
 
 ## Después
 

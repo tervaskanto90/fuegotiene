@@ -14,8 +14,8 @@ export type ConfigR2 = {
   bucket: string;
 };
 
-/** Las URLs firmadas duran lo suficiente para un capítulo con pausas largas. */
-export const EXPIRA_URL_S = 8 * 60 * 60;
+/** Las URLs firmadas duran un día: si alguien deja la pestaña abierta más que eso, el reproductor vuelve a pedir una firma solo. */
+export const EXPIRA_URL_S = 24 * 60 * 60;
 
 export function leerR2(env: Record<string, string | undefined> = process.env): ConfigR2 | null {
   const accountId = (env.R2_ACCOUNT_ID ?? "").trim();
@@ -39,6 +39,9 @@ function cliente(config: ConfigR2): AwsClient {
     secretAccessKey: config.secretAccessKey,
     region: "auto",
     service: "s3",
+    // aws4fetch reintenta 10 veces por defecto: con R2 caído eso supera el
+    // tiempo máximo de la función y el error sale en inglés desde Vercel.
+    retries: 2,
   });
 }
 
@@ -116,9 +119,10 @@ export async function probarBucket(config: ConfigR2, maximo = 200): Promise<Acce
   try {
     res = await cliente(config).fetch(url.toString(), { method: "GET" });
   } catch (e) {
+    void e;
     return {
       acceso: "error",
-      mensaje: `No pude conectarme a R2: ${e instanceof Error ? e.message : "error de red"}. Revisá R2_ACCOUNT_ID: tiene que ser la tira de 32 caracteres.`,
+      mensaje: "No pude conectarme a R2. Revisá R2_ACCOUNT_ID: tiene que ser la tira de 32 caracteres, sin espacios. Si está bien, probá de nuevo en un rato.",
     };
   }
   if (res.status === 403) {
