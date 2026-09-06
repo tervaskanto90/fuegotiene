@@ -20,7 +20,7 @@ test("leerConfig explica qué falta", () => {
   assert.match((leerConfig({ SESSION_SECRET: secret }) as { problema: string }).problema, /ACCESS_CODES/);
   assert.match(
     (leerConfig({ SESSION_SECRET: secret, ACCESS_CODES: "abc" }) as { problema: string }).problema,
-    /al menos 6/,
+    /al menos 8/,
   );
   const ok = leerConfig({ SESSION_SECRET: secret, ACCESS_CODES: " uno-dos-tres, cuatro-cinco ;seis-siete\nocho-nueve" });
   assert.ok(ok.ok);

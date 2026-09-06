@@ -14,9 +14,13 @@ export default function Arte({ ep, grande, children }: Props) {
     );
   }
   return (
-    <div className={`arte arte--plano${grande ? " arte--grande" : ""}`} aria-hidden="true">
-      <span className="arte__temp">temporada {ep.temporada}</span>
-      <span className="arte__num">{numero}</span>
+    <div className={`arte arte--plano${grande ? " arte--grande" : ""}`}>
+      <span className="arte__temp" aria-hidden="true">
+        temporada {ep.temporada}
+      </span>
+      <span className="arte__num" aria-hidden="true">
+        {numero}
+      </span>
       {children}
     </div>
   );

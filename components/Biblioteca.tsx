@@ -67,7 +67,7 @@ export default function Biblioteca({ episodios }: Props) {
             </div>
           </div>
         ) : (
-          <div className="destacado destacado--vacio" aria-hidden="true">
+          <div className="destacado destacado--vacio" aria-hidden={!listo || undefined}>
             {listo ? "Ya viste los 24. Elegí cualquiera para volver a verlo." : " "}
           </div>
         )}

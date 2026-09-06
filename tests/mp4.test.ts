@@ -223,3 +223,20 @@ test("moov cortado: se avisa que el archivo está incompleto", async () => {
   assert.equal(r.veredicto, "desconocido");
   assert.match(r.mensaje, /incompleto|cortado/);
 });
+
+test("otros contenedores viejos: wmv, mpg, ts y flv se detectan como no reproducibles", async () => {
+  const casos: [string, Uint8Array][] = [
+    ["wmv", new Uint8Array([0x30, 0x26, 0xb2, 0x75, 0x8e, 0x66, 0xcf, 0x11, 0xa6, 0xd9, 0x00, 0xaa, 0x00, 0x62, 0xce, 0x6c, ...new Array(600).fill(0)])],
+    ["mpeg-ps", new Uint8Array([0, 0, 1, 0xba, 0x44, 0, 4, 0, 4, 1, ...new Array(600).fill(0)])],
+    ["flv", new Uint8Array(["F".charCodeAt(0), "L".charCodeAt(0), "V".charCodeAt(0), 1, 5, 0, 0, 0, 9, ...new Array(600).fill(0)])],
+  ];
+  const ts = new Uint8Array(188 * 4);
+  for (let i = 0; i < 4; i++) ts[i * 188] = 0x47;
+  casos.push(["mpeg-ts", ts]);
+  for (const [esperado, datos] of casos) {
+    const r = await analizar(async (a, b) => datos.subarray(a, b), datos.length);
+    assert.equal(r.contenedor, esperado);
+    assert.equal(r.veredicto, "no-reproducible", esperado);
+    assert.match(r.mensaje, /convertirlo|remuxarlo/);
+  }
+});

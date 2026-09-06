@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { EstadoCapitulo } from "@/app/api/estado/[id]/route";
 import type { EstadoBucket } from "@/app/api/estado/route";
@@ -43,7 +44,7 @@ export default function Estado({ episodios, modo }: Props) {
     Object.fromEntries(episodios.map((e) => [e.id, { estado: "esperando" as const }])),
   );
   const [ronda, setRonda] = useState(0);
-  const [bucket, setBucket] = useState<EstadoBucket | "cargando" | "fallo">("cargando");
+  const [bucket, setBucket] = useState<EstadoBucket | "cargando" | "fallo" | "sesion">("cargando");
   const cancelado = useRef(false);
 
   const revisar = useCallback(async () => {
@@ -56,6 +57,11 @@ export default function Estado({ episodios, modo }: Props) {
     let general: EstadoBucket | null = null;
     try {
       const res = await fetch("/api/estado", { cache: "no-store" });
+      if (res.status === 401) {
+        setBucket("sesion");
+        setFilas(Object.fromEntries(episodios.map((e) => [e.id, { estado: "omitido" as const }])));
+        return;
+      }
       if (!res.ok) throw new Error(`respuesta ${res.status}`);
       general = (await res.json()) as EstadoBucket;
       setBucket(general);
@@ -75,7 +81,8 @@ export default function Estado({ episodios, modo }: Props) {
         setFilas((f) => ({ ...f, [ep.id]: { estado: "revisando" } }));
         try {
           const res = await fetch(`/api/estado/${ep.id}`, { cache: "no-store" });
-          if (!res.ok) throw new Error(`respuesta ${res.status}`);
+          if (res.status === 401) throw new Error("tu sesión venció: entrá de nuevo");
+          if (!res.ok) throw new Error(`el servidor respondió ${res.status}; probá de nuevo en un rato`);
           const datos = (await res.json()) as EstadoCapitulo;
           setFilas((f) => ({ ...f, [ep.id]: { estado: "listo", datos } }));
         } catch (e) {
@@ -100,17 +107,26 @@ export default function Estado({ episodios, modo }: Props) {
   ).length;
   const pendientes = Object.values(filas).filter((f) => f.estado === "esperando" || f.estado === "revisando").length;
   const omitidos = Object.values(filas).filter((f) => f.estado === "omitido").length;
+  const sinRevisar = Object.values(filas).filter((f) => f.estado === "fallo").length;
   const bucketMal = typeof bucket === "object" && bucket.modo === "r2" && bucket.acceso !== "ok";
 
   return (
     <section className="seccion" style={{ marginTop: 0 }}>
-      {modo === "r2" && (
+      {(modo === "r2" || bucket === "sesion") && (
         <div className="resumen" style={{ marginBottom: 20 }}>
           <dl>
             <dt>bucket</dt>
             <dd>
               {bucket === "cargando" && <span className="muted">consultando…</span>}
               {bucket === "fallo" && <span>No pude consultar el bucket. Probá de nuevo en un rato.</span>}
+              {bucket === "sesion" && (
+                <span>
+                  Tu sesión venció.{" "}
+                  <Link href="/entrar?a=/estado" style={{ textDecoration: "underline" }}>
+                    entrá de nuevo
+                  </Link>
+                </span>
+              )}
               {typeof bucket === "object" && (
                 <>
                   <span className={`chip ${bucketMal ? "chip--mal" : "chip--ok"}`} style={{ marginRight: 8 }}>
@@ -148,7 +164,7 @@ export default function Estado({ episodios, modo }: Props) {
             ? "sin revisar hasta que el bucket responda"
             : pendientes > 0
               ? `revisando ${episodios.length - pendientes}/${episodios.length}`
-              : `${listos} listos, ${conProblemas} con problemas, ${faltan} faltan`}
+              : `${listos} listos, ${conProblemas} con problemas, ${faltan} faltan${sinRevisar ? `, ${sinRevisar} sin revisar` : ""}`}
         </span>
         <button className="boton boton--chico" style={{ marginLeft: "auto" }} onClick={() => setRonda((r) => r + 1)} disabled={pendientes > 0}>
           revisar de nuevo

@@ -9,7 +9,7 @@
 export const COOKIE_SESION = "ft_sesion";
 export const DURACION_SESION_S = 180 * 24 * 60 * 60; // 180 días
 export const MIN_SECRET = 32;
-export const MIN_CODIGO = 6;
+export const MIN_CODIGO = 8;
 
 export type ConfigAuth = { secret: string; codigos: string[] };
 export type ResultadoConfig =

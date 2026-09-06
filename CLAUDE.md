@@ -69,7 +69,8 @@ las cajas del mp4. Detecta:
 - **`moov` al final del archivo** (sin `+faststart`). El navegador se baja
   el capítulo entero antes de mostrar el primer cuadro. Veredicto
   `arranque-lento`.
-- **Contenedores que el navegador no abre**: .avi y .mkv. Y video que no
+- **Contenedores que el navegador no abre**: .avi, .mkv, .wmv, .mpg, .ts y
+  .flv. Y video que no
   decodifica: MPEG-4 parte 2 (DivX/Xvid), H.264 de 10 bits. Veredicto
   `no-reproducible`.
 
@@ -90,7 +91,7 @@ las cuatro variables: no hay un flag que prender.
 ```bash
 npm run dev                      # local en :3000
 npm run build                    # verificar que compila antes de deployar
-npm test                         # tests de auth, mp4 y episodes.json (node --test)
+npm test                         # tests de auth, r2, mp4 y episodes.json (node --test)
 npm run prepare-videos -- <dir>  # ffmpeg: normaliza, cuadros, srt->vtt (requiere ffmpeg)
 npm run upload -- ./listos       # sube a R2 con multipart (requiere las variables)
 npm run demo                     # regenera public/demo/muestra.mp4 (requiere ffmpeg)

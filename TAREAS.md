@@ -53,8 +53,8 @@ capítulo en una compu normal.
 - [ ] **Firma de URLs de R2.** Se hace con `aws4fetch` (lo que usan los
       ejemplos de Cloudflare). Se probó la forma de la URL pero no contra un
       bucket real. Si el primer capítulo da 403 en el navegador, `/estado`
-      lo dice; la alternativa es `@aws-sdk/s3-request-presigner`, ya
-      instalada como devDependency para `scripts/upload.mjs`.
+      lo dice; la alternativa es agregar `@aws-sdk/s3-request-presigner`
+      (el SDK de AWS ya está como devDependency para `scripts/upload.mjs`).
 - [ ] Vercel elige como rama de producción `main`, después `master`, después
       la rama por defecto del repo. Hoy la única rama es
       `claude/fuego-tiene-project-q2crcs`. Si se renombra a `main` en
@@ -62,8 +62,8 @@ capítulo en una compu normal.
       Branch Tracking.
 - [ ] Sólo el clip de `public/demo/` queda afuera del middleware. Las
       imágenes de `public/art/` piden sesión como todo lo demás, y al video
-      real sólo se llega con URL firmada, que dura un día; si vence con la
-      pestaña abierta, el reproductor recarga una vez y sigue solo.
+      real sólo se llega con URL firmada, que dura tres horas; si vence con
+      la pestaña abierta, el reproductor recarga y sigue solo.
 
 ## Después
 

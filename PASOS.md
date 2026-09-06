@@ -23,7 +23,7 @@ R2, después **un solo capítulo**, y recién al final los otros 23.
    | Name | Value |
    |---|---|
    | `SESSION_SECRET` | una frase larga que sólo vos sepas, 32 caracteres o más, con algún número. Firma la cookie de sesión. No la vas a tener que escribir nunca más. |
-   | `ACCESS_CODES` | tu código de acceso. Es lo que vas a escribir para entrar. Mínimo 6 caracteres, mejor 12 o más. Si querés dar acceso a más gente, más códigos separados por coma: `codigo-mio,codigo-de-mama` |
+   | `ACCESS_CODES` | tu código de acceso. Es lo que vas a escribir para entrar. Mínimo 8 caracteres, mejor 12 o más. Si querés dar acceso a más gente, más códigos separados por coma: `codigo-mio,codigo-de-mama` |
 
 5. **Deploy**. Tarda un par de minutos. Cuando termina, **Visit**.
 6. El sitio te lleva a `/entrar`. Poné tu código. Vas a ver la portada con
@@ -48,9 +48,9 @@ a `main` desde GitHub, pero no hace falta para nada de esto.
 Con el clip andando, probá lo que después vas a usar de verdad:
 
 - arrastrá la barra al medio y fijate que siga desde ahí,
-- cerrá la pestaña a los 10 segundos, volvé a la portada: tiene que ofrecer
-  **seguir desde 0:10** (ojo: para que aparezca hacen falta al menos 30
-  segundos vistos, así que en el clip de 20 no lo vas a ver; sí en un capítulo),
+- el clip dura menos de 30 segundos, así que "seguir desde" no va a
+  aparecer con él: eso probalo con el primer capítulo real, cerrando la
+  pestaña a los pocos minutos y volviendo a la portada,
 - dejalo terminar: ofrece el siguiente y cuenta 12 segundos,
 - las teclas: espacio, flechas, `f` para pantalla completa, `n` siguiente.
 

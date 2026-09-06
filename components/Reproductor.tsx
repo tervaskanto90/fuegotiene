@@ -29,6 +29,7 @@ function describirError(v: HTMLVideoElement): string {
 
 export default function Reproductor({ ep, sig, ant }: Props) {
   const video = useRef<HTMLVideoElement>(null);
+  const pantalla = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { mapa, listo, guardar, marcar } = useProgreso();
 
@@ -38,14 +39,16 @@ export default function Reproductor({ ep, sig, ant }: Props) {
   const [cuenta, setCuenta] = useState<number | null>(null);
   const [duracion, setDuracion] = useState(0);
   const [sinSesion, setSinSesion] = useState(false);
-  const reintentado = useRef(false);
+  /** true desde que la persona eligió ver: antes de eso no se guarda nada, para no pisar el progreso con 0. */
+  const empezo = useRef(false);
+  const ultimoReintento = useRef(0);
   const ultimoGuardado = useRef(0);
   const decidido = useRef(false);
   const guardadoInicial = useRef<number | null>(null);
 
   const guardarAhora = useCallback(() => {
     const v = video.current;
-    if (!v || !v.duration || Number.isNaN(v.duration)) return;
+    if (!empezo.current || !v || !v.duration || Number.isNaN(v.duration)) return;
     guardar(ep.id, v.currentTime, v.duration);
     ultimoGuardado.current = Date.now();
   }, [ep.id, guardar]);
@@ -61,6 +64,13 @@ export default function Reproductor({ ep, sig, ant }: Props) {
     const seguir = params.get("seguir") === "1";
     const desde = params.get("desde");
     const v = video.current;
+    // Si el video ya está andando (play nativo antes de que React se enganche), no hay nada que preguntar.
+    if (v && !v.paused && !v.ended) {
+      decidido.current = true;
+      empezo.current = true;
+      setFase("viendo");
+      return;
+    }
     if (desde === "0") {
       decidido.current = true;
       setFase("viendo");
@@ -68,6 +78,7 @@ export default function Reproductor({ ep, sig, ant }: Props) {
     }
     if (seguir && guardadoInicial.current !== null && v) {
       decidido.current = true;
+      empezo.current = true;
       v.currentTime = guardadoInicial.current;
       setFase("viendo");
       v.play().catch(() => {});
@@ -79,6 +90,7 @@ export default function Reproductor({ ep, sig, ant }: Props) {
 
   const seguirDesde = () => {
     const v = video.current;
+    empezo.current = true;
     if (v && guardadoInicial.current !== null) v.currentTime = guardadoInicial.current;
     setFase("viendo");
     v?.play().catch(() => {});
@@ -86,13 +98,23 @@ export default function Reproductor({ ep, sig, ant }: Props) {
 
   const desdeCero = () => {
     const v = video.current;
+    empezo.current = true;
     if (v) v.currentTime = 0;
     setFase("viendo");
     v?.play().catch(() => {});
   };
 
-  // Guardar al salir de la pestaña o cerrar.
+  /** Los controles nativos ponen en pantalla completa sólo el <video>, y ahí las capas no se ven. */
+  const salirDePantallaCompletaNativa = () => {
+    if (document.fullscreenElement && document.fullscreenElement !== pantalla.current) {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
+
+  // Guardar al salir de la pestaña, cerrar o cambiar de capítulo.
   useEffect(() => {
+    // Al desmontar, video.current ya es null: se captura el elemento ahora.
+    const v = video.current;
     const alOcultar = () => {
       if (document.visibilityState === "hidden") guardarAhora();
     };
@@ -101,9 +123,9 @@ export default function Reproductor({ ep, sig, ant }: Props) {
     return () => {
       window.removeEventListener("visibilitychange", alOcultar);
       window.removeEventListener("pagehide", guardarAhora);
-      guardarAhora();
+      if (v && empezo.current && v.duration && !Number.isNaN(v.duration)) guardar(ep.id, v.currentTime, v.duration);
     };
-  }, [guardarAhora]);
+  }, [guardarAhora, guardar, ep.id]);
 
   // Cuenta regresiva al siguiente capítulo.
   useEffect(() => {
@@ -161,8 +183,9 @@ export default function Reproductor({ ep, sig, ant }: Props) {
           v.muted = !v.muted;
           break;
         case "f":
+          // Pantalla completa del contenedor, no del <video>: así las capas siguen visibles.
           if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-          else v.requestFullscreen?.().catch(() => {});
+          else (pantalla.current ?? v).requestFullscreen?.().catch(() => {});
           break;
         case "n":
           if (sig) {
@@ -190,10 +213,12 @@ export default function Reproductor({ ep, sig, ant }: Props) {
     const v = video.current;
     if (!v) return;
     // Si ya venía andando y falla, lo más probable es que la URL firmada
-    // haya vencido tras una pausa larga: se recarga una vez (eso pide una
-    // firma nueva) y se sigue desde el mismo punto.
-    if (!reintentado.current && v.currentTime > 0) {
-      reintentado.current = true;
+    // haya vencido tras una pausa larga: se recarga (eso pide una firma
+    // nueva) y se sigue desde el mismo punto. Como mucho una vez por minuto,
+    // para no entrar en loop si el archivo está roto de verdad.
+    const ahora = Date.now();
+    if (v.currentTime > 0 && ahora - ultimoReintento.current > 60_000) {
+      ultimoReintento.current = ahora;
       const t = v.currentTime;
       v.addEventListener(
         "loadedmetadata",
@@ -206,6 +231,7 @@ export default function Reproductor({ ep, sig, ant }: Props) {
       v.load();
       return;
     }
+    salirDePantallaCompletaNativa();
     setFase("error");
     setError(describirError(v));
     setDiagnostico("Revisando el archivo…");
@@ -234,6 +260,16 @@ export default function Reproductor({ ep, sig, ant }: Props) {
     }
   };
 
+  // El <video> viene en el HTML del servidor y puede haber cargado, o fallado,
+  // antes de que React se enganche a sus eventos: se mira el estado al montar.
+  useEffect(() => {
+    const v = video.current;
+    if (!v) return;
+    if (v.error) void alError();
+    else if (v.readyState >= 1) setDuracion(v.duration || 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const progreso = mapa[ep.id];
 
   return (
@@ -246,7 +282,7 @@ export default function Reproductor({ ep, sig, ant }: Props) {
         {ep.emision && <span className="reproductor__fecha">emitido el {fechaCorta(ep.emision)}</span>}
       </div>
 
-      <div className={`pantalla${fase === "error" ? " pantalla--error" : ""}`}>
+      <div ref={pantalla} className={`pantalla${fase === "error" ? " pantalla--error" : ""}`}>
         <video
           ref={video}
           controls
@@ -259,10 +295,12 @@ export default function Reproductor({ ep, sig, ant }: Props) {
           }}
           onPause={guardarAhora}
           onPlay={() => {
+            empezo.current = true;
             if (fase === "elegir") decidido.current = true;
             setFase("viendo");
           }}
           onEnded={() => {
+            salirDePantallaCompletaNativa();
             marcar(ep.id, true);
             setFase("terminado");
             setCuenta(sig ? SEGUNDOS_PARA_SIGUIENTE : null);
@@ -334,11 +372,16 @@ export default function Reproductor({ ep, sig, ant }: Props) {
                   <button
                     className="boton"
                     onClick={() => {
+                      const v = video.current;
+                      const t = v?.currentTime ?? 0;
                       setError(null);
                       setDiagnostico(null);
-                      reintentado.current = false;
+                      ultimoReintento.current = 0;
                       setFase("viendo");
-                      video.current?.load();
+                      if (v) {
+                        if (t > 0) v.addEventListener("loadedmetadata", () => { v.currentTime = t; }, { once: true });
+                        v.load();
+                      }
                     }}
                   >
                     probar de nuevo

@@ -8,7 +8,7 @@
 
 export type Lector = (inicio: number, fin: number) => Promise<Uint8Array>;
 export type Soporte = "si" | "no" | "depende";
-export type Contenedor = "mp4" | "avi" | "mkv" | "webm" | "desconocido";
+export type Contenedor = "mp4" | "avi" | "mkv" | "webm" | "wmv" | "mpeg-ps" | "mpeg-ts" | "flv" | "desconocido";
 export type Veredicto = "ok" | "sin-audio" | "arranque-lento" | "no-reproducible" | "desconocido";
 
 export type Pista = {
@@ -88,6 +88,13 @@ function detectarContenedor(cabeza: Uint8Array): Contenedor {
     const inicio = texto(cabeza, 0, Math.min(cabeza.length, 64));
     return inicio.includes("webm") ? "webm" : "mkv";
   }
+  // Windows Media (ASF): GUID de cabecera
+  if (cabeza[0] === 0x30 && cabeza[1] === 0x26 && cabeza[2] === 0xb2 && cabeza[3] === 0x75) return "wmv";
+  // MPEG program stream (.mpg, .vob): pack header
+  if (cabeza[0] === 0 && cabeza[1] === 0 && cabeza[2] === 1 && cabeza[3] === 0xba) return "mpeg-ps";
+  // MPEG transport stream (.ts): sync byte cada 188
+  if (cabeza[0] === 0x47 && cabeza.length > 376 && cabeza[188] === 0x47 && cabeza[376] === 0x47) return "mpeg-ts";
+  if (texto(cabeza, 0, 3) === "FLV") return "flv";
   return "desconocido";
 }
 
@@ -425,11 +432,20 @@ function veredictoDe(
   if (contenedor === "mkv") {
     return { veredicto: "no-reproducible", mensaje: "Es un archivo Matroska (.mkv). Los navegadores no lo abren: hay que remuxarlo a .mp4, sin recomprimir si el video ya es H.264." };
   }
+  const otros: Partial<Record<Contenedor, string>> = {
+    wmv: "Es un archivo Windows Media (.wmv). Los navegadores no lo reproducen: hay que convertirlo a .mp4 (H.264 + AAC).",
+    "mpeg-ps": "Es un MPEG de DVD o captura (.mpg/.vob). Los navegadores no lo reproducen: hay que convertirlo a .mp4 (H.264 + AAC).",
+    "mpeg-ts": "Es un MPEG transport stream (.ts). Los navegadores no lo abren así: hay que remuxarlo o convertirlo a .mp4.",
+    flv: "Es un Flash Video (.flv). Los navegadores ya no lo reproducen: hay que convertirlo a .mp4 (H.264 + AAC).",
+  };
+  if (otros[contenedor]) {
+    return { veredicto: "no-reproducible", mensaje: otros[contenedor]! };
+  }
   if (contenedor === "webm") {
     return { veredicto: "ok", mensaje: "Es un WebM. Chrome lo reproduce si viene con VP8/VP9 y Vorbis/Opus." };
   }
   if (contenedor === "desconocido") {
-    return { veredicto: "desconocido", mensaje: "No reconozco el formato: no es mp4, avi ni mkv. ¿Es un video?" };
+    return { veredicto: "desconocido", mensaje: "No reconozco el formato: no es mp4, avi, mkv, wmv ni mpg. Si es un video, hay que convertirlo a .mp4." };
   }
   if (!moovEncontrado) {
     return { veredicto: "desconocido", mensaje: "Es un mp4 pero no encontré el índice (moov). Puede estar cortado o incompleto." };

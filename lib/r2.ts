@@ -14,8 +14,13 @@ export type ConfigR2 = {
   bucket: string;
 };
 
-/** Las URLs firmadas duran un día: si alguien deja la pestaña abierta más que eso, el reproductor vuelve a pedir una firma solo. */
-export const EXPIRA_URL_S = 24 * 60 * 60;
+/**
+ * Las URLs firmadas duran tres horas: alcanza para un capítulo con pausas, y
+ * si vence con la pestaña abierta el reproductor pide una firma nueva solo.
+ * Más corto que eso no hace falta; más largo agranda la ventana en que una
+ * URL copiada sigue sirviendo después de sacar un código.
+ */
+export const EXPIRA_URL_S = 3 * 60 * 60;
 
 export function leerR2(env: Record<string, string | undefined> = process.env): ConfigR2 | null {
   const accountId = (env.R2_ACCOUNT_ID ?? "").trim();
