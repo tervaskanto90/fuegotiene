@@ -75,7 +75,7 @@ export default function Biblioteca({ episodios }: Props) {
 
       {[...temporadas.entries()].map(([temporada, lista]) => (
         <section className="seccion" key={temporada}>
-          <h2 className="seccion__titulo">
+          <h2 className="seccion__titulo seccion__titulo--linea">
             temporada {temporada}
             <span className="num">
               {lista.length} capítulos
@@ -86,8 +86,8 @@ export default function Biblioteca({ episodios }: Props) {
             </span>
           </h2>
           <div className="grilla">
-            {lista.map((ep) => (
-              <Tarjeta key={ep.id} ep={ep} progreso={mapa[ep.id]} />
+            {lista.map((ep, i) => (
+              <Tarjeta key={ep.id} ep={ep} progreso={mapa[ep.id]} indice={i} />
             ))}
           </div>
         </section>

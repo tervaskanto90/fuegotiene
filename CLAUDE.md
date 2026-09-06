@@ -166,6 +166,15 @@ un solo lugar por pantalla (el botón principal), los radios son de 3 px en
 todo, y no hay transform en hover (solo cambia el borde y el brillo). El
 wordmark va en caja baja: es una frase hablada, no una placa.
 
+**Movimiento.** `app/template.tsx` se vuelve a montar en cada navegación y
+hace entrar la página con un fundido corto (`.pagina`). Las tarjetas de la
+grilla entran escalonadas con la variable `--i`. Las capas del reproductor
+aparecen con fundido y desenfoque, y la cuenta regresiva al siguiente
+capítulo tiene una barra menta que se vacía en 12 s. Duraciones de 150 a
+400 ms, curva `cubic-bezier(0.2, 0.7, 0.2, 1)`, nada rebota. Con
+`prefers-reduced-motion` todo se apaga. La cabecera es fija, con fondo
+translúcido y desenfoque.
+
 Las imágenes de los capítulos no son archivos: mientras no haya un cuadro
 real, `Arte.tsx` dibuja la trama diagonal y el número con CSS y la fuente de
 la página. `prepare-videos` puede guardar un cuadro real en `public/art/` y

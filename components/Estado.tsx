@@ -21,7 +21,7 @@ function peso(bytes: number | null): string {
 function chip(d: EstadoCapitulo | undefined, fila: Fila): { clase: string; texto: string } {
   if (fila.estado === "esperando") return { clase: "chip--falta", texto: "en cola" };
   if (fila.estado === "omitido") return { clase: "chip--falta", texto: "sin revisar" };
-  if (fila.estado === "revisando") return { clase: "chip--falta", texto: "revisando…" };
+  if (fila.estado === "revisando") return { clase: "chip--revisando", texto: "revisando" };
   if (fila.estado === "fallo" || !d) return { clase: "chip--mal", texto: "no pude revisar" };
   if (d.error) return { clase: "chip--mal", texto: "error" };
   if (!d.existe) return { clase: "chip--falta", texto: "no está en el bucket" };

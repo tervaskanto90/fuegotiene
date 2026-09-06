@@ -326,6 +326,9 @@ export default function Reproductor({ ep, sig, ant }: Props) {
 
         {fase === "terminado" && (
           <div className="capa">
+            {cuenta !== null && sig && (
+              <span className="cuenta" aria-hidden="true" style={{ animationDuration: `${SEGUNDOS_PARA_SIGUIENTE}s` }} />
+            )}
             <p className="capa__titulo">Terminó.</p>
             {sig ? (
               <>
