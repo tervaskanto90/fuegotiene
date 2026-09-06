@@ -371,20 +371,32 @@ function leerMvhd(b: Uint8Array, c: Caja): number | null {
   return escala ? dur / escala : null;
 }
 
-function analizarTrak(b: Uint8Array, trak: Caja): Pista | null {
+const MAX_ENTRADAS_STSD = 8;
+
+/** Una pista puede traer varias descripciones de muestras (archivos concatenados): se leen todas. */
+function analizarTrak(b: Uint8Array, trak: Caja): Pista[] {
   const mdia = hija(b, trak, "mdia");
-  if (!mdia) return null;
+  if (!mdia) return [];
   const hdlr = hija(b, mdia, "hdlr");
   const manejador = hdlr ? texto(b, hdlr.inicio + hdlr.cabecera + 8, 4) : "";
+  if (manejador !== "vide" && manejador !== "soun") return [];
   const minf = hija(b, mdia, "minf");
   const stbl = minf ? hija(b, minf, "stbl") : null;
   const stsd = stbl ? hija(b, stbl, "stsd") : null;
-  if (!stsd) return null;
-  const entrada = cabecera(b, stsd.inicio + stsd.cabecera + 8, Math.min(stsd.inicio + stsd.tamano, b.length));
-  if (!entrada) return null;
-  if (manejador === "vide") return pistaVideo(b, entrada);
-  if (manejador === "soun") return pistaAudio(b, entrada);
-  return null;
+  if (!stsd) return [];
+  const fin = Math.min(stsd.inicio + stsd.tamano, b.length);
+  const cuenta = stsd.inicio + stsd.cabecera + 8 <= fin ? u32(b, stsd.inicio + stsd.cabecera + 4) : 0;
+  const pistas: Pista[] = [];
+  let o = stsd.inicio + stsd.cabecera + 8;
+  for (let i = 0; i < Math.min(cuenta, MAX_ENTRADAS_STSD) && o + 8 <= fin; i++) {
+    const entrada = cabecera(b, o, fin);
+    if (!entrada) break;
+    const pista = manejador === "vide" ? pistaVideo(b, entrada) : pistaAudio(b, entrada);
+    if (cuenta > 1) pista.detalle = `${pista.detalle ? pista.detalle + ", " : ""}descripción ${i + 1} de ${cuenta}`;
+    pistas.push(pista);
+    o += entrada.tamano;
+  }
+  return pistas;
 }
 
 /** Analiza una caja moov completa en memoria. */
@@ -395,10 +407,7 @@ export function analizarMoov(b: Uint8Array): { pistas: Pista[]; duracion: number
   if (!raiz || raiz.tipo !== "moov") return { pistas, duracion };
   for (const c of hijas(b, raiz)) {
     if (c.tipo === "mvhd") duracion = leerMvhd(b, c);
-    if (c.tipo === "trak") {
-      const p = analizarTrak(b, c);
-      if (p) pistas.push(p);
-    }
+    if (c.tipo === "trak") pistas.push(...analizarTrak(b, c));
   }
   return { pistas, duracion };
 }
@@ -408,6 +417,7 @@ function veredictoDe(
   moovPrimero: boolean | null,
   pistas: Pista[],
   moovEncontrado: boolean,
+  problemaMoov: string | null = null,
 ): { veredicto: Veredicto; mensaje: string } {
   if (contenedor === "avi") {
     return { veredicto: "no-reproducible", mensaje: "Es un archivo .avi. Los navegadores no lo reproducen: hay que pasarlo a .mp4 (H.264 + AAC)." };
@@ -424,10 +434,23 @@ function veredictoDe(
   if (!moovEncontrado) {
     return { veredicto: "desconocido", mensaje: "Es un mp4 pero no encontré el índice (moov). Puede estar cortado o incompleto." };
   }
+  if (problemaMoov) {
+    return { veredicto: "desconocido", mensaje: problemaMoov };
+  }
 
   const video = pistas.filter((p) => p.tipo === "video");
   const audio = pistas.filter((p) => p.tipo === "audio");
   const partes: string[] = [];
+
+  if (video.length === 0) {
+    return {
+      veredicto: "desconocido",
+      mensaje:
+        pistas.length === 0
+          ? "Encontré el índice pero no pude leer las pistas. El archivo puede estar cortado o tener un índice raro."
+          : `El archivo no tiene pista de video, sólo audio (${audio.map((p) => p.codec).join(", ")}).`,
+    };
+  }
 
   const videoMalo = video.find((p) => p.soporte === "no");
   if (videoMalo) {
@@ -436,10 +459,6 @@ function veredictoDe(
       mensaje: `El video está en ${videoMalo.codec}${videoMalo.detalle ? ` (${videoMalo.detalle})` : ""} y el navegador no lo decodifica. Hay que convertir el video a H.264 de 8 bits.`,
     };
   }
-  if (video.length === 0) {
-    partes.push("No encontré pista de video.");
-  }
-
   let veredicto: Veredicto = "ok";
   if (audio.length > 0 && audio.every((p) => p.soporte === "no")) {
     veredicto = "sin-audio";
@@ -520,6 +539,7 @@ export async function analizar(leer: Lector, tamano: number): Promise<Analisis> 
 
   let pistas: Pista[] = [];
   let duracion: number | null = null;
+  let problemaMoov: string | null = null;
   if (moov) {
     let datos: Uint8Array | null = null;
     if (moov.inicio + moov.tamano <= cabeza.length) {
@@ -527,8 +547,13 @@ export async function analizar(leer: Lector, tamano: number): Promise<Analisis> 
     } else if (moov.tamano <= MAX_MOOV) {
       datos = await leer(moov.inicio, Math.min(tamano, moov.inicio + moov.tamano));
       bytes += datos.length;
+    } else {
+      problemaMoov = `El índice del archivo pesa ${Math.round(moov.tamano / 1024 / 1024)} MB y no lo puedo revisar desde acá. Es rarísimo para un capítulo: probá abrirlo igual.`;
     }
     if (datos) {
+      if (datos.length < moov.tamano) {
+        problemaMoov = "El índice del archivo está incompleto: el archivo parece cortado o la subida no terminó.";
+      }
       const r = analizarMoov(datos);
       pistas = r.pistas;
       duracion = r.duracion;
@@ -536,6 +561,6 @@ export async function analizar(leer: Lector, tamano: number): Promise<Analisis> 
   }
 
   const moovPrimero = moov ? !mdatAntesDeMoov : null;
-  const { veredicto, mensaje } = veredictoDe(contenedor, moovPrimero, pistas, moov !== null);
+  const { veredicto, mensaje } = veredictoDe(contenedor, moovPrimero, pistas, moov !== null, problemaMoov);
   return { contenedor, moovPrimero, pistas, duracion, veredicto, mensaje, cajas, bytesLeidos: bytes };
 }

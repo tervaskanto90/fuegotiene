@@ -141,3 +141,85 @@ test("archivo grande simulado: sólo se leen cabeceras e índice", async () => {
   const total = leidos.reduce((s, n) => s + n, 0);
   assert.ok(total < 200 * 1024, `leyó ${total} bytes; tendría que ser poco más que el índice`);
 });
+
+// --- cajas sintéticas para los casos raros ---
+
+function u32be(n: number): number[] {
+  return [(n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff];
+}
+
+function caja(tipo: string, ...partes: (number[] | Uint8Array)[]): Uint8Array {
+  const cuerpo = partes.flatMap((p) => [...p]);
+  return new Uint8Array([...u32be(8 + cuerpo.length), ...tipo.split("").map((c) => c.charCodeAt(0)), ...cuerpo]);
+}
+
+const ftyp = caja("ftyp", "isom".split("").map((c) => c.charCodeAt(0)), u32be(512), "isom".split("").map((c) => c.charCodeAt(0)));
+const mvhd = caja("mvhd", u32be(0), u32be(0), u32be(0), u32be(1000), u32be(2000), u32be(0x00010000), [0, 0, 0, 0], new Uint8Array(70));
+
+function trakVideo(fourccs: string[]): Uint8Array {
+  const hdlr = caja("hdlr", u32be(0), u32be(0), "vide".split("").map((c) => c.charCodeAt(0)), new Uint8Array(12), [0]);
+  const entradas = fourccs.map((f) => caja(f, new Uint8Array(6), [0, 1], new Uint8Array(16), [0, 160, 0, 90], new Uint8Array(50)));
+  const stsd = caja("stsd", u32be(0), u32be(entradas.length), ...entradas);
+  const stbl = caja("stbl", stsd);
+  const minf = caja("minf", stbl);
+  const mdia = caja("mdia", hdlr, minf);
+  return caja("trak", mdia);
+}
+
+function archivo(...cajas: Uint8Array[]): Uint8Array {
+  const total = cajas.reduce((s, c) => s + c.length, 0);
+  const salida = new Uint8Array(total);
+  let o = 0;
+  for (const c of cajas) {
+    salida.set(c, o);
+    o += c.length;
+  }
+  return salida;
+}
+
+test("stsd con dos descripciones: manda la peor", async () => {
+  const datos = archivo(ftyp, caja("moov", mvhd, trakVideo(["avc1", "mp4v"])), caja("mdat", new Uint8Array(16)));
+  const r = await analizar(async (a, b) => datos.subarray(a, b), datos.length);
+  assert.equal(r.pistas.length, 2);
+  assert.match(r.pistas[1].detalle, /descripción 2 de 2/);
+  assert.equal(r.veredicto, "no-reproducible");
+  assert.match(r.mensaje, /MPEG-4 parte 2/);
+});
+
+test("moov sin pistas legibles: no se dice que está listo", async () => {
+  const datos = archivo(ftyp, caja("moov", mvhd), caja("mdat", new Uint8Array(16)));
+  const r = await analizar(async (a, b) => datos.subarray(a, b), datos.length);
+  assert.equal(r.veredicto, "desconocido");
+  assert.match(r.mensaje, /no pude leer las pistas/);
+  assert.equal(r.duracion, 2);
+});
+
+test("moov gigante: se avisa en vez de leerlo", async () => {
+  const GIGANTE = 200 * 1024 * 1024;
+  const cabeceraMoov = new Uint8Array([...u32be(GIGANTE), ..."moov".split("").map((c) => c.charCodeAt(0))]);
+  const mdatCab = caja("mdat");
+  const tamano = ftyp.length + GIGANTE + mdatCab.length;
+  const pedidos: number[] = [];
+  const leer: Lector = async (a, b) => {
+    pedidos.push(b - a);
+    const salida = new Uint8Array(b - a);
+    for (let i = a; i < b; i++) {
+      if (i < ftyp.length) salida[i - a] = ftyp[i];
+      else if (i < ftyp.length + 8) salida[i - a] = cabeceraMoov[i - ftyp.length];
+      else if (i >= ftyp.length + GIGANTE) salida[i - a] = mdatCab[i - ftyp.length - GIGANTE];
+    }
+    return salida;
+  };
+  const r = await analizar(leer, tamano);
+  assert.equal(r.veredicto, "desconocido");
+  assert.match(r.mensaje, /200 MB/);
+  assert.ok(pedidos.reduce((s, n) => s + n, 0) < 100 * 1024, "no intentó bajar el índice gigante");
+});
+
+test("moov cortado: se avisa que el archivo está incompleto", async () => {
+  const completo = archivo(ftyp, caja("moov", mvhd, trakVideo(["avc1"])), caja("mdat", new Uint8Array(16)));
+  const cortado = completo.subarray(0, completo.length - 40); // se pierde parte del moov y el mdat
+  const r = await analizar(async (a, b) => cortado.subarray(a, b), cortado.length);
+  assert.equal(r.veredicto, "desconocido");
+  assert.match(r.mensaje, /incompleto|cortado/);
+});
