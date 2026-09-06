@@ -87,7 +87,7 @@ En Vercel, **Settings → Environment Variables**, cargá cuatro más:
 | `R2_BUCKET` | `fuego-tiene` |
 
 Después **Deployments → ⋯ en el último → Redeploy**. Cuando termina, el
-sitio deja el modo demo solo. **/estado** ahora dice "R2 conectado", prueba
+sitio deja el modo demo solo. **/estado** ahora dice "R2 configurado", prueba
 el bucket y, si responde, abajo los 24 capítulos figuran como "no está en el
 bucket", que es lo esperado porque todavía no subiste nada.
 

@@ -38,7 +38,8 @@ export default function PaginaEstado() {
             <dd>
               {r2 ? (
                 <>
-                  <span className="mint">R2 conectado</span>, bucket <code className="narrow">{r2.bucket}</code>
+                  <span className="mint">R2 configurado</span>, bucket <code className="narrow">{r2.bucket}</code>. Abajo dice si
+                  responde.
                 </>
               ) : (
                 <>
