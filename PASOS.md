@@ -143,6 +143,21 @@ Mismo Cyberduck, mismos nombres. Cuando /estado muestre los 24 en verde,
 terminaste. Los progresos de reproducción quedan en cada navegador, no hace
 falta configurar nada más.
 
+## Mientras mirás
+
+- **Seguir donde quedaste**: cada navegador recuerda dónde dejaste cada
+  capítulo (a partir de 15 segundos vistos). La portada ofrece "seguir desde"
+  con el último que quedó a medias.
+- **Saltear la intro**: en el reproductor, abajo del video, abrí "intro y
+  portada". Cuando empiece la intro tocá **empieza acá**, cuando termine
+  **termina acá**, y **guardar la intro**. Es una vez por capítulo y vale
+  para todos los que entren al sitio: mientras pasa la intro aparece el
+  botón para saltearla, también con la tecla `s`.
+- **Portadas**: el reproductor guarda solo un cuadro del capítulo como
+  portada, pasado el primer quinto. Si preferís otro, pausá en un buen cuadro
+  y tocá **usar este cuadro de portada**. Necesita la política CORS del
+  bucket, la misma que la página subir.
+
 ## Después
 
 - **Dar acceso a alguien**: agregá otro código a `ACCESS_CODES`, separado por

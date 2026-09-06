@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { codigo, fechaCorta, tiempoTexto, type Episodio } from "@/lib/episodes";
+import { enIntro, type Marca, type Marcas } from "@/lib/marcas";
 import { reanudable, useProgreso } from "@/lib/progress";
 
 type Props = { ep: Episodio; sig: Episodio | null; ant: Episodio | null };
@@ -11,6 +12,8 @@ type Fase = "cargando" | "elegir" | "viendo" | "terminado" | "error";
 
 const CADA_MS = 5000;
 const SEGUNDOS_PARA_SIGUIENTE = 12;
+/** La portada se captura sola pasado este punto del capítulo, si no hay una. */
+const PORTADA_EN = 0.2;
 
 function describirError(v: HTMLVideoElement): string {
   switch (v.error?.code) {
@@ -39,6 +42,22 @@ export default function Reproductor({ ep, sig, ant }: Props) {
   const [cuenta, setCuenta] = useState<number | null>(null);
   const [duracion, setDuracion] = useState(0);
   const [sinSesion, setSinSesion] = useState(false);
+
+  // Anotaciones del capítulo: intro y portada, compartidas vía el bucket.
+  const [marca, setMarca] = useState<Marca>({});
+  const [marcasCargadas, setMarcasCargadas] = useState(false);
+  const [mostrarSaltear, setMostrarSaltear] = useState(false);
+  const [introInicio, setIntroInicio] = useState<number | null>(null);
+  const [introFin, setIntroFin] = useState<number | null>(null);
+  const [avisoAjustes, setAvisoAjustes] = useState<string | null>(null);
+  const [guardando, setGuardando] = useState(false);
+
+  // El video se pide en modo CORS para poder capturar cuadros. Si el bucket no
+  // tiene la política CORS, la primera carga falla y se vuelve a pedir sin CORS.
+  const [conCors, setConCors] = useState(true);
+  const probadoSinCors = useRef(false);
+  const capturaIntentada = useRef(false);
+
   /** true desde que la persona eligió ver: antes de eso no se guarda nada, para no pisar el progreso con 0. */
   const empezo = useRef(false);
   const ultimoReintento = useRef(0);
@@ -52,6 +71,27 @@ export default function Reproductor({ ep, sig, ant }: Props) {
     guardar(ep.id, v.currentTime, v.duration);
     ultimoGuardado.current = Date.now();
   }, [ep.id, guardar]);
+
+  // Anotaciones: una consulta al montar.
+  useEffect(() => {
+    let vivo = true;
+    fetch("/api/marcas", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((m: Marcas) => {
+        if (!vivo) return;
+        const mia = m?.[ep.id] ?? {};
+        setMarca(mia);
+        setIntroInicio(mia.intro?.[0] ?? null);
+        setIntroFin(mia.intro?.[1] ?? null);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (vivo) setMarcasCargadas(true);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [ep.id]);
 
   // Cuando tenemos progreso y metadata, decidimos qué ofrecer.
   useEffect(() => {
@@ -138,6 +178,50 @@ export default function Reproductor({ ep, sig, ant }: Props) {
     return () => clearTimeout(t);
   }, [fase, cuenta, sig, router]);
 
+  // Cuando se apaga el modo CORS hay que volver a cargar el video sin el atributo.
+  useEffect(() => {
+    if (conCors) return;
+    const v = video.current;
+    if (!v) return;
+    const t = v.currentTime;
+    if (t > 0) v.addEventListener("loadedmetadata", () => { v.currentTime = t; }, { once: true });
+    v.load();
+  }, [conCors]);
+
+  const saltearIntro = useCallback(() => {
+    const v = video.current;
+    if (!v || !marca.intro) return;
+    v.currentTime = marca.intro[1];
+    setMostrarSaltear(false);
+  }, [marca.intro]);
+
+  /** Dibuja el cuadro actual en un canvas y lo guarda como portada. */
+  const capturarPortada = useCallback(async (): Promise<string | null> => {
+    const v = video.current;
+    if (!v) return "No hay video.";
+    if (!conCors) return "Para guardar portadas el bucket necesita la política CORS (está en la página subir).";
+    if (v.readyState < 2 || !v.videoWidth) return "Esperá a que se vea la imagen.";
+    try {
+      const ancho = Math.min(640, v.videoWidth);
+      const alto = Math.round((ancho * v.videoHeight) / v.videoWidth);
+      const canvas = document.createElement("canvas");
+      canvas.width = ancho;
+      canvas.height = alto;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return "El navegador no dejó dibujar el cuadro.";
+      ctx.drawImage(v, 0, 0, ancho, alto);
+      const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.82));
+      if (!blob) return "No pude armar la imagen.";
+      const res = await fetch(`/api/arte/${ep.id}`, { method: "POST", headers: { "Content-Type": "image/jpeg" }, body: blob });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) return d.error ?? `El sitio respondió ${res.status}.`;
+      setMarca((m) => ({ ...m, arte: d.arte }));
+      return null;
+    } catch {
+      return "El navegador no dejó leer el cuadro: el video vino sin permiso CORS.";
+    }
+  }, [ep.id, conCors]);
+
   // Atajos de teclado.
   useEffect(() => {
     const alTeclear = (e: KeyboardEvent) => {
@@ -182,6 +266,9 @@ export default function Reproductor({ ep, sig, ant }: Props) {
         case "m":
           v.muted = !v.muted;
           break;
+        case "s":
+          if (mostrarSaltear) saltearIntro();
+          break;
         case "f":
           // Pantalla completa del contenedor, no del <video>: así las capas siguen visibles.
           if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
@@ -207,11 +294,19 @@ export default function Reproductor({ ep, sig, ant }: Props) {
     };
     window.addEventListener("keydown", alTeclear);
     return () => window.removeEventListener("keydown", alTeclear);
-  }, [fase, sig, ant, router, guardarAhora]);
+  }, [fase, sig, ant, router, guardarAhora, mostrarSaltear, saltearIntro]);
 
   const alError = async () => {
     const v = video.current;
     if (!v) return;
+    // Primer intento en modo CORS que falla antes de arrancar: casi seguro el
+    // bucket no tiene la política CORS. Se vuelve a pedir sin CORS (el video
+    // anda igual; sólo no se pueden capturar portadas).
+    if (conCors && !probadoSinCors.current && v.currentTime === 0) {
+      probadoSinCors.current = true;
+      setConCors(false);
+      return;
+    }
     // Si ya venía andando y falla, lo más probable es que la URL firmada
     // haya vencido tras una pausa larga: se recarga (eso pide una firma
     // nueva) y se sigue desde el mismo punto. Como mucho una vez por minuto,
@@ -270,7 +365,52 @@ export default function Reproductor({ ep, sig, ant }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const alAvanzar = () => {
+    const v = video.current;
+    if (!v) return;
+    if (Date.now() - ultimoGuardado.current > CADA_MS) guardarAhora();
+    const dentro = enIntro(marca.intro, v.currentTime);
+    if (dentro !== mostrarSaltear) setMostrarSaltear(dentro);
+    // Portada automática: una vez por visita, pasado el 20 % (y la intro), si no hay.
+    if (
+      marcasCargadas &&
+      !marca.arte &&
+      !capturaIntentada.current &&
+      conCors &&
+      !v.paused &&
+      v.duration &&
+      v.currentTime >= Math.max((marca.intro?.[1] ?? 0) + 20, v.duration * PORTADA_EN)
+    ) {
+      capturaIntentada.current = true;
+      void capturarPortada();
+    }
+  };
+
+  const guardarIntro = async (intro: [number, number] | null) => {
+    setGuardando(true);
+    setAvisoAjustes(null);
+    try {
+      const res = await fetch("/api/marcas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: ep.id, intro }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error ?? `El sitio respondió ${res.status}.`);
+      const mia: Marca = d?.[ep.id] ?? {};
+      setMarca(mia);
+      setIntroInicio(mia.intro?.[0] ?? null);
+      setIntroFin(mia.intro?.[1] ?? null);
+      setAvisoAjustes(intro ? "Intro guardada: el botón para saltearla aparece en todos los navegadores." : "Intro borrada.");
+    } catch (e) {
+      setAvisoAjustes(e instanceof Error ? e.message : "No pude guardar.");
+    } finally {
+      setGuardando(false);
+    }
+  };
+
   const progreso = mapa[ep.id];
+  const introLista = introInicio !== null && introFin !== null && introFin > introInicio;
 
   return (
     <div className="reproductor">
@@ -288,11 +428,10 @@ export default function Reproductor({ ep, sig, ant }: Props) {
           controls
           playsInline
           preload="metadata"
+          crossOrigin={conCors ? "anonymous" : undefined}
           src={`/api/stream/${ep.id}`}
           onLoadedMetadata={(e) => setDuracion(e.currentTarget.duration || 0)}
-          onTimeUpdate={() => {
-            if (Date.now() - ultimoGuardado.current > CADA_MS) guardarAhora();
-          }}
+          onTimeUpdate={alAvanzar}
           onPause={guardarAhora}
           onPlay={() => {
             empezo.current = true;
@@ -309,6 +448,12 @@ export default function Reproductor({ ep, sig, ant }: Props) {
         >
           {ep.sub && <track kind="subtitles" srcLang="es" label="español" src={`/api/stream/${ep.id}/sub`} />}
         </video>
+
+        {mostrarSaltear && fase === "viendo" && (
+          <button className="boton saltear" onClick={saltearIntro} type="button">
+            saltear la intro
+          </button>
+        )}
 
         {fase === "elegir" && guardadoInicial.current !== null && (
           <div className="capa">
@@ -417,6 +562,76 @@ export default function Reproductor({ ep, sig, ant }: Props) {
         )}
       </div>
 
+      <details className="ajustes">
+        <summary>intro y portada</summary>
+        <div className="ajustes__bloque">
+          <div>
+            {marca.intro ? (
+              <>
+                La intro va de <span className="num">{tiempoTexto(marca.intro[0])}</span> a{" "}
+                <span className="num">{tiempoTexto(marca.intro[1])}</span>. Mientras pasa, aparece el botón para saltearla,
+                también con la tecla <kbd>s</kbd>.
+              </>
+            ) : (
+              <>Marcá dónde empieza y termina la intro de este capítulo, una sola vez, y después se puede saltear.</>
+            )}
+          </div>
+          <div className="ajustes__fila">
+            <button
+              className="boton boton--chico"
+              type="button"
+              onClick={() => setIntroInicio(Math.round((video.current?.currentTime ?? 0) * 10) / 10)}
+            >
+              empieza acá
+            </button>
+            <span className="num">{introInicio !== null ? tiempoTexto(introInicio) : "–"}</span>
+            <button
+              className="boton boton--chico"
+              type="button"
+              onClick={() => setIntroFin(Math.round((video.current?.currentTime ?? 0) * 10) / 10)}
+            >
+              termina acá
+            </button>
+            <span className="num">{introFin !== null ? tiempoTexto(introFin) : "–"}</span>
+            <button
+              className="boton boton--chico"
+              type="button"
+              disabled={!introLista || guardando}
+              onClick={() => guardarIntro([introInicio!, introFin!])}
+            >
+              guardar la intro
+            </button>
+            {marca.intro && (
+              <button className="boton boton--chico" type="button" disabled={guardando} onClick={() => guardarIntro(null)}>
+                borrar
+              </button>
+            )}
+          </div>
+          <div className="ajustes__fila">
+            <span>
+              {marca.arte
+                ? "Este capítulo ya tiene portada. Si querés otra, pausá en un buen cuadro y tocá el botón."
+                : conCors
+                  ? "La portada se guarda sola pasado el primer quinto del capítulo. O elegila vos: pausá en un buen cuadro y tocá el botón."
+                  : "Para guardar portadas el bucket necesita la política CORS que muestra la página subir."}
+            </span>
+            <button
+              className="boton boton--chico"
+              type="button"
+              disabled={!conCors}
+              onClick={async () => {
+                setAvisoAjustes(null);
+                const problema = await capturarPortada();
+                setAvisoAjustes(problema ?? "Portada guardada: ya se ve en la portada del sitio.");
+              }}
+            >
+              usar este cuadro de portada
+            </button>
+          </div>
+          {avisoAjustes && <div className="detalle">{avisoAjustes}</div>}
+        </div>
+      </details>
+
       <details className="teclas">
         <summary>teclas</summary>
         <ul>
@@ -437,6 +652,9 @@ export default function Reproductor({ ep, sig, ant }: Props) {
           </li>
           <li>
             <kbd>m</kbd> silencio
+          </li>
+          <li>
+            <kbd>s</kbd> saltear la intro
           </li>
           <li>
             <kbd>f</kbd> pantalla completa

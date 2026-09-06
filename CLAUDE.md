@@ -25,6 +25,12 @@ URL firmada de PUT y el navegador manda el archivo directo a R2. Para eso el
 bucket necesita una política CORS que nombre al sitio; la página la genera.
 Sin esa política, la subida falla en el navegador y la página lo explica.
 
+**El video se pide con `crossorigin="anonymous"`, con retroceso.** Es lo
+que permite dibujar un cuadro en un canvas para la portada. Exige que el
+bucket tenga la política CORS (la misma de `/subir`). Si no la tiene, la
+primera carga falla y el reproductor vuelve a pedir el video sin CORS: se ve
+igual, sólo no hay capturas. No saques ese retroceso.
+
 **Los subtítulos sí pasan por Vercel, a propósito.** `/api/stream/[id]/sub`
 lee el .vtt de R2 y lo devuelve. Un `<track>` sólo acepta archivos del mismo
 origen (o con CORS), así que un redirect a R2 lo bloquearía en silencio. Son
@@ -38,8 +44,13 @@ que el middleware se haya ejecutado. No la "limpies".
 **No hay base de datos.** El código de acceso es la identidad, y sale de la
 variable de entorno `ACCESS_CODES`. La cookie guarda un hash del código, no
 el código: sacar un código de la variable desloguea a esa persona. El
-progreso de reproducción vive en el `localStorage` de cada navegador. Si algo
-parece necesitar una tabla, primero replanteá el feature.
+progreso de reproducción vive en el `localStorage` de cada navegador. Lo
+único compartido entre navegadores son las anotaciones por capítulo (dónde
+está la intro, si hay portada): un JSON chico, `marcas.json`, que vive en el
+bucket al lado de los videos y que el sitio lee y reescribe entero
+(`lib/marcas.ts`, `lib/almacen.ts`). Las portadas son JPEG de ~50 KB en
+`art/<id>.jpg`, capturados por el reproductor. Si algo parece necesitar una
+tabla, primero replanteá el feature.
 
 **Los .mp4 no entran nunca al repo.** Están en `.gitignore`. Las dos
 excepciones, chicas y explícitas, son `public/demo/muestra.mp4` (135 KB) y
@@ -98,7 +109,7 @@ las cuatro variables: no hay un flag que prender.
 ```bash
 npm run dev                      # local en :3000
 npm run build                    # verificar que compila antes de deployar
-npm test                         # tests de auth, r2, mp4 y episodes.json (node --test)
+npm test                         # tests de auth, r2, mp4, marcas y episodes.json (node --test)
 npm run prepare-videos -- <dir>  # ffmpeg: normaliza, cuadros, srt->vtt (requiere ffmpeg)
 npm run upload -- ./listos       # sube a R2 con multipart (requiere las variables)
 npm run demo                     # regenera public/demo/muestra.mp4 (requiere ffmpeg)
@@ -126,6 +137,10 @@ app/ver/[id]/page.tsx     reproductor
 app/estado/page.tsx       estado de la configuración y de cada archivo
 app/subir/page.tsx        subida al bucket desde el navegador -> Subida (client)
 app/api/subir             firma una URL de PUT para un nombre válido
+app/api/marcas            lee y escribe marcas.json (intro por capítulo)
+app/api/arte/[id]         portada JPEG: la devuelve (GET) o la guarda (POST)
+lib/marcas.ts             forma de las anotaciones y validación
+lib/almacen.ts            bucket o carpeta temporal (modo demo)
 app/api/entrar            valida el código y pone la cookie
 app/api/salir             borra la cookie
 app/api/stream/[id]       firma la URL de R2 y redirige (302)
@@ -185,10 +200,12 @@ capítulo tiene una barra menta que se vacía en 12 s. Duraciones de 150 a
 `prefers-reduced-motion` todo se apaga. La cabecera es fija, con fondo
 translúcido y desenfoque.
 
-Las imágenes de los capítulos no son archivos: mientras no haya un cuadro
-real, `Arte.tsx` dibuja la trama diagonal y el número con CSS y la fuente de
-la página. `prepare-videos` puede guardar un cuadro real en `public/art/` y
-anotarlo en el campo `arte` del episodio; ahí la tarjeta lo usa.
+Las imágenes de los capítulos: `Arte.tsx` dibuja siempre la trama diagonal
+y el número con CSS. Encima, con fundido, va la portada si existe: la que
+el reproductor capturó del video (`/api/arte/[id]`, anotada en
+`marcas.json`) o, si alguien corrió `prepare-videos`, la de `public/art/`
+del campo `arte`. El reproductor captura sola una portada pasado el primer
+quinto del capítulo, y tiene un botón para elegir otro cuadro.
 
 ## Textos
 

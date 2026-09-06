@@ -4,12 +4,29 @@ import Link from "next/link";
 import Arte from "@/components/Arte";
 import Tarjeta from "@/components/Tarjeta";
 import { codigo, fechaCorta, tiempoTexto, type Episodio } from "@/lib/episodes";
+import type { Marcas } from "@/lib/marcas";
 import { ultimoEmpezado, useProgreso } from "@/lib/progress";
+import { useEffect, useState } from "react";
 
 type Props = { episodios: Episodio[] };
 
 export default function Biblioteca({ episodios }: Props) {
   const { mapa, listo } = useProgreso();
+  const [marcas, setMarcas] = useState<Marcas>({});
+
+  // Portadas capturadas: una sola consulta, después de montar.
+  useEffect(() => {
+    let vivo = true;
+    fetch("/api/marcas", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((m) => {
+        if (vivo && m && typeof m === "object") setMarcas(m as Marcas);
+      })
+      .catch(() => {});
+    return () => {
+      vivo = false;
+    };
+  }, []);
 
   const temporadas = new Map<number, Episodio[]>();
   for (const e of episodios) {
@@ -38,7 +55,11 @@ export default function Biblioteca({ episodios }: Props) {
         {destacado ? (
           <div className="destacado">
             <Link href={`/ver/${destacado.ep.id}`} aria-label={`ver ${destacado.ep.titulo}`}>
-              <Arte ep={destacado.ep} grande />
+              <Arte
+                ep={destacado.ep}
+                grande
+                foto={marcas[destacado.ep.id]?.arte ? `/api/arte/${destacado.ep.id}?v=${marcas[destacado.ep.id].arte}` : undefined}
+              />
             </Link>
             <div className="destacado__info">
               <span className="muted">
@@ -87,7 +108,7 @@ export default function Biblioteca({ episodios }: Props) {
           </h2>
           <div className="grilla">
             {lista.map((ep, i) => (
-              <Tarjeta key={ep.id} ep={ep} progreso={mapa[ep.id]} indice={i} />
+              <Tarjeta key={ep.id} ep={ep} progreso={mapa[ep.id]} indice={i} arte={marcas[ep.id]?.arte} />
             ))}
           </div>
         </section>

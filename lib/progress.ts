@@ -20,7 +20,7 @@ export const CLAVE = "ft.progreso";
 /** A partir de este porcentaje el capítulo cuenta como visto. */
 export const UMBRAL_VISTO = 0.92;
 /** Menos que esto no vale la pena ofrecer "seguir desde". */
-export const MINIMO_REANUDAR_S = 30;
+export const MINIMO_REANUDAR_S = 15;
 
 export function leerProgreso(): MapaProgreso {
   if (typeof window === "undefined") return {};

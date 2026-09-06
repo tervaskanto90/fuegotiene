@@ -3,9 +3,9 @@ import Arte from "@/components/Arte";
 import { codigo, duracionTexto, fechaCorta, type Episodio } from "@/lib/episodes";
 import type { Progreso } from "@/lib/progress";
 
-type Props = { ep: Episodio; progreso?: Progreso; indice?: number };
+type Props = { ep: Episodio; progreso?: Progreso; indice?: number; arte?: number };
 
-export default function Tarjeta({ ep, progreso, indice = 0 }: Props) {
+export default function Tarjeta({ ep, progreso, indice = 0, arte }: Props) {
   const duracion = ep.duracion || progreso?.d || 0;
   const porcentaje =
     progreso && !progreso.visto && duracion > 0 ? Math.min(100, Math.round((progreso.t / duracion) * 100)) : 0;
@@ -13,7 +13,7 @@ export default function Tarjeta({ ep, progreso, indice = 0 }: Props) {
 
   return (
     <Link href={`/ver/${ep.id}`} className="tarjeta" style={{ "--i": indice } as React.CSSProperties}>
-      <Arte ep={ep}>
+      <Arte ep={ep} foto={arte ? `/api/arte/${ep.id}?v=${arte}` : undefined}>
         <span className="tarjeta__ver" aria-hidden="true">
           {progreso && !progreso.visto && porcentaje > 0 ? "seguir" : "ver"}
         </span>

@@ -44,9 +44,11 @@ capítulo en una compu normal.
 - [ ] `sinopsis` vacía a propósito. Si se quieren, se escriben, se cargan en
       `data/episodes.json` y la tarjeta las muestra (hoy no las lee: agregar
       cuando existan).
-- [ ] Imágenes reales de los capítulos. Hoy es la trama con el número. Si
-      alguien corre `prepare-videos`, guarda un cuadro de cada uno en
-      `public/art/` y lo anota en el campo `arte`.
+- [x] Imágenes de los capítulos: el reproductor las captura solo y las
+      guarda en el bucket (`art/<id>.jpg`). `prepare-videos` sigue pudiendo
+      generar las de `public/art/`, que tienen prioridad si existen.
+- [x] Saltear la intro: se marca una vez por capítulo desde el reproductor
+      y queda en `marcas.json`, en el bucket.
 
 ## Técnicas, para verificar con el primer archivo real
 
@@ -61,6 +63,11 @@ capítulo en una compu normal.
       Cualquier persona con un código puede subir: es un sitio de
       confianza entre conocidos. Si eso molesta, se puede limitar a un
       código concreto.
+- [ ] **Portadas y CORS.** La captura de cuadros pide el video con
+      `crossorigin`, así que depende de la política CORS del bucket. Sin
+      ella el video anda igual (retroceso automático) pero no hay capturas.
+      Probado en local con un R2 simulado; la primera portada real lo
+      confirma.
 - [ ] Vercel elige como rama de producción `main`, después `master`, después
       la rama por defecto del repo. Hoy la única rama es
       `claude/fuego-tiene-project-q2crcs`. Si se renombra a `main` en

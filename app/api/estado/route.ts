@@ -5,6 +5,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { COOKIE_SESION, leerConfig, verificarSesion } from "@/lib/auth";
 import { episodios } from "@/lib/episodes";
+import { esInterno } from "@/lib/marcas";
 import { leerR2, probarBucket, type ObjetoR2 } from "@/lib/r2";
 
 export const runtime = "nodejs";
@@ -57,7 +58,7 @@ export async function GET(req: NextRequest) {
   }
 
   const usados = new Set(episodios.flatMap((e) => [e.key, e.sub, e.arte ? `art/${e.arte}` : ""]).filter(Boolean));
-  const sueltos = prueba.listado.objetos.filter((o) => !usados.has(o.key));
+  const sueltos = prueba.listado.objetos.filter((o) => !usados.has(o.key) && !esInterno(o.key));
   const bien: EstadoBucket = {
     modo: "r2",
     bucket: r2.bucket,

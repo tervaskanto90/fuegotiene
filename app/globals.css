@@ -738,6 +738,61 @@ kbd {
   }
 }
 
+/* portadas capturadas y controles del capítulo */
+.arte__foto {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  z-index: 1;
+  transition: opacity 380ms ease;
+}
+.arte__foto--lista {
+  opacity: 1;
+}
+.saltear {
+  position: absolute;
+  right: 16px;
+  bottom: 72px;
+  z-index: 2;
+  background: rgba(13, 31, 38, 0.88);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  animation: entrar 260ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.ajustes {
+  color: var(--muted);
+  font-size: 14px;
+}
+.ajustes summary {
+  cursor: pointer;
+  list-style: none;
+  display: inline-block;
+}
+.ajustes summary::-webkit-details-marker {
+  display: none;
+}
+.ajustes__bloque {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radio);
+  background: var(--ink-2);
+  display: grid;
+  gap: 10px;
+}
+.ajustes__fila {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.ajustes__fila .num {
+  color: var(--bone);
+}
+
 /* subir */
 .zona {
   display: flex;

@@ -76,11 +76,12 @@ export async function firmarUrl(
 export async function pedirR2(
   config: ConfigR2,
   key: string,
-  init: { method?: "GET" | "HEAD"; headers?: Record<string, string> } = {},
+  init: { method?: "GET" | "HEAD" | "PUT" | "DELETE"; headers?: Record<string, string>; body?: BodyInit } = {},
 ): Promise<Response> {
   return cliente(config).fetch(urlObjeto(config, key).toString(), {
     method: init.method ?? "GET",
     headers: init.headers,
+    body: init.body,
   });
 }
 
