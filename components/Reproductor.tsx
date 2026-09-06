@@ -12,8 +12,9 @@ type Fase = "cargando" | "elegir" | "viendo" | "terminado" | "error";
 
 const CADA_MS = 5000;
 const SEGUNDOS_PARA_SIGUIENTE = 12;
-/** La portada se captura sola pasado este punto del capítulo, si no hay una. */
+/** La portada se captura sola pasado este punto del capítulo (o al minuto, lo que llegue antes), si no hay una. */
 const PORTADA_EN = 0.2;
+const PORTADA_TOPE_S = 60;
 
 function describirError(v: HTMLVideoElement): string {
   switch (v.error?.code) {
@@ -379,7 +380,7 @@ export default function Reproductor({ ep, sig, ant }: Props) {
       conCors &&
       !v.paused &&
       v.duration &&
-      v.currentTime >= Math.max((marca.intro?.[1] ?? 0) + 20, v.duration * PORTADA_EN)
+      v.currentTime >= Math.max((marca.intro?.[1] ?? 0) + 15, Math.min(v.duration * PORTADA_EN, PORTADA_TOPE_S))
     ) {
       capturaIntentada.current = true;
       void capturarPortada();
@@ -612,7 +613,7 @@ export default function Reproductor({ ep, sig, ant }: Props) {
               {marca.arte
                 ? "Este capítulo ya tiene portada. Si querés otra, pausá en un buen cuadro y tocá el botón."
                 : conCors
-                  ? "La portada se guarda sola pasado el primer quinto del capítulo. O elegila vos: pausá en un buen cuadro y tocá el botón."
+                  ? "La portada se guarda sola al minuto de empezar a verlo. O elegila vos: pausá en un buen cuadro y tocá el botón."
                   : "Para guardar portadas el bucket necesita la política CORS que muestra la página subir."}
             </span>
             <button

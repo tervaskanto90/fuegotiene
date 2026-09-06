@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Cabecera from "@/components/Cabecera";
 import Estado from "@/components/Estado";
+import Portadas from "@/components/Portadas";
 import { leerConfig } from "@/lib/auth";
 import { episodios } from "@/lib/episodes";
 import { faltantesR2, leerR2 } from "@/lib/r2";
@@ -50,6 +51,10 @@ export default function PaginaEstado() {
             </dd>
           </dl>
         </section>
+        <Portadas
+          episodios={episodios.map((e) => ({ id: e.id, titulo: e.titulo, temporada: e.temporada, numero: e.numero }))}
+          modo={r2 ? "r2" : "demo"}
+        />
         <Estado episodios={episodios} modo={r2 ? "r2" : "demo"} />
       </main>
     </div>

@@ -204,8 +204,10 @@ Las imágenes de los capítulos: `Arte.tsx` dibuja siempre la trama diagonal
 y el número con CSS. Encima, con fundido, va la portada si existe: la que
 el reproductor capturó del video (`/api/arte/[id]`, anotada en
 `marcas.json`) o, si alguien corrió `prepare-videos`, la de `public/art/`
-del campo `arte`. El reproductor captura sola una portada pasado el primer
-quinto del capítulo, y tiene un botón para elegir otro cuadro.
+del campo `arte`. El reproductor captura sola una portada al minuto de
+empezar, y tiene un botón para elegir otro cuadro. `/estado` tiene un botón
+que genera las que faltan (`components/Portadas.tsx`): carga cada video en
+un `<video>` oculto, busca un momento pasado el arranque y captura.
 
 ## Textos
 
