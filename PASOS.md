@@ -153,12 +153,13 @@ falta configurar nada más.
   **termina acá**, y **guardar la intro**. Es una vez por capítulo y vale
   para todos los que entren al sitio: mientras pasa la intro aparece el
   botón para saltearla, también con la tecla `s`.
-- **Portadas**: en **estado**, arriba de la tabla, el botón **generar las
-  que faltan** toma un cuadro de cada capítulo y lo guarda, de a uno, sin
-  que tengas que mirarlos. Además el reproductor guarda sola la portada al
-  minuto de empezar un capítulo que no la tenga, y si preferís otro cuadro,
-  pausá donde te guste y tocá **usar este cuadro de portada**. Todo esto
-  necesita la política CORS del bucket, la misma que la página subir.
+- **Portadas**: se generan solas. La primera vez que alguien abre la
+  portada del sitio, el servidor saca un cuadro de cada capítulo (pasado el
+  arranque, o después de la intro si está marcada) y lo guarda; tardan unos
+  segundos en aparecer y después quedan. En **estado** hay un botón para
+  generarlas de a una y ver si alguna falla. Si preferís otro cuadro para
+  algún capítulo, en el reproductor pausá donde te guste y tocá **usar este
+  cuadro de portada**; eso sí necesita la política CORS del bucket.
 
 ## Después
 

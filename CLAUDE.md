@@ -18,7 +18,9 @@ alguna, avisá antes en vez de hacerlo al pasar.
 devuelve un 302. El navegador le pide los bytes directo a R2. Convertir esa
 ruta en un proxy (leer el objeto y devolverlo en el response) rompe los Range
 requests, mata el seek de la barra y quema ancho de banda de Vercel. Es el
-error más fácil de cometer acá.
+error más fácil de cometer acá. Las dos excepciones leen pedazos, no el
+video: `/api/estado/[id]` lee la cabecera y el índice para el diagnóstico, y
+`/api/arte/[id]` lee unos MB alrededor de un cuadro para generar la portada.
 
 **Las subidas tampoco pasan por Vercel.** `/subir` pide a `/api/subir` una
 URL firmada de PUT y el navegador manda el archivo directo a R2. Para eso el
@@ -26,10 +28,11 @@ bucket necesita una política CORS que nombre al sitio; la página la genera.
 Sin esa política, la subida falla en el navegador y la página lo explica.
 
 **El video se pide con `crossorigin="anonymous"`, con retroceso.** Es lo
-que permite dibujar un cuadro en un canvas para la portada. Exige que el
-bucket tenga la política CORS (la misma de `/subir`). Si no la tiene, la
-primera carga falla y el reproductor vuelve a pedir el video sin CORS: se ve
-igual, sólo no hay capturas. No saques ese retroceso.
+que permite dibujar un cuadro en un canvas cuando alguien elige una portada
+a mano desde el reproductor. Exige que el bucket tenga la política CORS (la
+misma de `/subir`). Si no la tiene, la primera carga falla y el reproductor
+vuelve a pedir el video sin CORS: se ve igual, sólo no hay capturas manuales.
+No saques ese retroceso. Las portadas automáticas no dependen de esto.
 
 **Los subtítulos sí pasan por Vercel, a propósito.** `/api/stream/[id]/sub`
 lee el .vtt de R2 y lo devuelve. Un `<track>` sólo acepta archivos del mismo
@@ -204,10 +207,17 @@ Las imágenes de los capítulos: `Arte.tsx` dibuja siempre la trama diagonal
 y el número con CSS. Encima, con fundido, va la portada si existe: la que
 el reproductor capturó del video (`/api/arte/[id]`, anotada en
 `marcas.json`) o, si alguien corrió `prepare-videos`, la de `public/art/`
-del campo `arte`. El reproductor captura sola una portada al minuto de
-empezar, y tiene un botón para elegir otro cuadro. `/estado` tiene un botón
-que genera las que faltan (`components/Portadas.tsx`): carga cada video en
-un `<video>` oculto, busca un momento pasado el arranque y captura.
+del campo `arte`. Las portadas las genera el servidor la primera vez que
+alguien las pide (`/api/arte/[id]`, `lib/cuadro.ts`): lee el índice del mp4
+para saber la duración, elige un momento (20 s después de la intro si está
+marcada; si no, el 12 % del capítulo, entre 1 y 5 minutos) y le pide ese
+cuadro a ffmpeg. ffmpeg viene del paquete `@ffmpeg-installer/ffmpeg`, se deja
+fuera del bundle (`serverExternalPackages`) y se incluye en la función con
+`outputFileTracingIncludes`. Como ese binario estático no resuelve nombres
+de dominio, no se le da la URL de R2: un servidor HTTP mínimo en 127.0.0.1
+reenvía los Range firmados por Node. `/estado` tiene un botón que las pide
+de a una para ver si alguna falla, y el reproductor permite elegir otro
+cuadro a mano.
 
 ## Textos
 

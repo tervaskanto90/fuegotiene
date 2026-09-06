@@ -13,8 +13,11 @@ type Props = { episodios: Episodio[] };
 export default function Biblioteca({ episodios }: Props) {
   const { mapa, listo } = useProgreso();
   const [marcas, setMarcas] = useState<Marcas>({});
+  const [marcasListas, setMarcasListas] = useState(false);
 
-  // Portadas capturadas: una sola consulta, después de montar.
+  // Anotaciones (versión de cada portada): una sola consulta, después de
+  // montar. Las imágenes se piden recién con esto resuelto, para que la URL
+  // no cambie a mitad de carga.
   useEffect(() => {
     let vivo = true;
     fetch("/api/marcas", { cache: "no-store" })
@@ -22,11 +25,16 @@ export default function Biblioteca({ episodios }: Props) {
       .then((m) => {
         if (vivo && m && typeof m === "object") setMarcas(m as Marcas);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (vivo) setMarcasListas(true);
+      });
     return () => {
       vivo = false;
     };
   }, []);
+
+  const fotoDe = (id: string) => (marcasListas ? `/api/arte/${id}${marcas[id]?.arte ? `?v=${marcas[id].arte}` : ""}` : undefined);
 
   const temporadas = new Map<number, Episodio[]>();
   for (const e of episodios) {
@@ -58,7 +66,7 @@ export default function Biblioteca({ episodios }: Props) {
               <Arte
                 ep={destacado.ep}
                 grande
-                foto={marcas[destacado.ep.id]?.arte ? `/api/arte/${destacado.ep.id}?v=${marcas[destacado.ep.id].arte}` : undefined}
+                foto={fotoDe(destacado.ep.id)}
               />
             </Link>
             <div className="destacado__info">
@@ -108,7 +116,7 @@ export default function Biblioteca({ episodios }: Props) {
           </h2>
           <div className="grilla">
             {lista.map((ep, i) => (
-              <Tarjeta key={ep.id} ep={ep} progreso={mapa[ep.id]} indice={i} arte={marcas[ep.id]?.arte} />
+              <Tarjeta key={ep.id} ep={ep} progreso={mapa[ep.id]} indice={i} foto={fotoDe(ep.id)} />
             ))}
           </div>
         </section>

@@ -2,15 +2,17 @@
 // y en la carpeta temporal del sistema en modo demo (se pierde al reiniciar,
 // alcanza para probar). Sólo se usa desde rutas de servidor.
 
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { leerR2, pedirR2, type ConfigR2 } from "@/lib/r2";
+import { leerR2, listarObjetos, pedirR2, type ConfigR2 } from "@/lib/r2";
 
 export type Almacen = {
   modo: "r2" | "demo";
   leerBytes(key: string): Promise<Uint8Array | null>;
   escribirBytes(key: string, datos: Uint8Array, tipo: string): Promise<void>;
+  /** keys que empiezan con el prefijo (hasta unos cientos) */
+  listar(prefijo: string): Promise<string[]>;
 };
 
 function almacenR2(config: ConfigR2): Almacen {
@@ -25,6 +27,9 @@ function almacenR2(config: ConfigR2): Almacen {
     async escribirBytes(key, datos, tipo) {
       const res = await pedirR2(config, key, { method: "PUT", body: datos as BodyInit, headers: { "Content-Type": tipo } });
       if (!res.ok) throw new Error(`R2 respondió ${res.status} al guardar ${key}.`);
+    },
+    async listar(prefijo) {
+      return (await listarObjetos(config, prefijo)).objetos.map((o) => o.key);
     },
   };
 }
@@ -44,6 +49,14 @@ function almacenDemo(): Almacen {
     async escribirBytes(key, datos) {
       await mkdir(carpeta, { recursive: true });
       await writeFile(ruta(key), datos);
+    },
+    async listar(prefijo) {
+      try {
+        const marca = prefijo.replace(/\//g, "__");
+        return (await readdir(carpeta)).filter((n) => n.startsWith(marca)).map((n) => n.replace(/__/g, "/"));
+      } catch {
+        return [];
+      }
     },
   };
 }

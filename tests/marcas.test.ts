@@ -43,3 +43,13 @@ test("enIntro, keyArte y esInterno", () => {
   assert.equal(keyArte("s01e01"), "art/s01e01.jpg");
   assert.ok(esInterno("marcas.json") && esInterno("art/s01e01.jpg") && !esInterno("s01e01.mp4"));
 });
+
+test("elegirMomento: después de la intro, o pasado el arranque, siempre dentro del video", async () => {
+  const { elegirMomento } = await import("../lib/cuadro.ts");
+  assert.equal(elegirMomento(2700, undefined), 300);
+  assert.equal(elegirMomento(600, undefined), 72);
+  assert.equal(elegirMomento(2700, [100, 160]), 180);
+  assert.equal(elegirMomento(20, undefined), 10);
+  assert.equal(elegirMomento(null, undefined), 60);
+  assert.equal(elegirMomento(50, [10, 48]), 25);
+});

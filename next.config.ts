@@ -3,6 +3,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // ffmpeg viene como binario dentro de node_modules: no se empaqueta con
+  // webpack y se incluye entero en la función que genera portadas.
+  serverExternalPackages: ["@ffmpeg-installer/ffmpeg", "@ffmpeg-installer/linux-x64"],
+  outputFileTracingIncludes: {
+    "/api/arte/**": ["./node_modules/@ffmpeg-installer/linux-x64/**/*"],
+  },
   async headers() {
     return [
       {

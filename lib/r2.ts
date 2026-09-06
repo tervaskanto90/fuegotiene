@@ -76,12 +76,13 @@ export async function firmarUrl(
 export async function pedirR2(
   config: ConfigR2,
   key: string,
-  init: { method?: "GET" | "HEAD" | "PUT" | "DELETE"; headers?: Record<string, string>; body?: BodyInit } = {},
+  init: { method?: "GET" | "HEAD" | "PUT" | "DELETE"; headers?: Record<string, string>; body?: BodyInit; signal?: AbortSignal } = {},
 ): Promise<Response> {
   return cliente(config).fetch(urlObjeto(config, key).toString(), {
     method: init.method ?? "GET",
     headers: init.headers,
     body: init.body,
+    signal: init.signal,
   });
 }
 
@@ -140,6 +141,18 @@ export function revisarConfigR2(config: ConfigR2): string | null {
     return `R2_SECRET_ACCESS_KEY tiene que ser el Secret Access Key del token, 64 letras y números; ahora tiene ${config.secretAccessKey.length} caracteres.`;
   }
   return null;
+}
+
+/** Lista objetos del bucket, opcionalmente por prefijo. Lanza si R2 no responde bien. */
+export async function listarObjetos(config: ConfigR2, prefijo = "", maximo = 500): Promise<Listado> {
+  const url = new URL(`https://${config.accountId}.r2.cloudflarestorage.com`);
+  url.pathname = "/" + encodeURIComponent(config.bucket);
+  url.searchParams.set("list-type", "2");
+  url.searchParams.set("max-keys", String(maximo));
+  if (prefijo) url.searchParams.set("prefix", prefijo);
+  const res = await cliente(config).fetch(url.toString(), { method: "GET" });
+  if (!res.ok) throw new Error(`R2 respondió ${res.status} al listar el bucket.`);
+  return parsearListado(await res.text());
 }
 
 /** Prueba el bucket con un listado corto y explica qué falla, si falla. */

@@ -63,11 +63,16 @@ capítulo en una compu normal.
       Cualquier persona con un código puede subir: es un sitio de
       confianza entre conocidos. Si eso molesta, se puede limitar a un
       código concreto.
-- [ ] **Portadas y CORS.** La captura de cuadros pide el video con
-      `crossorigin`, así que depende de la política CORS del bucket. Sin
-      ella el video anda igual (retroceso automático) pero no hay capturas.
-      Probado en local con un R2 simulado; la primera portada real lo
-      confirma.
+- [ ] **Portadas con ffmpeg en Vercel.** Se generan en el servidor con el
+      binario de `@ffmpeg-installer/ffmpeg`, incluido en la función por
+      `outputFileTracingIncludes`. Probado en local; en Vercel hay que
+      confirmar que el binario viaja con permiso de ejecución (si no, se
+      copia a /tmp solo) y que la función termina dentro de los 60 s. Si
+      falla, el botón de /estado muestra el motivo exacto.
+- [ ] **Portada manual y CORS.** Elegir un cuadro desde el reproductor pide
+      el video con `crossorigin` y depende de la política CORS del bucket.
+      Sin ella el video anda igual (retroceso automático) pero no hay
+      captura manual.
 - [ ] Vercel elige como rama de producción `main`, después `master`, después
       la rama por defecto del repo. Hoy la única rama es
       `claude/fuego-tiene-project-q2crcs`. Si se renombra a `main` en
