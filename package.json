@@ -1,0 +1,32 @@
+{
+  "name": "fuego-tiene",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sitio privado para ver Los Simuladores desde archivos propios.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "node --test tests/*.test.ts",
+    "prepare-videos": "node scripts/prepare-videos.mjs",
+    "upload": "node scripts/upload.mjs",
+    "demo": "node scripts/demo.mjs"
+  },
+  "dependencies": {
+    "aws4fetch": "^1.0.20",
+    "next": "15.5.25",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-s3": "^3.1127.0",
+    "@aws-sdk/lib-storage": "^3.1127.0",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,31 @@
+# dependencias y build
+node_modules/
+.next/
+out/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
+# secretos: nunca al repo
+.env
+.env.local
+.env.*.local
+
+# los capítulos no entran al repo (van a R2)
+*.mp4
+*.mkv
+*.avi
+*.m4v
+*.srt
+*.vtt
+listos/
+
+# excepciones chicas: el clip de muestra y los archivos de prueba del parser
+!public/demo/muestra.mp4
+!public/demo/muestra.vtt
+!tests/fixtures/*.mp4
+!tests/fixtures/*.avi
+!tests/fixtures/*.mkv
+
+.DS_Store
+Thumbs.db
