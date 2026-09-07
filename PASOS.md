@@ -148,11 +148,17 @@ falta configurar nada más.
 - **Seguir donde quedaste**: cada navegador recuerda dónde dejaste cada
   capítulo (a partir de 15 segundos vistos). La portada ofrece "seguir desde"
   con el último que quedó a medias.
-- **Saltear la intro**: en el reproductor, abajo del video, abrí "intro y
-  portada". Cuando empiece la intro tocá **empieza acá**, cuando termine
-  **termina acá**, y **guardar la intro**. Es una vez por capítulo y vale
-  para todos los que entren al sitio: mientras pasa la intro aparece el
-  botón para saltearla, también con la tecla `s`.
+- **El reproductor** ocupa la ventana entera, como en las plataformas. Los
+  controles se esconden solos mientras el video anda y vuelven al mover el
+  mouse o tocar la pantalla. Un clic pausa y sigue, doble clic pone pantalla
+  completa, la flecha de arriba vuelve a los capítulos. Al entrar a un
+  capítulo que dejaste a medias arranca solo desde ahí y avisa; si el
+  navegador no deja arrancar solo, queda el botón grande de play.
+- **Saltear la intro**: en el reproductor, el engranaje abre un panel. Cuando
+  empiece la intro tocá **empieza acá**, cuando termine **termina acá**, y
+  **guardar la intro**. Es una vez por capítulo y vale para todos los que
+  entren al sitio: mientras pasa la intro aparece el botón para saltearla,
+  también con la tecla `s`, y la barra la marca con un tramo más claro.
 - **Portadas**: se generan solas. La primera vez que alguien abre la
   portada del sitio, el servidor saca un cuadro de cada capítulo (pasado el
   arranque, o después de la intro si está marcada) y lo guarda; tardan unos
@@ -160,6 +166,38 @@ falta configurar nada más.
   generarlas de a una y ver si alguna falla. Si preferís otro cuadro para
   algún capítulo, en el reproductor pausá donde te guste y tocá **usar este
   cuadro de portada**; eso sí necesita la política CORS del bucket.
+
+## Si un capítulo se escucha pero no se ve
+
+Pasa cuando el video viene en un formato que el navegador no decodifica
+(DivX/Xvid, H.264 de 10 bits, HEVC); `/estado` lo dice en la fila del
+capítulo, y el reproductor lo avisa arriba del video. Hay que convertirlo, y
+lo puede hacer GitHub por vos, con un botón. Una sola vez hay que darle los
+mismos cuatro datos de R2 que tiene Vercel:
+
+1. En **github.com**, entrá al repo, pestaña **Settings**, en el menú de la
+   izquierda **Secrets and variables**, **Actions**.
+2. **New repository secret**, cuatro veces, con los mismos nombres y
+   valores que en Vercel: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`,
+   `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`.
+
+Y para convertir un capítulo:
+
+1. Pestaña **Actions** del repo. A la izquierda, **Convertir capítulo**.
+2. Botón **Run workflow**, a la derecha. Escribí el nombre del archivo, por
+   ejemplo `s02e05.mp4`, dejá tildado "respaldar" y tocá **Run workflow**.
+3. Aparece una corrida en la lista; tocala para ver el progreso. Tarda entre
+   10 y 30 minutos: baja el archivo, guarda el original como
+   `originales/s02e05.mp4`, lo convierte a H.264 + AAC con el índice al
+   principio, y lo sube con el mismo nombre.
+4. Cuando termina en verde, entrá a `/estado`, **revisar de nuevo**: el
+   capítulo tiene que decir **listo**. Abrilo y listo. Si la portada quedó
+   fea, en el reproductor, engranaje, **usar este cuadro de portada**.
+
+GitHub regala 2000 minutos por mes en repos privados, así que hay para
+convertir la serie entera si hiciera falta. El respaldo en `originales/`
+ocupa lugar en el bucket; cuando estés seguro, lo podés borrar desde el
+panel de Cloudflare.
 
 ## Después
 

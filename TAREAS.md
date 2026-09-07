@@ -11,22 +11,16 @@
 
 ## Si hay que convertir
 
-`/estado` dice qué falla en cada archivo. Las opciones, de la más simple a la
-menos, sabiendo que en la compu del dueño no se puede instalar nada:
+`/estado` dice qué falla en cada archivo. El camino es el workflow
+**Convertir capítulo** de GitHub Actions (ver `PASOS.md`): sin instalar
+nada, con los cuatro secretos de R2 cargados en el repo. Alternativas para
+quien sí tenga Node y ffmpeg: `npm run prepare-videos -- <carpeta>` sobre
+los archivos locales, o `node scripts/convertir.mjs entrada salida.mp4`.
 
-1. Que alguien con ffmpeg corra `npm run prepare-videos -- <carpeta>` una
-   sola vez sobre los 24 y suba la carpeta `listos/` con Cyberduck (o con
-   `npm run upload`). El script copia el video sin recomprimir cuando ya es
-   H.264, pasa el audio a AAC y agrega `+faststart`.
-2. Un ffmpeg "portable" (un .zip que se descomprime y se usa sin instalador)
-   en la compu personal, si la lista blanca lo permite. Node también existe
-   en versión portable.
-3. Un programa con ventanas tipo HandBrake, que hace lo mismo pero
-   recomprime siempre. Más lento, pero sin terminal.
-
-Si los archivos son `.avi` (DivX/Xvid, muy común en rips de 2002) la
-conversión es inevitable, y es recompresión completa: contá una hora por
-capítulo en una compu normal.
+- [ ] El 2x05 ("El vengador infantil") tiene el video en un formato que el
+      navegador no decodifica: se escucha y no se ve. Convertirlo con el
+      workflow. Primera corrida real del workflow: confirmar que los
+      secretos están y que el runner tiene ffmpeg.
 
 ## Datos
 

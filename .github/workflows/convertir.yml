@@ -1,0 +1,70 @@
+# Convierte un capítulo del bucket para que lo reproduzca el navegador, sin
+# instalar nada en ninguna compu: corre en una máquina de GitHub con ffmpeg.
+#
+# Cómo usarlo: pestaña Actions del repo, "Convertir capítulo", "Run workflow",
+# escribir el nombre del archivo (por ejemplo s02e05.mp4) y correr. Tarda
+# entre 10 y 30 minutos según el capítulo. Necesita cuatro secretos del repo
+# (Settings, Secrets and variables, Actions): R2_ACCOUNT_ID,
+# R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY y R2_BUCKET, los mismos de Vercel.
+
+name: Convertir capítulo
+
+on:
+  workflow_dispatch:
+    inputs:
+      archivo:
+        description: "Nombre del archivo en el bucket (por ejemplo s02e05.mp4)"
+        required: true
+        type: string
+      respaldar:
+        description: "Guardar el original como originales/<archivo> antes de reemplazarlo"
+        required: true
+        type: boolean
+        default: true
+
+jobs:
+  convertir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Dependencias mínimas
+        run: npm install --no-save --no-audit --no-fund aws4fetch
+
+      - name: ffmpeg
+        run: |
+          if ! command -v ffmpeg >/dev/null; then sudo apt-get update && sudo apt-get install -y ffmpeg; fi
+          ffmpeg -version | head -1
+
+      - name: Bajar el original
+        run: node scripts/r2.mjs bajar "${{ inputs.archivo }}" entrada.bin
+
+      - name: Respaldar el original en el bucket
+        if: ${{ inputs.respaldar }}
+        run: |
+          if node scripts/r2.mjs existe "originales/${{ inputs.archivo }}"; then
+            echo "ya había un respaldo, no se toca"
+          else
+            node scripts/r2.mjs subir entrada.bin "originales/${{ inputs.archivo }}"
+          fi
+
+      - name: Convertir
+        run: node scripts/convertir.mjs entrada.bin salida.mp4
+
+      - name: Subir el convertido con el mismo nombre
+        run: node scripts/r2.mjs subir salida.mp4 "${{ inputs.archivo }}"
+
+      - name: Resumen
+        run: |
+          echo "Listo. Abrí /estado en el sitio y tocá 'revisar de nuevo': el capítulo tiene que decir 'listo'." >> "$GITHUB_STEP_SUMMARY"
+          echo "Si la portada del capítulo quedó vieja, en el reproductor: intro y portada, usar este cuadro de portada." >> "$GITHUB_STEP_SUMMARY"

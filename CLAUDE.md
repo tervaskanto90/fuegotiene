@@ -72,7 +72,11 @@ principal.
 
 **No des por sentado que ffmpeg está disponible.** Para saber si un archivo
 hace falta convertirlo no se corre ffprobe: se sube uno solo con Cyberduck y
-se mira `/estado`.
+se mira `/estado`. Si hay que convertir, lo hace el workflow **Convertir
+capítulo** (`.github/workflows/convertir.yml`) en una máquina de GitHub:
+baja el archivo del bucket, respalda el original en `originales/`, lo pasa a
+H.264 + AAC con `+faststart` y lo sube con el mismo nombre. El dueño lo
+dispara desde la pestaña Actions con el nombre del archivo.
 
 ## La página /estado reemplaza a ffprobe
 
@@ -153,12 +157,17 @@ app/api/estado/[id]       HEAD + lectura parcial del archivo -> JSON
 components/Biblioteca.tsx destacado + grilla por temporada
 components/Tarjeta.tsx    una tarjeta de capítulo
 components/Arte.tsx       imagen del capítulo o trama con el número
-components/Reproductor.tsx video, progreso, atajos, siguiente, errores
+components/Reproductor.tsx reproductor a pantalla entera: controles propios,
+                          progreso, intro, portada, atajos, siguiente, errores
+components/Iconos.tsx     íconos SVG del reproductor
 components/Estado.tsx     tabla de /estado, revisa de a tres
 components/Subida.tsx     cola de subidas con progreso y ayuda de CORS
 components/Cabecera.tsx   wordmark, secciones, salir
 data/episodes.json        títulos, fechas, duraciones, keys de R2
-scripts/                  Node (.mjs), opcionales
+scripts/                  Node (.mjs), opcionales; r2.mjs y convertir.mjs
+                          los usa el workflow de GitHub Actions
+.github/workflows/        "Convertir capítulo": ffmpeg en GitHub, sin instalar
+                          nada; secretos R2_* del repo
 tests/                    node --test, con fixtures generados con ffmpeg
 ```
 
@@ -193,6 +202,14 @@ Reglas que ya se aplicaron y conviene sostener: el acento ladrillo se usa en
 un solo lugar por pantalla (el botón principal), los radios son de 3 px en
 todo, y no hay transform en hover (solo cambia el borde y el brillo). El
 wordmark va en caja baja: es una frase hablada, no una placa.
+
+**El reproductor** (`/ver/[id]`) no tiene cabecera ni márgenes: ocupa la
+ventana entera, fondo negro, con controles propios sobre el video que se
+esconden a los 3 s (`.cine`). Reanuda solo desde el progreso guardado con
+un toast para empezar de nuevo, arranca solo si el navegador lo permite y
+si no muestra el botón grande. El engranaje abre un panel con la intro, la
+portada y las teclas. Progreso en menta; el botón ladrillo sólo aparece en
+las capas de fin de capítulo y de error.
 
 **Movimiento.** `app/template.tsx` se vuelve a montar en cada navegación y
 hace entrar la página con un fundido corto (`.pagina`). Las tarjetas de la
