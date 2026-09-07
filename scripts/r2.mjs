@@ -85,6 +85,12 @@ async function existe(key) {
   return res.ok;
 }
 
+async function borrar(key) {
+  const res = await cliente.fetch(urlDe(key), { method: "DELETE" });
+  if (!res.ok && res.status !== 204) throw new Error(`R2 respondió ${res.status} al borrar ${key}`);
+  console.log(`borrado: ${key}`);
+}
+
 const [, , orden, a, b] = process.argv;
 try {
   if (orden === "bajar" && a && b) await bajar(a, b);
@@ -93,8 +99,10 @@ try {
     const hay = await existe(a);
     console.log(hay ? "existe" : "no existe");
     process.exit(hay ? 0 : 2);
+  } else if (orden === "borrar" && a) {
+    await borrar(a);
   } else {
-    console.error("Uso: node scripts/r2.mjs bajar <key> <archivo> | subir <archivo> <key> | existe <key>");
+    console.error("Uso: node scripts/r2.mjs bajar <key> <archivo> | subir <archivo> <key> | existe <key> | borrar <key>");
     process.exit(1);
   }
 } catch (e) {

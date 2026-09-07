@@ -2,8 +2,10 @@
 # instalar nada en ninguna compu: corre en una máquina de GitHub con ffmpeg.
 #
 # Cómo usarlo: pestaña Actions del repo, "Convertir capítulo", "Run workflow",
-# escribir el nombre del archivo (por ejemplo s02e05.mp4) y correr. Tarda
-# entre 10 y 30 minutos según el capítulo. Necesita cuatro secretos del repo
+# escribir el nombre del archivo (por ejemplo s02e05.mp4, o s01e05.avi) y
+# correr. Tarda entre 5 y 30 minutos según el capítulo. El resultado se sube
+# siempre como .mp4; si el original tenía otra extensión y se respaldó, se
+# borra del bucket para que no quede suelto. Necesita cuatro secretos del repo
 # (Settings, Secrets and variables, Actions): R2_ACCOUNT_ID,
 # R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY y R2_BUCKET, los mismos de Vercel.
 
@@ -61,8 +63,20 @@ jobs:
       - name: Convertir
         run: node scripts/convertir.mjs entrada.bin salida.mp4
 
-      - name: Subir el convertido con el mismo nombre
-        run: node scripts/r2.mjs subir salida.mp4 "${{ inputs.archivo }}"
+      - name: Nombre del resultado
+        id: nombre
+        run: |
+          archivo="${{ inputs.archivo }}"
+          destino="${archivo%.*}.mp4"
+          echo "destino=$destino" >> "$GITHUB_OUTPUT"
+          echo "El resultado se sube como $destino"
+
+      - name: Subir el convertido
+        run: node scripts/r2.mjs subir salida.mp4 "${{ steps.nombre.outputs.destino }}"
+
+      - name: Borrar el original si cambió de extensión
+        if: ${{ inputs.respaldar && inputs.archivo != steps.nombre.outputs.destino }}
+        run: node scripts/r2.mjs borrar "${{ inputs.archivo }}"
 
       - name: Resumen
         run: |
