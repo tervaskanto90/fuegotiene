@@ -55,6 +55,18 @@ El middleware la mira en cada pedido y `/api/stream/[id]` la vuelve a mirar
 por su cuenta. Si vas a tocar `lib/simulacro.ts`, tené presente que ahora los
 puntajes son una puerta: bajarle el puntaje a un plan bueno deja gente afuera.
 
+**Tres niveles de acceso, no dos.** Un código común tiene que ganarse los
+capítulos en el juego. Los de `CODIGOS_LIBRES` los ven sin jugar, y nada más.
+Los de `CODIGOS_DUENO` además entran a `/estado` y `/subir`: mirar el bucket y
+escribir en él es del dueño del sitio, no de cualquiera que pase el juego.
+Cada nivel implica el de abajo, y estar nombrado en cualquiera de las tres
+variables ya alcanza para entrar: `leerConfig` las suma. El middleware tiene
+la lista `SOLO_DUENO`, y `/api/subir` y `/api/estado` lo vuelven a chequear
+por su cuenta, porque una firma de escritura sobre el bucket no depende de
+que el middleware haya corrido. `/api/estado/[id]` queda afuera de esa lista
+a propósito: es el diagnóstico de un capítulo y el reproductor lo usa para
+explicar por qué un video no anda, en la pantalla de cualquiera.
+
 **No hay base de datos.** El código de acceso es la identidad, y sale de la
 variable de entorno `ACCESS_CODES`. La cookie guarda un hash del código, no
 el código: sacar un código de la variable desloguea a esa persona. El
@@ -133,9 +145,9 @@ vivo a propósito: quien lo toca cae en `/juego?puerta=1`, que explica el trato.
 Eso enseña la regla mejor que un enlace muerto.
 
 `/subir` y `/estado` **no están en el menú a propósito**: los 24 capítulos ya
-están cargados y son pantallas de mantenimiento. No se borraron: se llega
-escribiendo la dirección, y el reproductor enlaza a `/estado` cuando un video
-falla. Si alguna vez hay que subir de nuevo, están ahí.
+están cargados y son pantallas de mantenimiento. No se borraron: el dueño
+llega escribiendo la dirección, y el reproductor le enlaza a `/estado` cuando
+un video falla. Al resto el middleware lo devuelve a los capítulos.
 
 La sección de lectura se llamaba `/serie`. El nombre daba a entender que los
 capítulos estaban ahí, así que pasó a **el expediente**, con un redirect
@@ -337,22 +349,25 @@ los capítulos. Cómo funciona, de punta a punta:
    `pases.json` y le devuelve el pase sin hacerlo jugar de nuevo.
 
 El mínimo es 70 y se cambia con `PUNTAJE_PARA_ENTRAR` sin tocar código. Los
-códigos de `CODIGOS_LIBRES` entran sin jugar: es la salida del dueño, que no
-puede quedarse afuera de `/estado` por un mal operativo. **Estar en esa lista
-alcanza para entrar**: `leerConfig` suma esos códigos a los de `ACCESS_CODES`.
-Antes había que escribirlos en las dos variables, y quien se olvidaba veía el
-login rechazar una clave recién cargada sin ninguna explicación. No vuelvas a
-pedir que estén en las dos. Se puede intentar
-las veces que uno quiera, con cualquiera de los seis casos, y el pase se
-queda con el mejor puntaje: nadie pierde la entrada por volver a jugar y
-salir peor.
+códigos de `CODIGOS_LIBRES` y `CODIGOS_DUENO` entran sin jugar. **Estar
+nombrado en cualquiera de las tres variables alcanza para entrar**:
+`leerConfig` las suma. Antes había que repetir el código en `ACCESS_CODES` y
+quien se olvidaba veía el login rechazar una clave recién cargada sin ninguna
+explicación; no vuelvas a pedir que estén en las dos. Se puede intentar las
+veces que uno quiera, con cualquiera de los seis casos, y el pase se queda con
+el mejor puntaje: nadie pierde la entrada por volver a jugar y salir peor.
 
-Dos cosas que ya se rompieron una vez y conviene no repetir: el enlace a los
+Tres cosas que ya se rompieron una vez y conviene no repetir: el enlace a los
 capítulos desde el juego es un `<a>` y no un `<Link>`, porque el router de
 Next prefetchea `/` cuando todavía no hay pase y después sirve ese rebote de
-su cache; y al abrirse la puerta se llama a `router.refresh()`, porque la
+su cache; al abrirse la puerta se llama a `router.refresh()`, porque la
 cabecera se arma en el servidor y si no el candado se queda puesto
-contradiciendo al cartel.
+contradiciendo al cartel; y **`/ver/[id]` es una página estática** (SSG, por
+`generateStaticParams`), así que no puede leer cookies para decidir qué
+mostrar: el intento de pasarle si es el dueño desde el servidor dio un error
+de hidratación que sólo aparecía en el build de producción. Ese dato viaja en
+la respuesta de `/api/estado/[id]`, que el reproductor ya consulta cuando un
+video falla, que es justo cuando hace falta.
 
 ## Textos
 

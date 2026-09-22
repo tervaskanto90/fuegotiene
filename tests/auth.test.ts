@@ -12,7 +12,7 @@ import {
 } from "../lib/auth.ts";
 
 const secret = "un-secreto-de-prueba-largo-para-firmar-1234567890";
-const config = { secret, codigos: ["codigo-de-octavio", "codigo-de-mama"], libres: [] };
+const config = { secret, codigos: ["codigo-de-octavio", "codigo-de-mama"], libres: [], duenos: [] };
 
 test("leerConfig explica qué falta", () => {
   assert.match((leerConfig({}) as { problema: string }).problema, /SESSION_SECRET/);
@@ -159,4 +159,46 @@ test("un código que sólo está en CODIGOS_LIBRES igual entra", async () => {
   // Un código corto sigue siendo un error aunque venga por la lista corta.
   const corto = leerConfig({ SESSION_SECRET: secret, ACCESS_CODES: "codigo-largo-ok", CODIGOS_LIBRES: "abc" });
   assert.equal(corto.ok, false);
+});
+
+test("los tres niveles: quien juega, quien entra sin jugar y el dueño", async () => {
+  // El reparto real del sitio: una clave para mirar la serie sin pasar por el
+  // juego, y otra, la del dueño, que además llega a /estado y /subir.
+  const env = {
+    SESSION_SECRET: secret,
+    ACCESS_CODES: "codigo-de-un-amigo",
+    CODIGOS_LIBRES: "clave-para-mirar",
+    CODIGOS_DUENO: "clave-del-dueno-del-sitio",
+  };
+  const leido = leerConfig(env);
+  assert.ok(leido.ok);
+  // Las tres entran, aunque dos no estén nombradas en ACCESS_CODES.
+  assert.deepEqual(leido.config.codigos, [
+    "codigo-de-un-amigo",
+    "clave-para-mirar",
+    "clave-del-dueno-del-sitio",
+  ]);
+
+  const nivel = async (codigo: string) => {
+    const token = await crearSesion(codigo, leido.config);
+    assert.ok(token, `${codigo} tiene que poder entrar`);
+    const s = await verificarSesion(token, leido.config);
+    assert.ok(s);
+    return { libre: s.libre, dueno: s.dueno };
+  };
+
+  assert.deepEqual(await nivel("codigo-de-un-amigo"), { libre: false, dueno: false });
+  assert.deepEqual(await nivel("clave-para-mirar"), { libre: true, dueno: false });
+  // El dueño es libre además de dueño: no tiene que jugar para entrar.
+  assert.deepEqual(await nivel("clave-del-dueno-del-sitio"), { libre: true, dueno: true });
+});
+
+test("sin CODIGOS_DUENO no hay dueño y nadie llega al mantenimiento", async () => {
+  const leido = leerConfig({ SESSION_SECRET: secret, ACCESS_CODES: "codigo-de-octavio", CODIGOS_LIBRES: "codigo-de-octavio" });
+  assert.ok(leido.ok);
+  assert.deepEqual(leido.config.duenos, []);
+  const token = await crearSesion("codigo-de-octavio", leido.config);
+  const s = await verificarSesion(token, leido.config);
+  assert.equal(s?.libre, true);
+  assert.equal(s?.dueno, false, "ser libre no alcanza para entrar a /estado");
 });

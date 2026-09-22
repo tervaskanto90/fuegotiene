@@ -54,6 +54,10 @@ function esTactil(): boolean {
 }
 
 export default function Reproductor({ ep, sig, ant }: Props) {
+  // /estado y /subir son del dueño del sitio: al resto no se le ofrece un
+  // enlace que lo va a rebotar. Lo dice /api/estado/[id], a quien el
+  // reproductor ya le pregunta cuando un video falla.
+  const [dueno, setDueno] = useState(false);
   const video = useRef<HTMLVideoElement>(null);
   const pantalla = useRef<HTMLDivElement>(null);
   const barra = useRef<HTMLDivElement>(null);
@@ -476,6 +480,7 @@ export default function Reproductor({ ep, sig, ant }: Props) {
       }
       if (!res.ok) throw new Error();
       const d = await res.json();
+      setDueno(!!d.dueno);
       if (d.error) setDiagnostico(d.error);
       else if (!d.existe) setDiagnostico(`No hay ningún archivo llamado ${d.key} en el bucket. Fijate el nombre en la página subir.`);
       else if (d.analisis?.veredicto === "ok")
@@ -502,6 +507,7 @@ export default function Reproductor({ ep, sig, ant }: Props) {
       try {
         const res = await fetch(`/api/estado/${ep.id}`, { cache: "no-store" });
         const d = res.ok ? await res.json() : null;
+        if (d) setDueno(!!d.dueno);
         if (d?.analisis?.mensaje) setSinImagen(`Se escucha pero no se ve la imagen. ${d.analisis.mensaje}`);
       } catch {
         // queda el mensaje general
@@ -692,11 +698,18 @@ export default function Reproductor({ ep, sig, ant }: Props) {
 
       {sinImagen && fase === "viendo" && (
         <div className="aviso aviso-cine" role="alert">
-          {sinImagen} Hay que convertir este capítulo: cómo hacerlo está en la página{" "}
-          <Link href="/estado" style={{ textDecoration: "underline" }}>
-            estado
-          </Link>
-          .
+          {sinImagen}{" "}
+          {dueno ? (
+            <>
+              Hay que convertir este capítulo: cómo hacerlo está en la página{" "}
+              <Link href="/estado" style={{ textDecoration: "underline" }}>
+                estado
+              </Link>
+              .
+            </>
+          ) : (
+            <>Hay que convertir este capítulo: avisale al que armó el sitio.</>
+          )}
         </div>
       )}
 
@@ -994,9 +1007,11 @@ export default function Reproductor({ ep, sig, ant }: Props) {
                 >
                   probar de nuevo
                 </button>
-                <Link className="boton" href="/estado">
-                  ver el estado de todos
-                </Link>
+                {dueno && (
+                  <Link className="boton" href="/estado">
+                    ver el estado de todos
+                  </Link>
+                )}
                 <Link className="boton" href="/">
                   volver a los capítulos
                 </Link>

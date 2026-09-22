@@ -4,8 +4,8 @@ import { crearPase, verificarPase } from "../lib/auth.ts";
 import { conPase, normalizarPases, puntajeParaEntrar, type Pases } from "../lib/puerta.ts";
 
 const secret = "un-secreto-de-prueba-largo-para-firmar-1234567890";
-const config = { secret, codigos: ["codigo-de-octavio"], libres: [] };
-const otro = { secret: "otro-secreto-igual-de-largo-para-firmar-123456", codigos: [], libres: [] };
+const config = { secret, codigos: ["codigo-de-octavio"], libres: [], duenos: [] };
+const otro = { secret: "otro-secreto-igual-de-largo-para-firmar-123456", codigos: [], libres: [], duenos: [] };
 
 test("el pase abre sólo para el id que lo ganó", async () => {
   const pase = await crearPase("id-de-octavio", 82, config);

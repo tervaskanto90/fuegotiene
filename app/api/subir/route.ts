@@ -17,6 +17,9 @@ export async function POST(req: NextRequest) {
   const config = leerConfig();
   const sesion = config.ok ? await verificarSesion(req.cookies.get(COOKIE_SESION)?.value, config.config) : null;
   if (!sesion) return NextResponse.json({ error: "Sin sesión. Entrá con tu código." }, { status: 401 });
+  // Vuelve a mirar quién es aunque el middleware ya lo haya hecho: esta ruta
+  // firma permisos de escritura sobre el bucket.
+  if (!sesion.dueno) return NextResponse.json({ error: "Esa pantalla es del dueño del sitio." }, { status: 403 });
 
   const r2 = leerR2();
   if (!r2) {

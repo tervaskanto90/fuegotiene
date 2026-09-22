@@ -44,8 +44,8 @@ export type Pase = {
 
 export type Pases = Record<string, Pase>;
 
-/** Lo que necesita saber una pantalla. `puntaje` es null si entró por CODIGOS_LIBRES. */
-export type EstadoPuerta = { paso: boolean; puntaje: number | null; minimo: number };
+/** Lo que necesita saber una pantalla. `puntaje` es null si entró sin jugar. */
+export type EstadoPuerta = { paso: boolean; puntaje: number | null; minimo: number; dueno: boolean };
 
 /** Deja sólo lo que tiene la forma esperada; lo demás se descarta en silencio. */
 export function normalizarPases(crudo: unknown): Pases {

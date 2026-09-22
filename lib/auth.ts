@@ -11,13 +11,18 @@ export const DURACION_SESION_S = 180 * 24 * 60 * 60; // 180 días
 export const MIN_SECRET = 32;
 export const MIN_CODIGO = 8;
 
-export type ConfigAuth = { secret: string; codigos: string[]; libres: string[] };
+export type ConfigAuth = { secret: string; codigos: string[]; libres: string[]; duenos: string[] };
 export type ResultadoConfig =
   | { ok: true; config: ConfigAuth }
   | { ok: false; problema: string };
 
-/** `libre`: el código está en CODIGOS_LIBRES y no tiene que pasar por el juego. */
-export type Sesion = { id: string; vence: number; libre: boolean };
+/**
+ * Tres niveles, de menos a más:
+ * - un código común: tiene que ganarse los capítulos en el juego.
+ * - `libre` (CODIGOS_LIBRES): ve los capítulos sin jugar, y nada más.
+ * - `dueno` (CODIGOS_DUENO): además entra a /estado y /subir. Es libre también.
+ */
+export type Sesion = { id: string; vence: number; libre: boolean; dueno: boolean };
 
 const enc = new TextEncoder();
 
@@ -31,7 +36,7 @@ export function parsearCodigos(valor: string | undefined): string[] {
   return [...vistos];
 }
 
-/** Lee SESSION_SECRET, ACCESS_CODES y CODIGOS_LIBRES y dice qué falta, en palabras. */
+/** Lee las variables de acceso y dice qué falta, en palabras. */
 export function leerConfig(env: Record<string, string | undefined> = process.env): ResultadoConfig {
   const secret = (env.SESSION_SECRET ?? "").trim();
   if (!secret) {
@@ -43,11 +48,12 @@ export function leerConfig(env: Record<string, string | undefined> = process.env
       problema: `SESSION_SECRET es muy corto: tiene ${secret.length} caracteres y necesita al menos ${MIN_SECRET}.`,
     };
   }
-  // Un código de CODIGOS_LIBRES vale como código de acceso aunque no esté en
-  // ACCESS_CODES. Antes había que escribirlo en las dos variables y, si uno se
-  // olvidaba, el login lo rechazaba sin decir por qué: la variable parecía rota.
-  // Estar en la lista corta implica poder entrar.
-  const libres = parsearCodigos(env.CODIGOS_LIBRES);
+  // Cada nivel implica el de abajo: el dueño entra sin jugar, y todos los
+  // códigos nombrados en cualquiera de las tres variables sirven para entrar.
+  // Antes había que repetirlos en ACCESS_CODES y, si uno se olvidaba, el login
+  // rechazaba una clave recién cargada sin decir por qué.
+  const duenos = parsearCodigos(env.CODIGOS_DUENO);
+  const libres = [...new Set([...parsearCodigos(env.CODIGOS_LIBRES), ...duenos])];
   const codigos = [...new Set([...parsearCodigos(env.ACCESS_CODES), ...libres])];
   if (codigos.length === 0) {
     return { ok: false, problema: "Falta la variable ACCESS_CODES: no hay ningún código de acceso cargado." };
@@ -59,7 +65,7 @@ export function leerConfig(env: Record<string, string | undefined> = process.env
       problema: `Hay un código de acceso de ${corto.length} caracteres. Cada código necesita al menos ${MIN_CODIGO}.`,
     };
   }
-  return { ok: true, config: { secret, codigos, libres } };
+  return { ok: true, config: { secret, codigos, libres, duenos } };
 }
 
 function base64url(bytes: Uint8Array): string {
@@ -129,7 +135,7 @@ export async function verificarSesion(
   if (!iguales(firma, esperada)) return null;
   for (const c of config.codigos) {
     if ((await idDeCodigo(c, config.secret)) === id) {
-      return { id, vence, libre: config.libres.includes(c) };
+      return { id, vence, libre: config.libres.includes(c), dueno: config.duenos.includes(c) };
     }
   }
   return null;

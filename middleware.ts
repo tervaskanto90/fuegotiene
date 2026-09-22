@@ -15,6 +15,17 @@ const PUBLICAS = [/^\/entrar$/, /^\/api\/entrar$/, /^\/api\/salir$/, /^\/demo\//
  */
 const SIN_PASE = [/^\/juego$/, /^\/api\/simulacro$/, /^\/expediente$/, /^\/origen$/];
 
+/**
+ * Las pantallas de mantenimiento, sólo para los códigos de CODIGOS_DUENO.
+ * Pasar el juego abre los capítulos, no el bucket: nadie más tiene por qué
+ * poder subir archivos ni ver qué hay adentro.
+ *
+ * `/api/estado/[id]` queda afuera de esta lista a propósito: es el
+ * diagnóstico de un capítulo y el reproductor lo usa para explicar en
+ * palabras por qué un video no anda, en la pantalla de cualquiera.
+ */
+const SOLO_DUENO = [/^\/subir$/, /^\/estado$/, /^\/api\/subir$/, /^\/api\/estado$/];
+
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
   const publica = PUBLICAS.some((r) => r.test(pathname));
@@ -42,10 +53,16 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
+  if (SOLO_DUENO.some((r) => r.test(pathname)) && !sesion.dueno) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Esa pantalla es del dueño del sitio." }, { status: 403 });
+    }
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
   if (SIN_PASE.some((r) => r.test(pathname))) return NextResponse.next();
 
-  // Los códigos de CODIGOS_LIBRES entran sin jugar: es la salida del dueño
-  // del sitio, que no puede quedarse afuera de /estado por un mal operativo.
+  // Los códigos de CODIGOS_LIBRES entran a los capítulos sin jugar.
   if (sesion.libre) return NextResponse.next();
 
   const pase = config.ok

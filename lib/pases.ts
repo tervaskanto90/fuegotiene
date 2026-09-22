@@ -53,10 +53,11 @@ export async function estadoPuerta(): Promise<EstadoPuerta> {
   const tarro = await cookies();
   const minimo = puntajeParaEntrar();
   const config = leerConfig();
-  if (!config.ok) return { paso: false, puntaje: null, minimo };
+  const cerrada = { paso: false, puntaje: null, minimo, dueno: false };
+  if (!config.ok) return cerrada;
   const sesion = await verificarSesion(tarro.get(COOKIE_SESION)?.value, config.config);
-  if (!sesion) return { paso: false, puntaje: null, minimo };
-  if (sesion.libre) return { paso: true, puntaje: null, minimo };
+  if (!sesion) return cerrada;
+  if (sesion.libre) return { paso: true, puntaje: null, minimo, dueno: sesion.dueno };
   const puntaje = await verificarPase(tarro.get(COOKIE_PASE)?.value, sesion.id, config.config);
-  return { paso: puntaje !== null, puntaje, minimo };
+  return { paso: puntaje !== null, puntaje, minimo, dueno: false };
 }

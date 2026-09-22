@@ -14,5 +14,7 @@ de datos.
 - **Los capítulos se ganan jugando.** Entrar con el código no alcanza: hay
   que ponerse en el lugar de Santos y armar un operativo que saque 70 sobre
   100 o más. Se puede intentar todas las veces que uno quiera, con cualquiera
-  de los seis casos. Los códigos de `CODIGOS_LIBRES` entran sin jugar.
+  de los seis casos.
+- Tres niveles: un código común juega; los de `CODIGOS_LIBRES` miran la serie
+  sin jugar; el de `CODIGOS_DUENO` además entra a `/estado` y `/subir`.
 - **CLAUDE.md**: cómo está hecho y por qué, para quien toque el código.

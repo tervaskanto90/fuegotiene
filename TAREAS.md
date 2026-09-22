@@ -53,9 +53,9 @@ expediente y el origen, y la serie se abre cuando arma un operativo que saca
       de prueba. Cuando juegue gente de verdad va a quedar claro si deja
       afuera a alguien que se tomó el trabajo. Se cambia con la variable
       `PUNTAJE_PARA_ENTRAR`, sin tocar código ni perder los pases ya dados.
-- [ ] **Poner el código del dueño en `CODIGOS_LIBRES`** (Vercel, Settings,
-      Environment Variables, Redeploy). Sin eso `/estado` y `/subir` quedan
-      del otro lado de la puerta hasta pasar el juego.
+- [x] **El código del dueño va en `CODIGOS_DUENO`**, que es el único nivel
+      que llega a `/estado` y `/subir`. `CODIGOS_LIBRES` quedó para quien
+      mira la serie sin jugar y no tiene por qué tocar el bucket.
 - [ ] Nadie puede perder el pase: `pases.json` se queda con el mejor puntaje
       y el pase dura 180 días como la sesión. Si alguna vez hay que sacarle
       la entrada a alguien, hoy se hace borrando su línea de `pases.json` con
@@ -102,10 +102,9 @@ datos" es el mismo que usa `pases.json`:
 - [x] **Firma de URLs de R2** con `aws4fetch`: anda contra el bucket real.
       No hizo falta el SDK de AWS.
 - [x] **Subida desde el navegador.** `/subir` con URLs firmadas de PUT y la
-      política CORS puesta: así subieron los capítulos grandes. Queda una
-      decisión abierta: cualquiera con un código puede subir, porque es un
-      sitio de confianza entre conocidos. Si molesta, se limita a un código
-      concreto (o al rol `admin`, si algún día hay usuarios).
+      política CORS puesta: así subieron los capítulos grandes. Ya no la puede
+      usar cualquiera: `/subir`, `/estado` y sus dos APIs son sólo para los
+      códigos de `CODIGOS_DUENO`.
 - [x] **Portadas con ffmpeg en Vercel.** El binario de
       `@ffmpeg-installer/ffmpeg` viaja en la función y corre; los 24
       capítulos tienen su portada capturada del video.

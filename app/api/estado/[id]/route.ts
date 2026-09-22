@@ -83,6 +83,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const sesion = config.ok ? await verificarSesion(req.cookies.get(COOKIE_SESION)?.value, config.config) : null;
   if (!sesion) return NextResponse.json({ error: "Sin sesión." }, { status: 401 });
 
+  // `dueno` viaja en la respuesta para que el reproductor sepa si ofrecer los
+  // enlaces a /estado: la página del reproductor es estática y no puede leer
+  // la cookie, pero cuando un video falla ya pregunta por acá.
   const { id } = await params;
   const ep = buscar(id);
   if (!ep) return NextResponse.json({ error: "Ese capítulo no existe." }, { status: 404 });
@@ -90,7 +93,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const r2 = leerR2();
   const sinCache = { "Cache-Control": "private, no-store" };
   if (!r2) {
-    return NextResponse.json(await estadoDemo(req, ep.id, ep.key), { headers: sinCache });
+    return NextResponse.json({ ...(await estadoDemo(req, ep.id, ep.key)), dueno: sesion.dueno }, { headers: sinCache });
   }
 
   const resultado: EstadoCapitulo = {
@@ -108,16 +111,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const cabeza = await pedirR2(r2, ep.key, { method: "HEAD" });
     if (cabeza.status === 404) {
-      return NextResponse.json(resultado, { headers: sinCache });
+      return NextResponse.json({ ...resultado, dueno: sesion.dueno }, { headers: sinCache });
     }
     if (cabeza.status === 403) {
       resultado.error =
         "R2 rechazó las credenciales (403). Revisá R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY y que el token tenga permiso sobre el bucket.";
-      return NextResponse.json(resultado, { headers: sinCache });
+      return NextResponse.json({ ...resultado, dueno: sesion.dueno }, { headers: sinCache });
     }
     if (!cabeza.ok) {
       resultado.error = `R2 respondió ${cabeza.status} al consultar el archivo.`;
-      return NextResponse.json(resultado, { headers: sinCache });
+      return NextResponse.json({ ...resultado, dueno: sesion.dueno }, { headers: sinCache });
     }
     resultado.existe = true;
     resultado.tamano = Number(cabeza.headers.get("content-length") ?? 0) || null;
@@ -135,5 +138,5 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     resultado.error = e instanceof ErrorLegible ? e.message : MENSAJE_RED;
   }
 
-  return NextResponse.json(resultado, { headers: sinCache });
+  return NextResponse.json({ ...resultado, dueno: sesion.dueno }, { headers: sinCache });
 }

@@ -27,6 +27,9 @@ export async function GET(req: NextRequest) {
   const config = leerConfig();
   const sesion = config.ok ? await verificarSesion(req.cookies.get(COOKIE_SESION)?.value, config.config) : null;
   if (!sesion) return NextResponse.json({ error: "Sin sesión." }, { status: 401 });
+  // Lista lo que hay en el bucket: es del dueño, aunque el middleware ya lo
+  // haya filtrado.
+  if (!sesion.dueno) return NextResponse.json({ error: "Esa pantalla es del dueño del sitio." }, { status: 403 });
 
   const sinCache = { "Cache-Control": "private, no-store" };
   const r2 = leerR2();

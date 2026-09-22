@@ -238,15 +238,24 @@ para siempre, también desde el celular o desde otra compu.
 En "capítulos" aparece un candado hasta que lo logra. Si lo toca igual, el
 sitio lo lleva al juego y le explica el trato en una línea.
 
-**Ponete en la lista corta.** En Vercel, **Settings**, **Environment
-Variables**, agregá `CODIGOS_LIBRES` con tu propio código y **Redeploy**. Los
-códigos de esa lista entran sin jugar. Sin eso vas a tener que pasar el juego
-como todos, y `/estado` y `/subir` también te quedan cerrados hasta que lo
-hagas.
+### Los tres niveles
 
-Ese código no hace falta repetirlo en `ACCESS_CODES`: con estar en
-`CODIGOS_LIBRES` ya sirve para entrar. Si lo ponés en las dos, tampoco pasa
-nada.
+En Vercel, **Settings**, **Environment Variables**, y **Redeploy** después de
+tocar cualquiera. Ninguna de estas claves hace falta repetirla en otra
+variable: con estar nombrada en una ya sirve para entrar.
+
+| Variable | Quién es | Qué puede |
+| --- | --- | --- |
+| `ACCESS_CODES` | la gente a la que le pasás el sitio | tiene que ganarse los capítulos en el juego |
+| `CODIGOS_LIBRES` | a quien le querés ahorrar el juego | mira la serie sin jugar, y nada más |
+| `CODIGOS_DUENO` | vos | además entra a `/estado` y a `/subir` |
+
+**Poné tu código en `CODIGOS_DUENO`.** Es el único que llega a las pantallas
+de mantenimiento: a mirar qué hay en el bucket y a subir archivos. Nadie más,
+ni siquiera quien pasó el juego con 100, puede escribir en tu bucket.
+
+Si a alguien le querés dar la serie sin que juegue —porque no tiene ganas, o
+porque ya la vio— su código va en `CODIGOS_LIBRES`.
 
 Si 70 te parece mucho o poco, se cambia sin tocar código: variable
 `PUNTAJE_PARA_ENTRAR` con otro número, y Redeploy. Para tener una referencia:
@@ -262,7 +271,10 @@ todos tienen que volver a jugar.
 - **Dar acceso a alguien**: agregá otro código a `ACCESS_CODES`, separado por
   coma, y Redeploy. Le pasás el código y la dirección del sitio. Avisale que
   para ver los capítulos primero tiene que pasar el juego, o no va a entender
-  por qué el sitio lo manda ahí.
+  por qué el sitio lo manda ahí. Si preferís que entre derecho, su código va
+  en `CODIGOS_LIBRES` en vez de en `ACCESS_CODES`.
+- **Sacarle el acceso a alguien**: borrá su código de la variable donde esté y
+  Redeploy. Queda deslogueado en el acto, sin importar la cookie que tenga.
 - **Sacarle el acceso a alguien**: borrá su código de la variable y Redeploy.
   Su sesión deja de valer en el acto.
 - **Dominio propio**: en Vercel, Settings → Domains. Opcional.
