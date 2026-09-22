@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 import Cabecera from "@/components/Cabecera";
-import Fichas from "@/components/Serie";
+import Fichas from "@/components/Expediente";
 import Revelar from "@/components/Revelar";
 import { laSerie, metodo, szifron } from "@/lib/serie";
 
-export const metadata: Metadata = { title: "la serie" };
+export const metadata: Metadata = { title: "el expediente" };
 
-export default function PaginaSerie() {
+export default function PaginaExpediente() {
   return (
     <div className="contenedor">
-      <Cabecera activa="serie" />
+      <Cabecera activa="expediente" />
       <main>
         <section className="intro">
-          <h1 className="intro__titulo">la serie</h1>
+          <h1 className="intro__titulo">el expediente</h1>
           {laSerie.texto.map((p, i) => (
             <p key={i} className="intro__texto">
               {p}

@@ -131,13 +131,13 @@ const SENALES: Senal[] = [
     id: "personaje",
     etiqueta: "un personaje creíble adelante",
     peso: 18,
-    re: /hacerse pasar|se hace pasar|nos hacemos pasar|personaje|disfraz|fing|actua|actúa|actuar|simul|inspector|perito|escriban|auditor|abogad|m(é|e)dic|doctor|funcionari|periodist|comprador|cliente falso|present(a|á|ar)se como|hacerme pasar|de incógnito/i,
+    re: /hacerse pasar|se hace pasar|nos hacemos pasar|haci(é|e)ndose pasar|hacerme pasar|personaje|disfraz|fing|actua|actúa|actuar|simul|inspector|perito|escriban|auditor|abogad|m(é|e)dic|doctor|funcionari|periodist|comprador|tasador|enviado|representante|cliente falso|\bfalso\b|\bfalsa\b|present(a|á|ar)se como|se presenta como|aparece como|entra como|hace de\b|en\s+el\s+papel\s+de|uno\s+de\s+nosotros|de\s+inc(ó|o)gnito/i,
   },
   {
     id: "montaje",
     etiqueta: "el mundo falso armado",
     peso: 16,
-    re: /oficina|local|cartel|escenograf|utiler|imprent|document|papel|credencial|folleto|tarjeta|sello|formulario|expediente|cami(ó|o)n|camioneta|\bauto\b|uniforme|placa|equipo de|c(á|a)mara|grabador|micr(ó|o)fono/i,
+    re: /oficina|cartel|escenograf|utiler|imprent|document|papel|credencial|folleto|tarjeta|sello|formulario|expediente|cami(ó|o)n|camioneta|\bauto\b|uniforme|placa|equipo de|c(á|a)mara|grabador|micr(ó|o)fono|empresa|sociedad|consultora|inmobiliaria|constructora|estudio\s+jur|sucursal|grupo\s+(hotelero|inversor|empresario)|firma\s+que|membrete/i,
   },
   {
     id: "guion",
@@ -171,10 +171,11 @@ const PENAS: Pena[] = [
   {
     id: "violencia",
     etiqueta: "hay violencia o amenazas, y así no se trabaja",
-    peso: 40,
+    peso: 60,
     // Ojo con "arma": Santos arma el operativo. Sólo cuentan las armas nombradas.
-    // "amenace" no lleva z: en español el verbo la cambia por c delante de e.
-    re: /golpe|peg(a|á)rle|amena[zc]|\bun arma\b|\barmas\b|arma de fuego|pistola|rev(ó|o)lver|cuchillo|secuestr|lastim|romperle|matarlo|apret|apriet|cagarlo a|meterle miedo|un susto|asustarlo|extorsion|chantaj/i,
+    // Ojo con el castellano: "amenace" no lleva z, "Santos arma el operativo"
+    // no es un arma y "golpea la puerta" no es golpear a nadie.
+    re: /golpearl|golpear\s+a\b|lo\s+golpea|a\s+los\s+golpes|una\s+paliza|trompada|peg(a|á)rle|le\s+pegamos|amena[zc]|\bun arma\b|\barmas\b|arma\s+de\s+fuego|pistola|rev(ó|o)lver|cuchillo|secuestr|lastim|romperle|matarlo|apret|apriet|cagarlo a|meterle\s+miedo|un\s+susto|asustarlo|extorsion|chantaj/i,
   },
   {
     id: "frontal",
@@ -258,7 +259,7 @@ export function evaluarPlan(caso: Caso, plan: string): Resultado {
   puntaje = Math.max(0, Math.min(100, puntaje));
 
   const veredicto: Veredicto =
-    puntaje >= 78 ? "redondo" : puntaje >= 58 ? "sale" : puntaje >= 38 ? "raspando" : "se-cae";
+    puntaje >= 75 ? "redondo" : puntaje >= 55 ? "sale" : puntaje >= 32 ? "raspando" : "se-cae";
 
   const tiene = (id: string) => presentes.some((s) => s.id === id);
   const nombre = caso.cliente.split(",")[0];

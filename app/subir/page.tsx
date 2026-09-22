@@ -12,7 +12,7 @@ export default function PaginaSubir() {
   const r2 = leerR2();
   return (
     <div className="contenedor">
-      <Cabecera activa="subir" />
+      <Cabecera />
       <main>
         <Subida
           modo={r2 ? "r2" : "demo"}

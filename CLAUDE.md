@@ -111,6 +111,30 @@ clip de 20 s con cronómetro y un tic por segundo. Sirve para probar login,
 seek, progreso y navegación sin subir nada. Se apaga solo en cuanto aparecen
 las cuatro variables: no hay un flag que prender.
 
+## Las secciones y el menú
+
+El menú tiene cuatro: **capítulos** (`/`), **el expediente** (`/expediente`),
+**el juego** (`/juego`) y **el origen** (`/origen`). Más salir.
+
+`/subir` y `/estado` **no están en el menú a propósito**: los 24 capítulos ya
+están cargados y son pantallas de mantenimiento. No se borraron: se llega
+escribiendo la dirección, y el reproductor enlaza a `/estado` cuando un video
+falla. Si alguna vez hay que subir de nuevo, están ahí.
+
+La sección de lectura se llamaba `/serie`. El nombre daba a entender que los
+capítulos estaban ahí, así que pasó a **el expediente**, con un redirect
+permanente en `next.config.ts` para que no se rompa ningún enlace guardado.
+Si se vuelve a renombrar, son tres lugares: la carpeta de `app/`, el `href`
+de `components/Cabecera.tsx` y ese redirect.
+
+`/origen` cuenta por qué existe el sitio: alguien buscó la serie en las
+plataformas que paga, no estaba en ninguna, y la subió a un bucket. El texto
+vive entero en `lib/origen.ts`, en cinco capítulos numerados, y la página
+sólo lo pone en pantalla. El tono es contenido: la épica sale de los hechos,
+no de los adjetivos. El acento ladrillo va una sola vez, en la última frase
+(`.relato__cierre`, marcado desde el componente: un `:last-child` no sirve
+porque cada capítulo va envuelto en su propio `Revelar`).
+
 ## Comandos
 
 ```bash
@@ -141,15 +165,17 @@ middleware.ts             puerta de acceso, corre en Edge
 app/page.tsx              portada (server) -> Biblioteca (client)
 app/entrar/page.tsx       login. Form HTML común, sin JS obligatorio.
 app/ver/[id]/page.tsx     reproductor
-app/serie/page.tsx        la serie: legajos, método y Szifrón
+app/expediente/page.tsx   el expediente: legajos, método y Szifrón
+app/origen/page.tsx       el origen: por qué existe el sitio
 app/juego/page.tsx        el simulacro -> Juego (client)
-app/estado/page.tsx       estado de la configuración y de cada archivo
-app/subir/page.tsx        subida al bucket desde el navegador -> Subida (client)
+app/estado/page.tsx       mantenimiento: estado de cada archivo. Fuera del menú.
+app/subir/page.tsx        mantenimiento: subida al bucket. Fuera del menú.
 app/api/subir             firma una URL de PUT para un nombre válido
 app/api/marcas            lee y escribe marcas.json (intro por capítulo)
 app/api/arte/[id]         portada JPEG: la devuelve (GET) o la guarda (POST)
 app/api/simulacro         evalúa el plan del juego (local, y Claude si hay clave)
 lib/serie.ts              datos de la serie, los cuatro y Szifrón. Escrito, no copiado.
+lib/origen.ts             el relato de por qué existe el sitio. Cinco capítulos.
 lib/simulacro.ts          casos del juego + motor que puntúa y narra
 lib/cuadro.ts             ffmpeg: saca un cuadro del video para la portada
 lib/marcas.ts             forma de las anotaciones y validación
@@ -166,7 +192,7 @@ components/Arte.tsx       imagen del capítulo o trama con el número
 components/Reproductor.tsx reproductor a pantalla entera: controles propios,
                           progreso, intro, portada, atajos, siguiente, errores
 components/Iconos.tsx     íconos SVG del reproductor
-components/Serie.tsx      las cuatro fichas y el legajo que se abre
+components/Expediente.tsx las cuatro fichas y el legajo que se abre
 components/Juego.tsx      el juego: caso, plan y desenlace
 components/Revelar.tsx    deja aparecer una sección cuando entra en pantalla
 components/Estado.tsx     tabla de /estado, revisa de a tres
@@ -233,7 +259,7 @@ capítulo tiene una barra menta que se vacía en 12 s. Duraciones de 150 a
 `prefers-reduced-motion` todo se apaga. La cabecera es fija, con fondo
 translúcido y desenfoque. Además: la imagen de la tarjeta hace zoom al pasar
 el mouse, la portada del destacado respira despacio, las secciones de
-`/serie` aparecen al llegar a la pantalla (`components/Revelar.tsx`, que
+`/expediente` y `/origen` aparecen al llegar a la pantalla (`components/Revelar.tsx`, que
 muestra igual si no hay IntersectionObserver) y las fases del desenlace del
 juego entran escalonadas.
 

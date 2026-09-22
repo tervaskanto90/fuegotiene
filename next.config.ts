@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/arte/**": ["./node_modules/@ffmpeg-installer/linux-x64/**/*"],
   },
+  async redirects() {
+    // La sección se llamaba /serie: cualquier enlace viejo sigue andando.
+    return [{ source: "/serie", destination: "/expediente", permanent: true }];
+  },
   async headers() {
     return [
       {

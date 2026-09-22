@@ -30,7 +30,7 @@ R2, después **un solo capítulo**, y recién al final los otros 23.
    los 24 capítulos y, si abrís uno, el clip de muestra de 20 segundos, con
    un cronómetro y un tic por segundo. Si se escucha el tic, la parte del
    sitio está bien.
-7. Entrá a **/estado** (está en el menú). Arriba dice cómo está la
+7. Entrá a **/estado** (escribí la dirección: no está en el menú). Arriba dice cómo está la
    configuración: los códigos cargados y que todavía está en modo demo.
 
 Si `/entrar` muestra un aviso rojo en vez del formulario, dice exactamente
@@ -102,8 +102,9 @@ Hay tres formas, y las tres dejan el archivo en el mismo lugar:
 
 - **El panel de Cloudflare**: entrás al bucket, **Upload**, arrastrás. Sirve
   para archivos de hasta 300 MB. Los más grandes los rechaza.
-- **La página /subir del sitio**: arrastrás los archivos y van del navegador
-  directo a R2, sin límite de 300 MB y sin instalar nada. La primera vez hay
+- **La página /subir del sitio** (escribí la dirección: quedó fuera del menú
+  ahora que los 24 están cargados): arrastrás los archivos y van del
+  navegador directo a R2, sin límite de 300 MB y sin instalar nada. La primera vez hay
   que pegar una política CORS en el bucket; la página la muestra lista para
   copiar y dice dónde va (Cloudflare, el bucket, **Settings**, **CORS
   Policy**, **Add CORS policy**). Se hace una sola vez.
@@ -199,11 +200,16 @@ convertir la serie entera si hiciera falta. El respaldo en `originales/`
 ocupa lugar en el bucket; cuando estés seguro, lo podés borrar desde el
 panel de Cloudflare.
 
-## Las dos secciones nuevas
+## Las secciones para leer y jugar
 
-- **la serie**: quiénes son los cuatro, qué hace cada uno, quiénes son los
+- **el expediente**: quiénes son los cuatro, qué hace cada uno, quiénes son los
   actores y quién es Szifrón. Los datos están escritos a mano en
-  `lib/serie.ts`: si ves algo mal, se corrige ahí.
+  `lib/serie.ts`: si ves algo mal, se corrige ahí. (Antes se llamaba "la
+  serie"; el nombre daba a entender que los capítulos estaban ahí adentro.
+  Los enlaces viejos a `/serie` siguen andando.)
+- **el origen**: por qué existe el sitio, en cinco capítulos. El texto está
+  en `lib/origen.ts`, todo junto: si querés cambiar una frase, es ahí y no
+  hace falta tocar nada más.
 - **el juego**: te dan un caso, escribís el operativo y se simula cómo sale.
   Funciona sin configurar nada y sin costo.
 

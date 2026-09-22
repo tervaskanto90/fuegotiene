@@ -140,3 +140,39 @@ test("la violencia se detecta en todas sus formas", () => {
     );
   }
 });
+
+test("no confunde castellano corriente con violencia", () => {
+  // Casos que aparecieron probando el juego: el cliente que golpea una puerta
+  // y Santos que arma un operativo no son violencia.
+  const inocentes = [
+    "A la semana Aníbal golpea la puerta con el contrato de siempre y el viejo firma aliviado, sin dudarlo",
+    "Santos arma el operativo completo y se lo reparte a cada uno con los tiempos bien marcados desde el principio",
+    "Hay que golpear la puerta del vecino y esperar a que atienda, con toda la tranquilidad del mundo",
+  ];
+  for (const frase of inocentes) {
+    const r = evaluarPlan(caso, `${frase}. Después seguimos con el resto del plan que ya está escrito y coordinado.`);
+    assert.ok(
+      !r.falto.some((x) => /violencia/.test(x)),
+      `marcó violencia donde no hay: ${frase.slice(0, 40)}`,
+    );
+  }
+});
+
+test("un buen operativo puntúa alto aunque no use el vocabulario del oficio", () => {
+  const conOtrasPalabras = `La idea es que el dueño crea que perdió una oportunidad mucho mejor y que el cliente pase a
+    ser lo más seguro que le queda. Uno de nosotros aparece como representante de un grupo hotelero que quiere toda la
+    manzana y le ofrece una cifra altísima. Cuando va a cerrar, el grupo desaparece y se queda sin nadie. A la semana
+    el cliente vuelve con el contrato de siempre y firma aliviado, sin enterarse nunca de nada.`;
+  const r = evaluarPlan(caso, conOtrasPalabras);
+  assert.ok(r.puntaje >= 55, `un plan así no puede sacar ${r.puntaje}`);
+  assert.ok(["sale", "redondo"].includes(r.veredicto), r.veredicto);
+});
+
+test("la violencia manda el operativo al fondo, no al medio", () => {
+  const r = evaluarPlan(
+    caso,
+    `Medina investiga, Lamponne consigue la oficina y Ravenna se hace pasar por tasador. Si el viejo no afloja lo
+     amenazamos con contarle a la familia lo que averiguamos. Después levantamos todo y no queda rastro.`,
+  );
+  assert.equal(r.veredicto, "se-cae");
+});

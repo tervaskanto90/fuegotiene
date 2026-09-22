@@ -1561,6 +1561,73 @@ kbd {
   font-size: 15px;
 }
 
+/* el origen */
+.apertura {
+  font-size: clamp(19px, 2.6vw, 24px);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  max-width: 24ch;
+  margin-top: 6px;
+}
+.relato {
+  margin-top: 40px;
+  display: grid;
+  gap: 8px;
+}
+.relato__cap {
+  display: grid;
+  grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
+  gap: 24px;
+  padding: 26px 0;
+  border-top: 1px solid var(--line);
+}
+.relato__cap header {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  align-self: start;
+  position: sticky;
+  top: 86px;
+}
+.relato__num {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--muted);
+}
+.relato__cap h2 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.relato__texto {
+  max-width: 62ch;
+}
+.relato__texto p {
+  font-size: 17px;
+  line-height: 1.65;
+  margin-bottom: 14px;
+}
+.relato__texto p:last-child {
+  margin-bottom: 0;
+}
+.relato__cierre {
+  color: var(--bone);
+  border-left: 2px solid var(--brick);
+  padding-left: 16px;
+  margin-top: 20px;
+}
+
+@media (max-width: 720px) {
+  .relato__cap {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .relato__cap header {
+    position: static;
+  }
+}
+
 /* el juego */
 .casos {
   display: flex;

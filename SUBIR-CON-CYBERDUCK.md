@@ -7,7 +7,8 @@ retoma si se corta.
 
 Ninguna terminal. Esto reemplaza a `npm run upload`.
 
-La otra opción sin instalar nada es la página **/subir** del propio sitio,
+La otra opción sin instalar nada es la página **/subir** del propio sitio
+(quedó fuera del menú: se llega escribiendo la dirección),
 que manda los archivos del navegador directo al bucket. Necesita una
 política CORS en el bucket, que la misma página muestra lista para pegar.
 Cyberduck sigue siendo útil si preferís un programa aparte o si querés
@@ -61,7 +62,7 @@ derecho → Rename), o el nombre que le corresponda: el sitio busca los
 archivos por ese nombre exacto.
 
 Después, con las cuatro variables de R2 ya cargadas en Vercel, abrí
-**/estado** en el sitio. La fila de ese capítulo te dice si el archivo está,
+**/estado** en el sitio (también fuera del menú: se escribe la dirección). La fila de ese capítulo te dice si el archivo está,
 cuánto pesa, qué códecs trae y una de estas cosas:
 
 - **listo**: subí el resto tal cual y terminaste.

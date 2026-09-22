@@ -17,7 +17,7 @@ export default function PaginaEstado() {
 
   return (
     <div className="contenedor">
-      <Cabecera activa="estado" />
+      <Cabecera />
       <main>
         <section className="resumen">
           <h2 className="seccion__titulo" style={{ marginBottom: 4 }}>
