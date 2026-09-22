@@ -177,6 +177,7 @@ export default function Estado({ episodios, modo }: Props) {
         </p>
       )}
       <div className="envoltorio">
+        <div className="tabla-ancha">
         <table className="tabla">
           <thead>
             <tr>
@@ -249,6 +250,7 @@ export default function Estado({ episodios, modo }: Props) {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </section>
   );

@@ -34,8 +34,8 @@ los archivos locales, o `node scripts/convertir.mjs entrada salida.mp4`.
       y una sección en `/expediente` con las caras que vuelven. Los datos los
       pasó el dueño exportando la lista de Wikipedia, porque el entorno de
       Claude no puede abrir esas páginas.
-- [ ] **El título del 2x07**: `data/episodes.json` dice «La brigada B» y
-      Wikipedia «El Gran Desafío». Decidir cuál va. Los otros 23 coinciden.
+- [x] El título del 2x07 quedó «El Gran Desafío», como en Wikipedia. Los
+      otros 23 ya coincidían.
 - [ ] De los 463 nombres, 103 tienen el personaje identificado. Al resto se
       lo podría atar a mano mirando los capítulos, pero es trabajo de fan.
 - [ ] El juego no guarda nada: cada partida arranca de cero y el plan se

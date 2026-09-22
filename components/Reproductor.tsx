@@ -769,13 +769,13 @@ export default function Reproductor({ ep, sig, ant }: Props) {
         </div>
 
         <div className="cine__controles">
-          <button className="cine__boton" type="button" onClick={alternarPlay} aria-label={reproduciendo ? "pausar" : "reproducir"}>
+          <button className="cine__boton cine__boton--tambien-arriba" type="button" onClick={alternarPlay} aria-label={reproduciendo ? "pausar" : "reproducir"}>
             {reproduciendo ? <Pausa /> : <Play />}
           </button>
-          <button className="cine__boton" type="button" onClick={() => saltar(-10)} aria-label="atrás 10 segundos">
+          <button className="cine__boton cine__boton--tambien-arriba" type="button" onClick={() => saltar(-10)} aria-label="atrás 10 segundos">
             <Atras10 />
           </button>
-          <button className="cine__boton" type="button" onClick={() => saltar(10)} aria-label="adelante 10 segundos">
+          <button className="cine__boton cine__boton--tambien-arriba" type="button" onClick={() => saltar(10)} aria-label="adelante 10 segundos">
             <Adelante10 />
           </button>
           <div className="cine__volumen">

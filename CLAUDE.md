@@ -317,6 +317,34 @@ si no muestra el botón grande. El engranaje abre un panel con la intro, la
 portada y las teclas. Progreso en menta; el botón ladrillo sólo aparece en
 las capas de fin de capítulo y de error.
 
+**Teléfonos.** Mucha gente entra desde el celular, así que el sitio se revisa
+ahí igual que en la compu. Las reglas viven en un bloque al final de
+`app/globals.css`, después de todo lo demás a propósito, para que pise sin
+pelear con la especificidad.
+
+- **44 px es la medida de lo que se toca.** Vale para los enlaces del menú,
+  los botones, los chips de los casos y los capítulos del reparto. La
+  excepción son los enlaces en medio de un párrafo: ahí `min-height` parte el
+  renglón, así que el área se estira con un `::after` de posición absoluta
+  que no ocupa lugar.
+- **El menú no parte palabras.** Sin `white-space: nowrap`, "el expediente"
+  caía en dos renglones y quedaba ilegible.
+- **La barra del reproductor no entra entera en un teléfono**: ocho botones
+  más el tiempo se iban 45 px fuera de la pantalla. Abajo de 700 px se
+  esconden play y ±10 (`.cine__boton--tambien-arriba`), que ya están grandes
+  en el centro del video, y el volumen, que en un teléfono se maneja con los
+  botones del costado.
+- **Muescas y barra de gestos**: el layout va con `viewportFit: "cover"` para
+  que el fondo llegue al borde, y los márgenes del contenido y los controles
+  del reproductor se corren con `env(safe-area-inset-*)`.
+- `/estado` tiene la única tabla ancha del sitio. Va envuelta en
+  `.tabla-ancha`, que scrollea sola en vez de empujar la página entera.
+
+Para revisar: `audit-movil.mjs` recorre todas las pantallas en 360 y 390 px y
+marca scroll horizontal, elementos que se salen y todo lo que se toque abajo
+de 40 px. `movil2.mjs` hace el recorrido completo con el dedo —entrar, jugar,
+ganar, mirar un capítulo— de parado y acostado.
+
 **Movimiento.** `app/template.tsx` se vuelve a montar en cada navegación y
 hace entrar la página con un fundido corto (`.pagina`). Ese fundido es
 **sólo de opacidad**: una animación de `transform` ahí convierte al
@@ -456,10 +484,6 @@ La sección los muestra en `/expediente`. El dato lindo, que sale de contar y
 está fijado en `tests/reparto.test.ts`: los cuatro que más vuelven —Ricci,
 Dioguardi, Sureda y Jorge D'Elía— son los cuatro de la Brigada B, y tres de
 ellos habían sido clientes en los capítulos 2, 3 y 4.
-
-**Discrepancia sin resolver:** el 2x07 figura en `data/episodes.json` como
-«La brigada B» y en Wikipedia como «El Gran Desafío». Está sin tocar hasta
-que el dueño decida.
 
 `duracion` está en 0 hasta que alguien la cargue; mientras, la tarjeta usa la
 duración que el navegador vio la última vez que se reprodujo el capítulo.

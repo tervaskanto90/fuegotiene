@@ -2186,6 +2186,171 @@ kbd {
   }
 }
 
+/* ===========================================================
+   Teléfonos. Va al final a propósito: pisa lo de arriba.
+
+   Tres cosas que estaban rotas y se arreglan acá:
+   1. El menú partía "el expediente" en dos renglones y los enlaces medían
+      22 px de alto, la mitad de lo que necesita un dedo.
+   2. La barra del reproductor no entraba: ocho botones más el tiempo se
+      iban 45 px fuera de la pantalla. Play y ±10 ya están grandes en el
+      centro del video, así que abajo sobran.
+   3. La tabla de /estado desbordaba la pantalla y empujaba toda la página.
+
+   La medida de referencia para tocar es 44 px.
+   =========================================================== */
+@media (max-width: 640px) {
+  .cabecera {
+    gap: 2px 20px;
+    padding: 14px 0 4px;
+  }
+  .nav {
+    margin-left: 0;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 0 18px;
+    align-items: center;
+  }
+  .nav a,
+  .nav .enlace {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    /* sin esto, "el expediente" se parte en dos renglones */
+    white-space: nowrap;
+  }
+  .nav a::after,
+  .nav .enlace::after {
+    bottom: 9px;
+  }
+  .nav__corte {
+    display: none;
+  }
+  .wordmark {
+    font-size: 22px;
+  }
+
+  /* lo que se toca, tamaño de dedo */
+  .boton,
+  .caso-chip,
+  .reparto__cap summary,
+  .wordmark {
+    min-height: 44px;
+  }
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+  }
+  .caso-chip {
+    display: inline-flex;
+    align-items: center;
+  }
+  /* Un enlace en medio de un párrafo no se agranda con min-height: eso
+     parte el renglón. Se le estira el área de toque con un pseudo, que no
+     ocupa lugar. (Por eso `audit-movil` los saltea: miden menos de 44 px
+     pero se tocan bien.) */
+  .puerta a,
+  .relato__texto a {
+    position: relative;
+    text-decoration: underline;
+  }
+  .puerta a::after,
+  .relato__texto a::after {
+    content: "";
+    position: absolute;
+    inset: -13px -8px;
+  }
+
+  /* el juego */
+  .plan__pie {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .plan__pie .boton {
+    width: 100%;
+    justify-content: center;
+  }
+  .plan__pie .espacio {
+    display: none;
+  }
+  .abrio {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .abrio .boton {
+    justify-content: center;
+  }
+  .desenlace__pie {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .desenlace__pie .boton {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  /* el expediente: dos columnas no entran en un teléfono */
+  .caras {
+    grid-template-columns: 1fr;
+  }
+  .reparto__lista {
+    grid-template-columns: 1fr;
+  }
+  .reparto__codigo {
+    min-width: 4.5ch;
+  }
+}
+
+/* La barra del reproductor, en pantallas donde no entra entera. */
+@media (max-width: 700px) {
+  /* play y ±10 ya están, grandes, en el centro del video */
+  .cine__boton--tambien-arriba,
+  .cine__volumen {
+    display: none;
+  }
+  .cine__boton {
+    width: 44px;
+    height: 44px;
+  }
+  .cine__controles {
+    gap: 2px;
+  }
+  /* volver y siguiente también se tocan con el dedo */
+  .cine__volver,
+  .cine__siguiente {
+    min-height: 44px;
+  }
+}
+
+/* Teléfonos con muesca y barra de gestos: el fondo llega hasta el borde
+   (viewportFit: "cover" en el layout) pero el contenido no se mete abajo. */
+.contenedor {
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
+}
+.cine__arriba {
+  padding-top: max(12px, env(safe-area-inset-top));
+  padding-left: max(12px, env(safe-area-inset-left));
+  padding-right: max(12px, env(safe-area-inset-right));
+}
+.cine__abajo {
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  padding-left: max(12px, env(safe-area-inset-left));
+  padding-right: max(12px, env(safe-area-inset-right));
+}
+
+/* La tabla de /estado no entra en un teléfono: que scrollee ella sola
+   en vez de empujar la página entera. */
+.tabla-ancha {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 640px) {
+  .tabla-ancha table {
+    min-width: 560px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
