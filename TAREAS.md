@@ -30,8 +30,14 @@ los archivos locales, o `node scripts/convertir.mjs entrada salida.mp4`.
       años de nacimiento de los actores tienen menos respaldo que el resto
       (de Peretti hay fuentes que dicen 10 y otras 25 de febrero de 1963;
       quedó sólo el año). Si algo está mal, se corrige en ese archivo.
-- [ ] Faltan los invitados: la serie tuvo un desfile de actores por capítulo
-      que hoy no está en ningún lado del sitio.
+- [x] Los invitados por capítulo ya están: 463 nombres en `data/reparto.json`
+      y una sección en `/expediente` con las caras que vuelven. Los datos los
+      pasó el dueño exportando la lista de Wikipedia, porque el entorno de
+      Claude no puede abrir esas páginas.
+- [ ] **El título del 2x07**: `data/episodes.json` dice «La brigada B» y
+      Wikipedia «El Gran Desafío». Decidir cuál va. Los otros 23 coinciden.
+- [ ] De los 463 nombres, 103 tienen el personaje identificado. Al resto se
+      lo podría atar a mano mirando los capítulos, pero es trabajo de fan.
 - [ ] El juego no guarda nada: cada partida arranca de cero y el plan se
       pierde al recargar. Si se quiere historial, va en `localStorage`,
       no en el bucket.

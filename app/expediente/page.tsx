@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Cabecera from "@/components/Cabecera";
 import Fichas from "@/components/Expediente";
+import Reparto from "@/components/Reparto";
 import Revelar from "@/components/Revelar";
 import { laSerie, metodo, szifron } from "@/lib/serie";
 
@@ -56,6 +57,10 @@ export default function PaginaExpediente() {
               ))}
             </ol>
           </section>
+        </Revelar>
+
+        <Revelar>
+          <Reparto />
         </Revelar>
 
         <Revelar>

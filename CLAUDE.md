@@ -202,7 +202,7 @@ porque cada capítulo va envuelto en su propio `Revelar`).
 ```bash
 npm run dev                      # local en :3000
 npm run build                    # verificar que compila antes de deployar
-npm test                         # tests de auth, puerta, r2, mp4, marcas, simulacro, serie y episodes.json
+npm test                         # tests de auth, puerta, r2, mp4, marcas, simulacro, serie, reparto y episodes.json
 npm run prepare-videos -- <dir>  # ffmpeg: normaliza, cuadros, srt->vtt (requiere ffmpeg)
 npm run upload -- ./listos       # sube a R2 con multipart (requiere las variables)
 npm run demo                     # regenera public/demo/muestra.mp4 (requiere ffmpeg)
@@ -237,6 +237,8 @@ app/api/marcas            lee y escribe marcas.json (intro por capítulo)
 app/api/arte/[id]         portada JPEG: la devuelve (GET) o la guarda (POST)
 app/api/simulacro         evalúa el plan del juego. Local: no sale a internet.
 lib/serie.ts              datos de la serie, los cuatro y Szifrón. Escrito, no copiado.
+lib/reparto.ts            quién actuó en cada capítulo + las caras que vuelven
+data/reparto.json         463 nombres, de la lista de Wikipedia. Datos, no texto.
 lib/origen.ts             el relato de por qué existe el sitio. Cinco capítulos.
 lib/simulacro.ts          casos del juego + motor que puntúa y narra
 lib/puerta.ts             las reglas de la puerta: cuánto hay que sacar y cómo
@@ -260,6 +262,7 @@ components/Reproductor.tsx reproductor a pantalla entera: controles propios,
                           progreso, intro, portada, atajos, siguiente, errores
 components/Iconos.tsx     íconos SVG del reproductor
 components/Expediente.tsx las cuatro fichas y el legajo que se abre
+components/Reparto.tsx    las caras que vuelven + el reparto por capítulo
 components/Juego.tsx      el juego: caso, plan y desenlace
 components/Revelar.tsx    deja aparecer una sección cuando entra en pantalla
 components/Estado.tsx     tabla de /estado, revisa de a tres
@@ -439,6 +442,24 @@ asume simetría entre temporadas, está mal. `npm test` lo verifica.
 
 `sinopsis` está vacío en los 24 a propósito. Los resúmenes de Wikipedia y de
 las páginas de series son texto de otro; si se quieren sinopsis, se escriben.
+
+`data/reparto.json` tiene 463 nombres: quién actuó en cada capítulo. Salió de
+la lista de episodios de Wikipedia en español, que el dueño exportó a un .docx
+y pasó por el chat, porque **el entorno donde corre Claude no puede abrir
+Wikipedia, IMDb ni el Fandom**: el proxy de egreso los bloquea, y el buscador
+que sí funciona devuelve resúmenes que mezclan la versión argentina con los
+remakes de España y México. Si hace falta ampliar estos datos, el camino es
+el mismo: que el dueño pase el material, no que Claude lo busque de memoria.
+Los nombres son datos; las sinopsis de esa misma fuente no se copian.
+
+La sección los muestra en `/expediente`. El dato lindo, que sale de contar y
+está fijado en `tests/reparto.test.ts`: los cuatro que más vuelven —Ricci,
+Dioguardi, Sureda y Jorge D'Elía— son los cuatro de la Brigada B, y tres de
+ellos habían sido clientes en los capítulos 2, 3 y 4.
+
+**Discrepancia sin resolver:** el 2x07 figura en `data/episodes.json` como
+«La brigada B» y en Wikipedia como «El Gran Desafío». Está sin tocar hasta
+que el dueño decida.
 
 `duracion` está en 0 hasta que alguien la cargue; mientras, la tarjeta usa la
 duración que el navegador vio la última vez que se reprodujo el capítulo.

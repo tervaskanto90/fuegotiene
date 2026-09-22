@@ -1,0 +1,918 @@
+{
+ "s01e01": {
+  "invitados": [
+   {
+    "actor": "Nilda Raggi",
+    "personaje": "María"
+   },
+   {
+    "actor": "Claudio Rissi",
+    "personaje": "Bernardo Galván"
+   },
+   {
+    "actor": "Carola Reyna",
+    "personaje": "Claudia"
+   }
+  ],
+  "tambien": [
+   "Marcelo Lahitou",
+   "Leonardo Bechini"
+  ]
+ },
+ "s01e02": {
+  "invitados": [
+   {
+    "actor": "Pablo Brichta",
+    "personaje": "Norberto Miseritzky"
+   },
+   {
+    "actor": "Humberto Serrano",
+    "personaje": "Juan Dumas"
+   },
+   {
+    "actor": "Valeria Britos",
+    "personaje": ""
+   },
+   {
+    "actor": "Pasta Dioguardi",
+    "personaje": "Martín Vanegas"
+   },
+   {
+    "actor": "Manuel Vicente",
+    "personaje": "Fernando Laguzzi"
+   },
+   {
+    "actor": "Roly Serrano",
+    "personaje": ""
+   },
+   {
+    "actor": "Alfredo Allende",
+    "personaje": ""
+   }
+  ],
+  "tambien": [
+   "Carola Reyna",
+   "Juan Carlos Ricci"
+  ]
+ },
+ "s01e03": {
+  "invitados": [
+   {
+    "actor": "Marcela Ferradas",
+    "personaje": ""
+   },
+   {
+    "actor": "Gimena Accardi",
+    "personaje": "Melina Fichelson"
+   },
+   {
+    "actor": "Jorge D'Elía",
+    "personaje": "José Feller"
+   },
+   {
+    "actor": "Luis Machín",
+    "personaje": "Romagnoli"
+   },
+   {
+    "actor": "Marcelo Trepat",
+    "personaje": "Ortiz DeOcampo"
+   },
+   {
+    "actor": "José Palomino Cortez",
+    "personaje": ""
+   },
+   {
+    "actor": "José Andrada",
+    "personaje": ""
+   },
+   {
+    "actor": "Lelio Leser",
+    "personaje": ""
+   }
+  ],
+  "tambien": [
+   "Juan Carlos Ricci",
+   "Carolina Daian",
+   "María Laura Topa",
+   "Mariano Villa",
+   "Willy Deymonnaz",
+   "Maximiliano López",
+   "Alicia Areste",
+   "Carlos Lanari",
+   "María José Iccardi"
+  ]
+ },
+ "s01e04": {
+  "invitados": [
+   {
+    "actor": "Fernando Sureda",
+    "personaje": "Lucio Bonelli"
+   },
+   {
+    "actor": "Oscar Alegre",
+    "personaje": ""
+   },
+   {
+    "actor": "Andrea Politti",
+    "personaje": "Alicia Corsiglia"
+   },
+   {
+    "actor": "Ernesto Claudio",
+    "personaje": ""
+   },
+   {
+    "actor": "Osvaldo Santoro",
+    "personaje": "Carlos Villarreal"
+   }
+  ],
+  "tambien": [
+   "Gabriel Laborde",
+   "Pasta Dioguardi",
+   "Juan Carlos Ricci",
+   "Horacio Vite",
+   "Leandro Ferraro",
+   "Pochi Ducasse",
+   "Horacio Nitaco",
+   "Héctor Sinder",
+   "Carola Beratta",
+   "Aretha Oliveira",
+   "Claudio Rissi"
+  ]
+ },
+ "s01e05": {
+  "invitados": [
+   {
+    "actor": "José María López",
+    "personaje": "Pirolo"
+   },
+   {
+    "actor": "Nazareno Casero",
+    "personaje": "Matías"
+   },
+   {
+    "actor": "Miguel Dedovich",
+    "personaje": "Miguens"
+   }
+  ],
+  "tambien": [
+   "Carlos Roffé",
+   "Marcos Woinsky",
+   "Juan Carlos Ricci",
+   "Patricia Rozas",
+   "Susana Di Gerónimo",
+   "Ricardo Díaz Mourelle",
+   "Gustavo Moro",
+   "Susana Machini",
+   "Hernán Martínez",
+   "Daniel García",
+   "Sebastián Calaro",
+   "Amancay Spindola",
+   "Juan West",
+   "Santiago Stieben",
+   "Jorge García Marino",
+   "Victoria Tortora",
+   "Claudia Pagano",
+   "Sergio Bermejo",
+   "Jorge Mensi",
+   "Uriel Misteisz",
+   "Jorge Gershman",
+   "Fernando Sureda",
+   "Claudio Rissi",
+   "Pasta Dioguardi"
+  ]
+ },
+ "s01e06": {
+  "invitados": [
+   {
+    "actor": "Martín Coria",
+    "personaje": "Roberto Ávalos"
+   },
+   {
+    "actor": "Héctor Bidonde",
+    "personaje": "Agustín Mendilaharzu"
+   },
+   {
+    "actor": "Marita Ballesteros",
+    "personaje": "Helena"
+   }
+  ],
+  "tambien": [
+   "Paula Siero",
+   "Federico Mini",
+   "Penélope Bal",
+   "Andrés Tiendo",
+   "Juan Carlos Ricci",
+   "Gabriel Fernández",
+   "Horacio Vite",
+   "Luciana Ramos",
+   "Javier De Souza",
+   "Fabián Chiquiar",
+   "Luis Motola",
+   "Irina Kostiuk",
+   "Andrea Goldberg",
+   "Oscar Leguizamón",
+   "Jorge Tejera",
+   "Eduardo Coacci",
+   "Johana Copes",
+   "Juan Carlos Copes",
+   "Claudio Rissi"
+  ]
+ },
+ "s01e07": {
+  "invitados": [
+   {
+    "actor": "Eduardo Santoro",
+    "personaje": "Solkin"
+   },
+   {
+    "actor": "Carlos Garic",
+    "personaje": "Saúl Pontevecchia"
+   },
+   {
+    "actor": "Emilio Bardi",
+    "personaje": ""
+   },
+   {
+    "actor": "Vando Villamil",
+    "personaje": ""
+   },
+   {
+    "actor": "Joselo Bela",
+    "personaje": ""
+   },
+   {
+    "actor": "Martín Adjemián",
+    "personaje": "Bruno Salamanca"
+   },
+   {
+    "actor": "Jorge Gómez",
+    "personaje": "Nerón"
+   },
+   {
+    "actor": "Jorge Prado",
+    "personaje": "Vargas"
+   }
+  ],
+  "tambien": [
+   "Pasta Dioguardi",
+   "Juan Carlos Ricci",
+   "Fernando Sureda",
+   "Berni Pages",
+   "Fabián Talin",
+   "Nelson Segre",
+   "María Laura Santanna",
+   "Martín Coria",
+   "Claudio Rissi"
+  ]
+ },
+ "s01e08": {
+  "invitados": [
+   {
+    "actor": "Chang Sung Kim",
+    "personaje": "Tamazaki"
+   },
+   {
+    "actor": "Boy Olmi",
+    "personaje": "José Zarazola"
+   },
+   {
+    "actor": "Claribel Medina",
+    "personaje": "Laura Smirnoff"
+   },
+   {
+    "actor": "Carola Islas",
+    "personaje": ""
+   },
+   {
+    "actor": "Gabriel Goity",
+    "personaje": "Jorge Torelli"
+   }
+  ],
+  "tambien": [
+   "Jorge D'Elía",
+   "José María Toledo",
+   "Gustavo Rey",
+   "Pasta Dioguardi",
+   "Juan Carlos Ricci",
+   "Fernando Sureda",
+   "Jorge Ochoa",
+   "Eduardo Iacono",
+   "Horacio Minujen"
+  ]
+ },
+ "s01e09": {
+  "invitados": [
+   {
+    "actor": "Fabián Rendo",
+    "personaje": ""
+   },
+   {
+    "actor": "Santiago Bal",
+    "personaje": "Rubén Bértora"
+   },
+   {
+    "actor": "César Vianco",
+    "personaje": "Franco Milazzo"
+   },
+   {
+    "actor": "Daniel Valenzuela",
+    "personaje": "Hugo Maresca"
+   }
+  ],
+  "tambien": [
+   "Rubén Polimeni",
+   "Jorge D'Elía",
+   "Humberto Serrano",
+   "Chang Sung Kim",
+   "Pasta Dioguardi",
+   "Juan Carlos Ricci",
+   "Juan Alberto Badía",
+   "Ana Doval",
+   "Víctor D'Anna",
+   "Laura Romeo",
+   "Paola Messina",
+   "Román Alberio",
+   "Paula Lima",
+   "Ulises Di Roma",
+   "Lucrecia Barbagelata",
+   "Gabriela Silva",
+   "Esteban Fiocca",
+   "Daniel Merwicer",
+   "Daniel Beniluz",
+   "Daniel Niborsky",
+   "Gabriel Galindez",
+   "Fernando Sureda"
+  ]
+ },
+ "s01e10": {
+  "invitados": [
+   {
+    "actor": "Divino Vivas",
+    "personaje": "Antonio Scotti"
+   },
+   {
+    "actor": "Ricardo Merkin",
+    "personaje": ""
+   },
+   {
+    "actor": "Horacio Dener",
+    "personaje": ""
+   },
+   {
+    "actor": "Daniel Figueiredo",
+    "personaje": ""
+   },
+   {
+    "actor": "Érica Rivas",
+    "personaje": "Clara Molina"
+   },
+   {
+    "actor": "Cacho Espíndola",
+    "personaje": ""
+   },
+   {
+    "actor": "Mabel Pessen",
+    "personaje": ""
+   },
+   {
+    "actor": "Ramiro Agüero",
+    "personaje": "Federico"
+   },
+   {
+    "actor": "Juan Vitali",
+    "personaje": "Enrique"
+   }
+  ],
+  "tambien": [
+   "Jorge D'Elía",
+   "Hilda Bernard",
+   "Néstor Sánchez",
+   "Teresa Calandra",
+   "Marcelo Fernández",
+   "Claudio Rissi",
+   "Juan Carlos Ricci",
+   "Fernando Sureda",
+   "Marcela Ruiz",
+   "Mausi Martínez",
+   "Roberto Catarineu",
+   "Pablo Moretti",
+   "Nicolás Agüero",
+   "Gabriela Silva",
+   "Lucrecia Barbagelata"
+  ]
+ },
+ "s01e11": {
+  "invitados": [
+   {
+    "actor": "Fabio Aste",
+    "personaje": ""
+   },
+   {
+    "actor": "José María Rivara",
+    "personaje": ""
+   },
+   {
+    "actor": "Lorenzo Quinteros",
+    "personaje": "Diego Crucitti"
+   }
+  ],
+  "tambien": [
+   "Néstor Zacco",
+   "Patrick Aduma",
+   "Marta Albertini",
+   "Jorge D'Elía",
+   "Pasta Dioguardi",
+   "Juan Carlos Ricci",
+   "Claudio Rissi",
+   "Chang Sung Kim",
+   "Fernando Sureda",
+   "Lucrecia Barbagelata",
+   "Luciana González Costa",
+   "Esteban Mihailik",
+   "Javier Maldonado",
+   "Natalia Imbrosciano",
+   "Adolfo Dorin",
+   "Darío Fernández",
+   "Andrea Monterroso"
+  ]
+ },
+ "s01e12": {
+  "invitados": [
+   {
+    "actor": "Thelma Fardín",
+    "personaje": "Sofía"
+   },
+   {
+    "actor": "Jorge Nolasco",
+    "personaje": "Adrián Pasternak"
+   },
+   {
+    "actor": "Malena Solda",
+    "personaje": "Natalia"
+   },
+   {
+    "actor": "Diego Topa",
+    "personaje": "Ezequiel"
+   },
+   {
+    "actor": "Mónica Galán",
+    "personaje": "Marcela"
+   },
+   {
+    "actor": "Jorge Ondarza",
+    "personaje": "Osvaldo Ferrarotti"
+   }
+  ],
+  "tambien": [
+   "Jorge Noya",
+   "Octavio Cavalli",
+   "Jorge D'Elía",
+   "Gianni Fiore",
+   "Juan Carlos Ricci",
+   "Patrick Aduma",
+   "Chang Sung Kim",
+   "Pasta Dioguardi",
+   "Helena Jios",
+   "Eduardo Ruderman",
+   "Arturo Goetz",
+   "James Murray",
+   "Silvia García Rey",
+   "Jessica Bacher",
+   "Daniel Ceriotti",
+   "Alejandro Costa",
+   "Cristina Rozadilla"
+  ]
+ },
+ "s01e13": {
+  "invitados": [
+   {
+    "actor": "Carlos Moreno",
+    "personaje": "Plimm"
+   },
+   {
+    "actor": "Rolo Puente",
+    "personaje": "Lempergier"
+   },
+   {
+    "actor": "Tony Vilas",
+    "personaje": "Bruno Sontag"
+   },
+   {
+    "actor": "Pachi Armas",
+    "personaje": ""
+   }
+  ],
+  "tambien": [
+   "Santiago Ríos",
+   "Jorge Nolasco",
+   "Miguel Dedovich",
+   "Boy Olmi",
+   "Jorge D'Elía",
+   "Juan Carlos Ricci",
+   "Chang Sung Kim",
+   "Pasta Dioguardi",
+   "Fernando Sureda",
+   "Emilio Comte",
+   "Julio La Cava",
+   "Fernando Álvarez",
+   "Claudia Zima",
+   "Martina Parret",
+   "Lucrecia Barbagelata",
+   "Martín Coria"
+  ]
+ },
+ "s02e01": {
+  "invitados": [
+   {
+    "actor": "Juan Carlos Ricci",
+    "personaje": "Arturo Gaona"
+   },
+   {
+    "actor": "María Marull",
+    "personaje": "María Anselmi"
+   },
+   {
+    "actor": "Atilio Pozzobón",
+    "personaje": "su padre"
+   }
+  ],
+  "tambien": [
+   "Norberto Díaz",
+   "Rodolfo Machado",
+   "Joaquín Bouzas",
+   "Susana Cart",
+   "Patrick Aduma",
+   "Chang Sung Kim",
+   "Daniel Valenzuela",
+   "Luis Ali",
+   "Osvaldo Pelufo",
+   "Claudio Chiafone",
+   "Ponchi Brusse",
+   "Carlos Simón",
+   "Paula Rojo",
+   "Eva Morel",
+   "Eliana Joffre",
+   "María José Sharry",
+   "Dalía Elnecave",
+   "Beatriz Dellacasa",
+   "Agustina Seiguer",
+   "Soledad Comasco",
+   "Agustina López",
+   "Pablo Moseinco",
+   "Anabella Blanco",
+   "Alejandro Kaplansky",
+   "Claudio Flores",
+   "Sergio Tedux",
+   "Alejandro Pous",
+   "Andrea Politti",
+   "Cacho Espíndola"
+  ]
+ },
+ "s02e02": {
+  "invitados": [
+   {
+    "actor": "Mónica Villa",
+    "personaje": "Beatriz Ledesma"
+   },
+   {
+    "actor": "Luis Luque",
+    "personaje": "Carlos Lorenzo"
+   }
+  ],
+  "tambien": [
+   "Jorge D'Elía",
+   "Fernando Sureda",
+   "Pasta Dioguardi",
+   "Juan Carlos Ricci",
+   "Chang Sung Kim",
+   "Patrick Aduma",
+   "Daniel Valenzuela",
+   "Elena Safdie",
+   "Noelia Vanrell",
+   "Camila Mac Lennan",
+   "Ana Padilla",
+   "Noni Avesani",
+   "Luis Graciano",
+   "Fernando Madanes",
+   "Agustina López",
+   "Soledad Comaso",
+   "Agustina Seiguer"
+  ]
+ },
+ "s02e03": {
+  "invitados": [
+   {
+    "actor": "Federico Olivera",
+    "personaje": "Alejandro Barack"
+   },
+   {
+    "actor": "Eleonora Wexler",
+    "personaje": "Corina Lázaro"
+   }
+  ],
+  "tambien": [
+   "Jorge D'Elía",
+   "José Andrada",
+   "Beatriz Thibaudin",
+   "Pasta Dioguardi",
+   "Juan Carlos Ricci",
+   "Fernando Sureda",
+   "Carlos Rivkin",
+   "Gustavo Mac Lennan",
+   "Lucía Rossi",
+   "Marcelo Breitz",
+   "Mercedes Muñoz",
+   "Chang Sung Kim",
+   "Nacha Ríos",
+   "Adrián Spinelli",
+   "Marisabel Ouzande",
+   "María Mazepa",
+   "Milita Branden",
+   "Elida Marceta",
+   "Agustina López",
+   "Soledad Comasco",
+   "Agustina Seiguer"
+  ]
+ },
+ "s02e04": {
+  "invitados": [
+   {
+    "actor": "Fernando Martínez",
+    "personaje": "Satanás"
+   },
+   {
+    "actor": "Mario Alarcón",
+    "personaje": "Luis Torrejón"
+   }
+  ],
+  "tambien": [
+   "Guido Gorgatti",
+   "Mario Labardén",
+   "Luis Mazzeo",
+   "Jorge D'Elía",
+   "Beatriz Thibaudin",
+   "Julio Gini",
+   "Marcos García Grau",
+   "Juan Carlos Ricci",
+   "Pasta Dioguardi",
+   "Fernando Sureda",
+   "Sandra Di Milo",
+   "Silvia Kalfaian",
+   "Yazmin Karzon",
+   "Paula Carruega",
+   "Silvina Casanova",
+   "Karina Caregnato",
+   "Marina Perret",
+   "Susana Brussa",
+   "Teresa Mejías",
+   "Santiago Bal"
+  ]
+ },
+ "s02e05": {
+  "invitados": [
+   {
+    "actor": "Luciano Acosta",
+    "personaje": "Pablo Herdel"
+   },
+   {
+    "actor": "Pablo Jemma",
+    "personaje": "Rubín"
+   },
+   {
+    "actor": "Carlos Weber",
+    "personaje": "Juan Carlos Robles"
+   },
+   {
+    "actor": "Fernando Caride",
+    "personaje": "Sebastián Perillo"
+   },
+   {
+    "actor": "Alejandro Awada",
+    "personaje": "Marcos Molero"
+   }
+  ],
+  "tambien": [
+   "Ricardo Morán",
+   "Jorge D'Elía",
+   "Mónica Gonzaga",
+   "Yael Tesouro",
+   "Sergio Baldini",
+   "Pasta Dioguardi",
+   "Fernando Sureda",
+   "Juan Carlos Ricci",
+   "Alicia Orfali",
+   "Daniel Lemes",
+   "Adriana Pellegrini",
+   "Mauro Iacono",
+   "Silvina Acosta",
+   "Eva Adonaylo",
+   "Fernando Lúpiz",
+   "Guido Gorgatti",
+   "Marcos García Grau",
+   "Sandra Di Milo",
+   "Hernán Jiménez"
+  ]
+ },
+ "s02e06": {
+  "invitados": [
+   {
+    "actor": "Jimena La Torre",
+    "personaje": "Paula Rivera"
+   },
+   {
+    "actor": "Nicolás Mateo",
+    "personaje": "Gustavo Brosky"
+   },
+   {
+    "actor": "Raúl Rizzo",
+    "personaje": "Álvaro Rivera"
+   },
+   {
+    "actor": "Rita Terranova",
+    "personaje": "Gloria"
+   },
+   {
+    "actor": "Juan Manuel Tenuta",
+    "personaje": "Tito Brosky"
+   },
+   {
+    "actor": "Alejandra Da Passano",
+    "personaje": "Susana"
+   },
+   {
+    "actor": "Margara Alonso",
+    "personaje": ""
+   }
+  ],
+  "tambien": [
+   "Jorge D'Elía",
+   "Gonzalo Urtizberea",
+   "Marcelo Serre",
+   "Karo Pampillo",
+   "Patrick Aduma",
+   "Chang Sung Kim",
+   "Pasta Dioguardi",
+   "Fernando Sureda",
+   "Alejandro Aristegui",
+   "Julián Cavero"
+  ]
+ },
+ "s02e07": {
+  "invitados": [
+   {
+    "actor": "Carlos Bermejo",
+    "personaje": ""
+   },
+   {
+    "actor": "Héctor Malamud",
+    "personaje": "Nicolás Rizzo"
+   }
+  ],
+  "tambien": [
+   "Diego Leske",
+   "Mariano Caligaris",
+   "Patrick Aduma",
+   "Divino Vivas",
+   "Pablo Jemma",
+   "Sandra Di Milo",
+   "Chang Sung Kim"
+  ]
+ },
+ "s02e08": {
+  "invitados": [
+   {
+    "actor": "Atilio Veronelli",
+    "personaje": ""
+   },
+   {
+    "actor": "Verónica Llinás",
+    "personaje": ""
+   },
+   {
+    "actor": "Sergio Lerer",
+    "personaje": "Pancchino"
+   },
+   {
+    "actor": "Pepe Monje",
+    "personaje": "Javier Loyola"
+   }
+  ],
+  "tambien": [
+   "Pasta Dioguardi",
+   "Juan Carlos Ricci",
+   "Fernando Sureda",
+   "Victoria Aragón",
+   "Daniel De Vita",
+   "Marcelo Chaparro",
+   "Susada Salerno",
+   "Trinidad Asencio",
+   "Ismael Santillán",
+   "Jorge D'Elía",
+   "Mariano Mores"
+  ]
+ },
+ "s02e09": {
+  "invitados": [
+   {
+    "actor": "Esteban Student",
+    "personaje": "Cozzetti"
+   },
+   {
+    "actor": "Marcela Kloosterboer",
+    "personaje": "Mariana Ventura"
+   },
+   {
+    "actor": "Jean-Pierre Noher",
+    "personaje": "Manuel Garriga"
+   },
+   {
+    "actor": "Nicolás D'Agostino",
+    "personaje": "Diego"
+   }
+  ],
+  "tambien": [
+   "Pablo Novak",
+   "Silvina Bosco",
+   "Pablo De Nito",
+   "Boy Olmi",
+   "Héctor Nogues",
+   "Bernardo Baras",
+   "Marcelo De Souza",
+   "Harry Havilio",
+   "Pablo Carnaghi",
+   "Ana Carina",
+   "Diana Santini",
+   "Anna Stark",
+   "Carlos Gentile",
+   "Juan Carlos Ricci",
+   "Chang Sung Kim",
+   "Patrick Aduma",
+   "Fernando Sureda",
+   "Pasta Dioguardi",
+   "Divino Vivas",
+   "Jorge D'Elía",
+   "Beatriz Thibaudin",
+   "Fernando Martínez"
+  ]
+ },
+ "s02e10": {
+  "invitados": [
+   {
+    "actor": "Villanueva Cosse",
+    "personaje": "Alejandro Horvat"
+   },
+   {
+    "actor": "Carlos Santamaría",
+    "personaje": "Fabián Charbone"
+   }
+  ],
+  "tambien": [
+   "Cristina Tejedor",
+   "Jorge Varas",
+   "Divino Vivas",
+   "David Di Napoli",
+   "Jorge Marcucci",
+   "Beatriz Thibaudin",
+   "Daniel Dibiase",
+   "Cristian Pasman",
+   "Matías Fiszson",
+   "Fernando Sureda",
+   "Jorge D'Elía",
+   "Pasta Dioguardi",
+   "Juan Carlos Ricci"
+  ]
+ },
+ "s02e11": {
+  "invitados": [
+   {
+    "actor": "Adriana Salonia",
+    "personaje": "Daniela Manzione"
+   },
+   {
+    "actor": "Gerardo Chendo",
+    "personaje": "Diego"
+   }
+  ],
+  "tambien": [
+   "Salo Pasik",
+   "Roberto Antier",
+   "Patrick Aduma",
+   "Chang Sung Kim",
+   "Carlos Bermejo",
+   "Fernando Martínez",
+   "Beatriz Thibaudin",
+   "Jorge D'Elía",
+   "Sandra Di Milo",
+   "María Marull",
+   "Pablo Jemma",
+   "Fernando Sureda",
+   "Pasta Dioguardi",
+   "Divino Vivas",
+   "Juan Carlos Ricci",
+   "Luciano Acosta",
+   "Claudio Rissi",
+   "Carola Reyna",
+   "Daniel Campomenosi"
+  ]
+ }
+}

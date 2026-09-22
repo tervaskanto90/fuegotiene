@@ -1482,6 +1482,127 @@ kbd {
 }
 
 /* el método */
+/* el expediente: la parte de biblioteca */
+.seccion__bajada {
+  max-width: 68ch;
+  margin: -6px 0 22px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.caras {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--radio);
+  overflow: hidden;
+}
+.caras li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 11px 14px;
+  background: var(--ink-2);
+}
+.caras__n {
+  min-width: 2ch;
+  text-align: right;
+  color: var(--mint);
+  font-size: 15px;
+}
+.caras__actor {
+  color: var(--bone);
+  font-size: 15px;
+}
+.caras__personaje {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.reparto {
+  border: 1px solid var(--line);
+  border-radius: var(--radio);
+  overflow: hidden;
+}
+.reparto__cap + .reparto__cap {
+  border-top: 1px solid var(--line);
+}
+.reparto__cap summary {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  background: var(--ink-2);
+  transition: background 160ms ease;
+  list-style: none;
+}
+.reparto__cap summary::-webkit-details-marker {
+  display: none;
+}
+.reparto__cap summary:hover {
+  background: color-mix(in srgb, var(--line) 30%, var(--ink-2));
+}
+.reparto__codigo {
+  color: var(--muted);
+  font-size: 14px;
+  min-width: 5ch;
+}
+.reparto__titulo {
+  color: var(--bone);
+  font-size: 15px;
+  flex: 1;
+}
+.reparto__cuantos {
+  color: var(--muted);
+  font-size: 13px;
+}
+.reparto__cap[open] summary {
+  background: color-mix(in srgb, var(--line) 22%, var(--ink-2));
+}
+.reparto__cuerpo {
+  padding: 4px 14px 16px;
+  background: var(--ink);
+}
+.reparto__lista {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 6px 18px;
+  font-size: 15px;
+}
+.reparto__lista b {
+  color: var(--bone);
+  font-weight: 500;
+}
+.reparto__tambien {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.reparto__rotulo {
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--line-2);
+}
+.reparto__fuente {
+  margin-top: 16px;
+  font-size: 13px;
+  max-width: 60ch;
+}
+
 .metodo {
   list-style: none;
   margin: 0;
