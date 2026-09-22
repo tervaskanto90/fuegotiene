@@ -199,6 +199,27 @@ convertir la serie entera si hiciera falta. El respaldo en `originales/`
 ocupa lugar en el bucket; cuando estés seguro, lo podés borrar desde el
 panel de Cloudflare.
 
+## Las dos secciones nuevas
+
+- **la serie**: quiénes son los cuatro, qué hace cada uno, quiénes son los
+  actores y quién es Szifrón. Los datos están escritos a mano en
+  `lib/serie.ts`: si ves algo mal, se corrige ahí.
+- **el juego**: te dan un caso, escribís el operativo y se simula cómo sale.
+  Funciona sin configurar nada y sin costo.
+
+  Si querés que el desenlace lo escriba Claude en vez del simulador que ya
+  tiene el sitio, hace falta una clave de la API de Anthropic, que se paga
+  aparte del plan de Claude:
+
+  1. En **console.anthropic.com**, creá una API key y cargá crédito.
+  2. En Vercel, **Settings**, **Environment Variables**: `ANTHROPIC_API_KEY`
+     con esa clave. **Redeploy**.
+  3. Opcional: `SIMULACRO_MODELO` con `claude-haiku-4-5` para que salga más
+     barato.
+
+  Cada partida cuesta centavos. Si no cargás la clave, o si un día se queda
+  sin crédito, el juego sigue andando con el simulador local y ni te enterás.
+
 ## Después
 
 - **Dar acceso a alguien**: agregá otro código a `ACCESS_CODES`, separado por

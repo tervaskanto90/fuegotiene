@@ -7,4 +7,6 @@ de datos.
 - **PASOS.md**: cómo publicarlo y cargarlo sin instalar nada, de punta a punta.
 - **SUBIR-CON-CYBERDUCK.md**: cómo subir los capítulos al bucket.
 - **TAREAS.md**: lo que falta y lo que queda por decidir.
+- Secciones: **capítulos** para ver, **la serie** para leer, **el juego**
+  para armar un operativo, y **subir** y **estado** para administrar.
 - **CLAUDE.md**: cómo está hecho y por qué, para quien toque el código.

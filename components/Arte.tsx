@@ -16,7 +16,7 @@ export default function Arte({ ep, grande, foto, children }: Props) {
   const [fallo, setFallo] = useState(false);
   const src = ep.arte ? `/art/${ep.arte}` : foto;
   return (
-    <div className={`arte arte--plano${grande ? " arte--grande" : ""}`}>
+    <div className={`arte arte--plano${grande ? " arte--grande" : ""}${src && !cargada && !fallo ? " arte--cargando" : ""}`}>
       <span className="arte__temp" aria-hidden="true">
         temporada {ep.temporada}
       </span>

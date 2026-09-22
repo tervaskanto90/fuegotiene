@@ -47,8 +47,9 @@ export const PantallaCompleta = ({ className }: P) => (
   </svg>
 );
 export const SalirPantalla = ({ className }: P) => (
+  // Las cuatro escuadras apuntan al centro: esquinas en (9,9), (15,9), (15,15) y (9,15).
   <svg {...base} className={className}>
-    <path d="M9 4v5H4M15 9V4h5M20 15h-5v5M4 15h5v5" />
+    <path d="M9 4v5H4M15 4v5h5M20 15h-5v5M4 15h5v5" />
   </svg>
 );
 export const Siguiente = ({ className }: P) => (

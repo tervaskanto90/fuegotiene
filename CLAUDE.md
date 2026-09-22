@@ -116,7 +116,7 @@ las cuatro variables: no hay un flag que prender.
 ```bash
 npm run dev                      # local en :3000
 npm run build                    # verificar que compila antes de deployar
-npm test                         # tests de auth, r2, mp4, marcas y episodes.json (node --test)
+npm test                         # tests de auth, r2, mp4, marcas, simulacro, serie y episodes.json
 npm run prepare-videos -- <dir>  # ffmpeg: normaliza, cuadros, srt->vtt (requiere ffmpeg)
 npm run upload -- ./listos       # sube a R2 con multipart (requiere las variables)
 npm run demo                     # regenera public/demo/muestra.mp4 (requiere ffmpeg)
@@ -141,11 +141,17 @@ middleware.ts             puerta de acceso, corre en Edge
 app/page.tsx              portada (server) -> Biblioteca (client)
 app/entrar/page.tsx       login. Form HTML común, sin JS obligatorio.
 app/ver/[id]/page.tsx     reproductor
+app/serie/page.tsx        la serie: legajos, método y Szifrón
+app/juego/page.tsx        el simulacro -> Juego (client)
 app/estado/page.tsx       estado de la configuración y de cada archivo
 app/subir/page.tsx        subida al bucket desde el navegador -> Subida (client)
 app/api/subir             firma una URL de PUT para un nombre válido
 app/api/marcas            lee y escribe marcas.json (intro por capítulo)
 app/api/arte/[id]         portada JPEG: la devuelve (GET) o la guarda (POST)
+app/api/simulacro         evalúa el plan del juego (local, y Claude si hay clave)
+lib/serie.ts              datos de la serie, los cuatro y Szifrón. Escrito, no copiado.
+lib/simulacro.ts          casos del juego + motor que puntúa y narra
+lib/cuadro.ts             ffmpeg: saca un cuadro del video para la portada
 lib/marcas.ts             forma de las anotaciones y validación
 lib/almacen.ts            bucket o carpeta temporal (modo demo)
 app/api/entrar            valida el código y pone la cookie
@@ -160,6 +166,9 @@ components/Arte.tsx       imagen del capítulo o trama con el número
 components/Reproductor.tsx reproductor a pantalla entera: controles propios,
                           progreso, intro, portada, atajos, siguiente, errores
 components/Iconos.tsx     íconos SVG del reproductor
+components/Serie.tsx      las cuatro fichas y el legajo que se abre
+components/Juego.tsx      el juego: caso, plan y desenlace
+components/Revelar.tsx    deja aparecer una sección cuando entra en pantalla
 components/Estado.tsx     tabla de /estado, revisa de a tres
 components/Subida.tsx     cola de subidas con progreso y ayuda de CORS
 components/Cabecera.tsx   wordmark, secciones, salir
@@ -200,7 +209,8 @@ agregues una tercera familia.
 
 Reglas que ya se aplicaron y conviene sostener: el acento ladrillo se usa en
 un solo lugar por pantalla (el botón principal), los radios son de 3 px en
-todo, y no hay transform en hover (solo cambia el borde y el brillo). El
+todo, y **la tarjeta no se mueve en hover**: cambian el borde, el fondo y el
+brillo, y la imagen de adentro hace un zoom lento sin correr la grilla. El
 wordmark va en caja baja: es una frase hablada, no una placa.
 
 **El reproductor** (`/ver/[id]`) no tiene cabecera ni márgenes: ocupa la
@@ -212,13 +222,20 @@ portada y las teclas. Progreso en menta; el botón ladrillo sólo aparece en
 las capas de fin de capítulo y de error.
 
 **Movimiento.** `app/template.tsx` se vuelve a montar en cada navegación y
-hace entrar la página con un fundido corto (`.pagina`). Las tarjetas de la
+hace entrar la página con un fundido corto (`.pagina`). Ese fundido es
+**sólo de opacidad**: una animación de `transform` ahí convierte al
+contenedor en bloque contenedor de los elementos `fixed` y le rompe la
+pantalla entera al reproductor. Las tarjetas de la
 grilla entran escalonadas con la variable `--i`. Las capas del reproductor
 aparecen con fundido y desenfoque, y la cuenta regresiva al siguiente
 capítulo tiene una barra menta que se vacía en 12 s. Duraciones de 150 a
 400 ms, curva `cubic-bezier(0.2, 0.7, 0.2, 1)`, nada rebota. Con
 `prefers-reduced-motion` todo se apaga. La cabecera es fija, con fondo
-translúcido y desenfoque.
+translúcido y desenfoque. Además: la imagen de la tarjeta hace zoom al pasar
+el mouse, la portada del destacado respira despacio, las secciones de
+`/serie` aparecen al llegar a la pantalla (`components/Revelar.tsx`, que
+muestra igual si no hay IntersectionObserver) y las fases del desenlace del
+juego entran escalonadas.
 
 Las imágenes de los capítulos: `Arte.tsx` dibuja siempre la trama diagonal
 y el número con CSS. Encima, con fundido, va la portada si existe: la que
@@ -235,6 +252,27 @@ de dominio, no se le da la URL de R2: un servidor HTTP mínimo en 127.0.0.1
 reenvía los Range firmados por Node. `/estado` tiene un botón que las pide
 de a una para ver si alguna falla, y el reproductor permite elegir otro
 cuadro a mano.
+
+## El juego (`/juego`)
+
+Te dan un caso, escribís el operativo y se simula cómo sale. El que evalúa es
+`lib/simulacro.ts`: detecta en el texto los elementos de un operativo
+(estudio previo, personaje, montaje, orden, reparto, salida, contingencia),
+descuenta por violencia, por hablarle de frente al otro y por delegar en la
+justicia, y arma el relato en cuatro fases. **Es determinista y no usa red**:
+la variedad sale de un hash del propio texto, con tres variantes por fase.
+Por eso se puede testear como cualquier función.
+
+Si además hay una clave en `ANTHROPIC_API_KEY`, `/api/simulacro` le pasa a
+Claude el caso, el plan y la lectura del motor local, y Claude narra el
+desenlace. Si Claude falla, tarda o devuelve algo que no parsea, se responde
+lo local: **el juego nunca se queda sin respuesta**. El modelo por defecto es
+`claude-opus-5`; con `SIMULACRO_MODELO` se puede poner uno más barato
+(`claude-haiku-4-5`). Sin clave el juego anda igual y no cuesta nada.
+
+Al agregar detectores, cuidado con el español: "Santos **arma** el
+operativo" no es un arma, y "amena**c**e" no lleva z. Los dos casos están en
+los tests.
 
 ## Textos
 

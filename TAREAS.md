@@ -22,6 +22,20 @@ los archivos locales, o `node scripts/convertir.mjs entrada salida.mp4`.
       workflow. Primera corrida real del workflow: confirmar que los
       secretos están y que el runner tiene ffmpeg.
 
+## De la sección "la serie" y del juego
+
+- [ ] Los datos de `lib/serie.ts` se cruzaron entre fuentes públicas. Los
+      años de nacimiento de los actores tienen menos respaldo que el resto
+      (de Peretti hay fuentes que dicen 10 y otras 25 de febrero de 1963;
+      quedó sólo el año). Si algo está mal, se corrige en ese archivo.
+- [ ] Faltan los invitados: la serie tuvo un desfile de actores por capítulo
+      que hoy no está en ningún lado del sitio.
+- [ ] El juego no guarda nada: cada partida arranca de cero y el plan se
+      pierde al recargar. Si se quiere historial, va en `localStorage`,
+      no en el bucket.
+- [ ] Los seis casos son inventados, en el espíritu de la serie. Se pueden
+      agregar más en `lib/simulacro.ts`: el motor no necesita cambios.
+
 ## Datos
 
 - [ ] **Título del último capítulo.** Las fuentes se dividen entre
