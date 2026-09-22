@@ -188,8 +188,11 @@ de `components/Cabecera.tsx` y ese redirect.
 
 `/origen` cuenta por qué existe el sitio: alguien buscó la serie en las
 plataformas que paga, no estaba en ninguna, y la subió a un bucket. El texto
-vive entero en `lib/origen.ts`, en cinco capítulos numerados, y la página
-sólo lo pone en pantalla. El tono es contenido: la épica sale de los hechos,
+vive entero en `lib/origen.ts`, en nueve capítulos numerados, y la página
+sólo lo pone en pantalla. **Se mantiene al día con lo que el sitio es**: tuvo
+una versión que todavía hablaba del código por persona cuando esa puerta ya
+no existía. Si cambia algo grande —la puerta, lo que cuesta, cómo suben los
+archivos—, el relato se toca en el mismo commit. El tono es contenido: la épica sale de los hechos,
 no de los adjetivos. El acento ladrillo va una sola vez, en la última frase
 (`.relato__cierre`, marcado desde el componente: un `:last-child` no sirve
 porque cada capítulo va envuelto en su propio `Revelar`).
