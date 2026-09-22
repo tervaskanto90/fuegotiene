@@ -11,11 +11,7 @@ type Fase = "escribiendo" | "montando" | "resultado";
 type Puerta = { minimo: number; puntaje: number; paso: boolean; recien: boolean };
 type Respuesta = Resultado & { puerta?: Puerta };
 
-type Props = {
-  puerta: EstadoPuerta;
-  /** llegó rebotado del middleware por querer ver los capítulos */
-  rebotado: boolean;
-};
+type Props = { puerta: EstadoPuerta };
 
 const MIENTRAS = [
   "Medina sale a averiguar quién es el otro…",
@@ -33,7 +29,7 @@ const COLOR: Record<Resultado["veredicto"], string> = {
   vacio: "mal",
 };
 
-export default function Juego({ puerta, rebotado }: Props) {
+export default function Juego({ puerta }: Props) {
   const [casoId, setCasoId] = useState(casos[0].id);
   const [planes, setPlanes] = useState<Record<string, string>>({});
   const [fase, setFase] = useState<Fase>("escribiendo");
@@ -111,14 +107,13 @@ export default function Juego({ puerta, rebotado }: Props) {
             {puntajeLogrado === null
               ? "Entrás sin jugar: tu código está en la lista corta."
               : `Pasaste con ${puntajeLogrado}.`}{" "}
-            Los capítulos están de este lado. <a href="/">ver los capítulos</a>
+            Los capítulos y el expediente están de este lado. <a href="/">ver los capítulos</a>
           </p>
         ) : (
           <p>
-            {rebotado ? "Fuiste derecho a los capítulos y te trajimos acá. " : ""}
-            Los capítulos están del otro lado. Se abren cuando armás un operativo que salga bien:{" "}
-            <b className="num">{puerta.minimo}</b> sobre 100 o más, en cualquiera de los seis casos. Podés intentar las
-            veces que quieras.
+            Los 24 capítulos y el expediente de los cuatro se abren cuando armás un operativo que salga bien:{" "}
+            <b className="num">{puerta.minimo}</b> sobre 100 o más, en cualquiera de los seis casos. No hay contraseña
+            ni hay que registrarse, y podés intentar las veces que quieras.
           </p>
         )}
       </aside>
@@ -269,7 +264,7 @@ export default function Juego({ puerta, rebotado }: Props) {
             <div className="abrio" style={{ "--i": resultado.fases.length + 2 } as React.CSSProperties}>
               <p>
                 <b>Se abrió la puerta.</b> Hacían falta {resultado.puerta.minimo} y el operativo sacó{" "}
-                <span className="num">{resultado.puerta.puntaje}</span>. Los capítulos ya están.
+                <span className="num">{resultado.puerta.puntaje}</span>. Los capítulos y el expediente ya están.
               </p>
               {/* <a> y no <Link>: el router ya se había prefetcheado /
                   sin pase y serviría ese rebote de su cache. Además una carga

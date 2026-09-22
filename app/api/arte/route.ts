@@ -2,16 +2,14 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { almacen } from "@/lib/almacen";
-import { COOKIE_SESION, leerConfig, verificarSesion } from "@/lib/auth";
+import { quienPide } from "@/lib/pases";
 import { PREFIJO_ARTE } from "@/lib/marcas";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  const config = leerConfig();
-  const sesion = config.ok ? await verificarSesion(req.cookies.get(COOKIE_SESION)?.value, config.config) : null;
-  if (!sesion) return NextResponse.json({ error: "Sin sesión." }, { status: 401 });
+  if (!(await quienPide(req)).entra) return NextResponse.json({ error: "Todavía no pasaste el juego." }, { status: 403 });
   try {
     const keys = await almacen().listar(PREFIJO_ARTE);
     const ids = keys

@@ -17,7 +17,12 @@ const config = { secret, codigos: ["codigo-de-octavio", "codigo-de-mama"], libre
 test("leerConfig explica qué falta", () => {
   assert.match((leerConfig({}) as { problema: string }).problema, /SESSION_SECRET/);
   assert.match((leerConfig({ SESSION_SECRET: "corto" }) as { problema: string }).problema, /muy corto/);
-  assert.match((leerConfig({ SESSION_SECRET: secret }) as { problema: string }).problema, /ACCESS_CODES/);
+  // Un sitio sin ningún código es válido: al sitio se entra sin nada y el
+  // juego abre los capítulos. Los códigos son para saltearlo o para el
+  // mantenimiento.
+  const sinCodigos = leerConfig({ SESSION_SECRET: secret });
+  assert.ok(sinCodigos.ok);
+  assert.deepEqual(sinCodigos.config.codigos, []);
   assert.match(
     (leerConfig({ SESSION_SECRET: secret, ACCESS_CODES: "abc" }) as { problema: string }).problema,
     /al menos 8/,

@@ -45,9 +45,9 @@ los archivos locales, o `node scripts/convertir.mjs entrada salida.mp4`.
 
 ## La puerta y los usuarios
 
-Los capítulos se ganan jugando: quien entra con su código ve el juego, el
-expediente y el origen, y la serie se abre cuando arma un operativo que saca
-70 sobre 100. Está andando; lo que queda abierto es esto:
+Al sitio se entra sin contraseña: quien abre la dirección ve el juego y el
+origen, y los capítulos y el expediente se abren cuando arma un operativo que
+saca 70 sobre 100. Está andando; lo que queda abierto es esto:
 
 - [ ] **El número.** 70 es la primera calibración, elegida contra los planes
       de prueba. Cuando juegue gente de verdad va a quedar claro si deja
@@ -60,11 +60,25 @@ expediente y el origen, y la serie se abre cuando arma un operativo que saca
       y el pase dura 180 días como la sesión. Si alguna vez hay que sacarle
       la entrada a alguien, hoy se hace borrando su línea de `pases.json` con
       Cyberduck. Si eso pasa seguido, conviene una pantalla.
-- [ ] El plan se puede copiar de otra persona. Es un sitio entre conocidos y
-      no vale la pena defenderlo; anotado por las dudas.
+- [ ] El plan se puede copiar de otra persona, y la cookie del pase también
+      se puede pasar. Como cualquiera puede ganar jugando, no cambia nada;
+      anotado por las dudas.
+- [ ] **El sitio es público.** Cualquiera con la dirección llega a la serie
+      pasando el juego. Si algún día hay que cerrarlo de nuevo, el cambio es
+      chico: volver a pedir sesión en el middleware para todo lo que no sea
+      /entrar.
+- [ ] **`/api/simulacro` es pública y puede gastar la clave de Claude.** Hay
+      un tope de diez narraciones por visitante por hora, pero vive en la
+      memoria de la función de Vercel y se pierde cuando la reciclan. Si
+      aparece una factura rara, sacar `ANTHROPIC_API_KEY`: el juego anda
+      igual con el simulador local.
+- [ ] Marcar la intro y guardar una portada lo puede hacer cualquiera que
+      gane el juego, no sólo el dueño. Es lo que había antes y no molesta,
+      pero ahora el conjunto es más grande. Si alguna vez molesta, esas dos
+      rutas piden `dueno` en vez de `entra`.
 
 **Cuentas de usuario**, que era la idea anterior y quedó reemplazada por la
-puerta. Si algún día se retoma (para que cada uno tenga su nombre y su
+puerta, ahora que ni siquiera hay códigos de por medio. Si algún día se retoma (para que cada uno tenga su nombre y su
 progreso, no sólo un código), el camino que no traiciona el "sin base de
 datos" es el mismo que usa `pases.json`:
 

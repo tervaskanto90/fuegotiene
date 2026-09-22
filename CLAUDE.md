@@ -1,8 +1,9 @@
 # Fuego tiene?
 
-Sitio privado para ver Los Simuladores desde archivos propios, con un código
-de acceso por persona. Next.js 15 (App Router) en Vercel, videos en
-Cloudflare R2. Sin base de datos.
+Sitio para ver Los Simuladores desde archivos propios. Se entra sin
+contraseña: el juego es la puerta, y los capítulos se abren cuando alguien
+arma un operativo que salga bien. Next.js 15 (App Router) en Vercel, videos
+en Cloudflare R2. Sin base de datos.
 
 El dueño del proyecto no puede instalar nada en su compu: ni Node, ni git,
 ni ffmpeg. Todo lo que él hace pasa por pantallas: Vercel, Cloudflare y
@@ -44,38 +45,54 @@ decenas de KB: no es la excepción que confirma la regla, es otra regla.
 esa ruta es la única que expone URLs firmadas y no queremos que dependa de
 que el middleware se haya ejecutado. No la "limpies".
 
-**Los capítulos se ganan jugando.** `/juego` no es un adorno al costado: es
-la puerta. Quien entra con su código ve el juego, el expediente y el origen,
-pero los capítulos recién se abren cuando arma un operativo que saca 70 sobre
-100 o más. Lo decide el servidor con `evaluarPlan`, que es determinista, y
-nunca el navegador ni Claude: Claude narra el desenlace, no califica. Lo que
-acredita haber pasado es el "pase", otra cookie firmada con el mismo HMAC de
-la sesión (`lib/auth.ts`) y atada al id del código, así prestarla no sirve.
-El middleware la mira en cada pedido y `/api/stream/[id]` la vuelve a mirar
-por su cuenta. Si vas a tocar `lib/simulacro.ts`, tené presente que ahora los
-puntajes son una puerta: bajarle el puntaje a un plan bueno deja gente afuera.
+**Al sitio se entra sin nada y los capítulos se ganan jugando.** No hay
+contraseña ni registro: quien abre la dirección ve el juego y el origen. Los
+capítulos y el expediente se abren cuando arma un operativo que saca 70 sobre
+100 o más. `/juego` no es un adorno al costado: es la puerta, y la primera
+pantalla que ve cualquiera.
 
-**Tres niveles de acceso, no dos.** Un código común tiene que ganarse los
-capítulos en el juego. Los de `CODIGOS_LIBRES` los ven sin jugar, y nada más.
+Lo decide el servidor con `evaluarPlan`, que es determinista, y nunca el
+navegador ni Claude: Claude narra el desenlace, no califica. Lo que acredita
+haber pasado es el "pase", una cookie firmada con el mismo HMAC de la sesión
+(`lib/auth.ts`). **El pase vale por sí mismo, sin sesión**: es lo que deja
+entrar a alguien que llegó sin ningún código. Lleva adentro un id —el del
+código si entró con uno, o uno anónimo— que sirve para anotarlo, no para
+validarlo. El middleware lo mira en cada pedido, y `/api/stream/[id]` lo
+vuelve a mirar por su cuenta.
+
+Si vas a tocar `lib/simulacro.ts`, tené presente que los puntajes son una
+puerta: bajarle el puntaje a un plan bueno deja gente afuera.
+
+**Tres niveles, y el de abajo es cualquiera.** Quien llega sin nada juega
+para entrar. Los códigos de `CODIGOS_LIBRES` se saltean el juego, y nada más.
 Los de `CODIGOS_DUENO` además entran a `/estado` y `/subir`: mirar el bucket y
-escribir en él es del dueño del sitio, no de cualquiera que pase el juego.
+escribir en él es del dueño del sitio, no de cualquiera que gane el juego.
 Cada nivel implica el de abajo, y estar nombrado en cualquiera de las tres
-variables ya alcanza para entrar: `leerConfig` las suma. El middleware tiene
-la lista `SOLO_DUENO`, y `/api/subir` y `/api/estado` lo vuelven a chequear
-por su cuenta, porque una firma de escritura sobre el bucket no depende de
-que el middleware haya corrido. `/api/estado/[id]` queda afuera de esa lista
-a propósito: es el diagnóstico de un capítulo y el reproductor lo usa para
-explicar por qué un video no anda, en la pantalla de cualquiera.
+variables alcanza para entrar con código: `leerConfig` las suma. **Ninguna es
+obligatoria**: un sitio sin un solo código anda perfecto, que es el caso
+normal ahora. Lo único que no puede faltar es `SESSION_SECRET`, que firma el
+pase.
 
-**No hay base de datos.** El código de acceso es la identidad, y sale de la
-variable de entorno `ACCESS_CODES`. La cookie guarda un hash del código, no
-el código: sacar un código de la variable desloguea a esa persona. El
+El middleware tiene la lista `SOLO_DUENO`, y `/api/subir` y `/api/estado` lo
+vuelven a chequear por su cuenta, porque una firma de escritura sobre el
+bucket no depende de que el middleware haya corrido. `/api/estado/[id]` queda
+afuera de esa lista a propósito: es el diagnóstico de un capítulo y el
+reproductor lo usa para explicar por qué un video no anda, en la pantalla de
+cualquiera. Las rutas de API resuelven todo esto con `quienPide` de
+`lib/pases.ts`, que devuelve `{ entra, dueno }`.
+
+**No hay base de datos.** No hay cuentas ni registro: la mayoría de la gente
+entra sin identidad ninguna. Los códigos que existen salen de variables de
+entorno, y la cookie guarda un hash del código, no el código: sacar un código
+de la variable desloguea a esa persona en el acto. El
 progreso de reproducción vive en el `localStorage` de cada navegador. Lo
 compartido entre navegadores son dos JSON chicos que viven en el bucket al
 lado de los videos y que el sitio lee y reescribe enteros: `marcas.json`, con
 las anotaciones por capítulo (dónde está la intro, si hay portada), y
-`pases.json`, con el mejor puntaje de quien ya pasó el juego, para que no
-tenga que jugar de nuevo desde otro navegador (`lib/marcas.ts`,
+`pases.json`, el registro de quiénes ganaron el juego y con cuánto. Para
+quien entró con código sirve además para no hacerlo jugar de nuevo desde otro
+navegador; para el resto es la bitácora, acotada a `MAX_PASES` porque el
+archivo se lee y reescribe entero (`lib/marcas.ts`,
 `lib/puerta.ts`, `lib/pases.ts`, `lib/almacen.ts`). Las portadas son JPEG de ~50 KB en
 `art/<id>.jpg`, capturados por el reproductor. Si algo parece necesitar una
 tabla, primero replanteá el feature.
@@ -139,10 +156,11 @@ las cuatro variables: no hay un flag que prender.
 ## Las secciones y el menú
 
 El menú tiene cuatro: **capítulos** (`/`), **el expediente** (`/expediente`),
-**el juego** (`/juego`) y **el origen** (`/origen`). Más salir. "capítulos"
-lleva un candado al lado hasta que la persona pasa el juego, y el enlace sigue
-vivo a propósito: quien lo toca cae en `/juego?puerta=1`, que explica el trato.
-Eso enseña la regla mejor que un enlace muerto.
+**el juego** (`/juego`) y **el origen** (`/origen`). "capítulos" y "el
+expediente" llevan un candado al lado hasta que la persona gana el juego, y
+los enlaces siguen vivos a propósito: quien los toca cae en `/juego`, que
+explica el trato. Eso enseña la regla mejor que un enlace muerto. "salir"
+aparece sólo si hay una sesión que cerrar, o sea casi nunca.
 
 `/subir` y `/estado` **no están en el menú a propósito**: los 24 capítulos ya
 están cargados y son pantallas de mantenimiento. No se borraron: el dueño
@@ -207,8 +225,9 @@ lib/origen.ts             el relato de por qué existe el sitio. Cinco capítulo
 lib/simulacro.ts          casos del juego + motor que puntúa y narra
 lib/puerta.ts             las reglas de la puerta: cuánto hay que sacar y cómo
                           se anota. No importa nada: se testea solo.
-lib/pases.ts              pases.json en el bucket + el estado para las páginas.
-                          Es la parte de la puerta que necesita Node.
+lib/pases.ts              pases.json en el bucket, el estado para las páginas
+                          y quienPide() para las rutas. La parte de la puerta
+                          que necesita Node.
 lib/cuadro.ts             ffmpeg: saca un cuadro del video para la portada
 lib/marcas.ts             forma de las anotaciones y validación
 lib/almacen.ts            bucket o carpeta temporal (modo demo)
@@ -335,9 +354,9 @@ los tests.
 **El juego es la puerta.** El puntaje no es sólo un número: de él dependen
 los capítulos. Cómo funciona, de punta a punta:
 
-1. Alguien entra con su código y va a `/`. El middleware no le ve el pase y
-   lo manda a `/juego?puerta=1`, donde un cartel dice el trato y cuánto hay
-   que sacar.
+1. Alguien abre la dirección del sitio. El middleware no le ve el pase y lo
+   manda a `/juego`, donde un cartel dice el trato y cuánto hay que sacar.
+   No se le pide nada: ni código, ni mail, ni registro.
 2. Escribe un plan y lo manda. `/api/simulacro` lo evalúa con `evaluarPlan`.
    Si el puntaje llega al mínimo, la misma respuesta trae la cookie del pase
    y anota el puntaje en `pases.json`. El cliente recibe además un objeto
@@ -345,17 +364,21 @@ los capítulos. Cómo funciona, de punta a punta:
    bloque que se abre o dice cuánto falta.
 3. A partir de ahí el middleware lo deja pasar, y `/api/stream/[id]`
    revalida el pase por su cuenta antes de firmar nada.
-4. Si entra desde otro navegador, `/api/entrar` encuentra su puntaje en
+4. El pase es una cookie, así que vive en ese navegador. Quien tiene código
+   además lo recupera al entrar: `/api/entrar` busca su puntaje en
    `pases.json` y le devuelve el pase sin hacerlo jugar de nuevo.
 
-El mínimo es 70 y se cambia con `PUNTAJE_PARA_ENTRAR` sin tocar código. Los
-códigos de `CODIGOS_LIBRES` y `CODIGOS_DUENO` entran sin jugar. **Estar
-nombrado en cualquiera de las tres variables alcanza para entrar**:
-`leerConfig` las suma. Antes había que repetir el código en `ACCESS_CODES` y
-quien se olvidaba veía el login rechazar una clave recién cargada sin ninguna
-explicación; no vuelvas a pedir que estén en las dos. Se puede intentar las
-veces que uno quiera, con cualquiera de los seis casos, y el pase se queda con
-el mejor puntaje: nadie pierde la entrada por volver a jugar y salir peor.
+El mínimo es 70 y se cambia con `PUNTAJE_PARA_ENTRAR` sin tocar código. Se
+puede intentar las veces que uno quiera, con cualquiera de los seis casos, y
+el pase se queda con el mejor puntaje: nadie pierde la entrada por volver a
+jugar y salir peor.
+
+**`/api/simulacro` es pública**, porque es la puerta. Si hay una clave de
+Claude cargada, eso es plata de alguien, así que la ruta tiene un tope por
+visitante y por hora; pasado el tope responde el simulador local, que no
+cuesta nada. El contador vive en la memoria de la función y se pierde cuando
+Vercel la recicla: es un techo, no un candado. El candado de verdad es sacar
+`ANTHROPIC_API_KEY`.
 
 Tres cosas que ya se rompieron una vez y conviene no repetir: el enlace a los
 capítulos desde el juego es un `<a>` y no un `<Link>`, porque el router de

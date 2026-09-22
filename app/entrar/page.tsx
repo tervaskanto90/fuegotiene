@@ -36,7 +36,8 @@ export default async function Entrar({ searchParams }: Props) {
         <form method="post" action="/api/entrar">
           <input type="hidden" name="a" value={volverA} />
           <label htmlFor="codigo" className="muted">
-            Poné tu código para entrar.
+            Poné tu código. Al sitio se entra sin nada: esto es para quien
+            tiene uno.
           </label>
           <input
             id="codigo"
@@ -58,6 +59,10 @@ export default async function Entrar({ searchParams }: Props) {
               entrar
             </button>
           </div>
+          <p className="muted" style={{ marginTop: 20 }}>
+            Si no tenés código, la serie se gana igual:{" "}
+            <a href="/juego">armá un operativo en el juego</a>.
+          </p>
         </form>
       )}
     </main>

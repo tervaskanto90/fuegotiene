@@ -4,15 +4,25 @@ import { estadoPuerta } from "@/lib/pases";
 
 type Props = { activa?: "capitulos" | "expediente" | "juego" | "origen" };
 
+function Candado() {
+  return (
+    <svg className="candado" viewBox="0 0 12 14" aria-label="cerrado" role="img">
+      <path d="M3 6V4a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="1.5" y="6" width="9" height="7" rx="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+
 /**
- * Las secciones de lectura y de ver. /subir y /estado quedan fuera del menú a
- * propósito: los capítulos ya están cargados y son pantallas de mantenimiento.
- * Siguen existiendo y se llega escribiendo la dirección; el reproductor
- * también enlaza a /estado cuando un video falla.
+ * Las secciones. /subir y /estado quedan fuera del menú a propósito: son
+ * mantenimiento y sólo entra el dueño, escribiendo la dirección.
  *
- * "capítulos" lleva candado hasta que la persona pasa el juego. El enlace
- * sigue vivo: quien lo toca cae en /juego con la explicación, que enseña la
- * regla mejor que un enlace muerto.
+ * "capítulos" y "el expediente" llevan candado hasta que la persona gana el
+ * juego. Los enlaces siguen vivos: quien los toca cae en /juego con la
+ * explicación, que enseña la regla mejor que un enlace muerto.
+ *
+ * "salir" aparece sólo si hay una sesión que cerrar: la mayoría entra sin
+ * ningún código.
  */
 export default async function Cabecera({ activa }: Props) {
   const puerta = await estadoPuerta();
@@ -26,18 +36,18 @@ export default async function Cabecera({ activa }: Props) {
         <Link
           href="/"
           aria-current={activa === "capitulos" ? "page" : undefined}
-          title={puerta.paso ? undefined : "se abren cuando pasás el juego"}
+          title={puerta.paso ? undefined : "se abren cuando ganás el juego"}
         >
           capítulos
-          {!puerta.paso && (
-            <svg className="candado" viewBox="0 0 12 14" aria-label="cerrado" role="img">
-              <path d="M3 6V4a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" strokeWidth="1.4" />
-              <rect x="1.5" y="6" width="9" height="7" rx="1.5" fill="currentColor" />
-            </svg>
-          )}
+          {!puerta.paso && <Candado />}
         </Link>
-        <Link href="/expediente" aria-current={activa === "expediente" ? "page" : undefined}>
+        <Link
+          href="/expediente"
+          aria-current={activa === "expediente" ? "page" : undefined}
+          title={puerta.paso ? undefined : "se abre cuando ganás el juego"}
+        >
           el expediente
+          {!puerta.paso && <Candado />}
         </Link>
         <Link href="/juego" aria-current={activa === "juego" ? "page" : undefined}>
           el juego
@@ -45,12 +55,16 @@ export default async function Cabecera({ activa }: Props) {
         <Link href="/origen" aria-current={activa === "origen" ? "page" : undefined}>
           el origen
         </Link>
-        <span className="nav__corte" aria-hidden="true" />
-        <form method="post" action="/api/salir">
-          <button className="enlace" type="submit">
-            salir
-          </button>
-        </form>
+        {puerta.sesion && (
+          <>
+            <span className="nav__corte" aria-hidden="true" />
+            <form method="post" action="/api/salir">
+              <button className="enlace" type="submit">
+                salir
+              </button>
+            </form>
+          </>
+        )}
       </nav>
     </header>
   );

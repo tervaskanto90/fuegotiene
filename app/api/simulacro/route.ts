@@ -11,6 +11,7 @@ import {
   COOKIE_PASE,
   COOKIE_SESION,
   crearPase,
+  idAnonimo,
   leerConfig,
   opcionesCookie,
   verificarPase,
@@ -27,6 +28,39 @@ export const maxDuration = 60;
 /** Por defecto el modelo más capaz; con SIMULACRO_MODELO se puede poner uno más barato. */
 const MODELO = (process.env.SIMULACRO_MODELO ?? "claude-opus-5").trim();
 const TIMEOUT_MS = 45_000;
+
+/**
+ * Esta ruta es pública: es la puerta del sitio y hay que poder jugar sin
+ * tener nada. Con una clave de Claude cargada, eso es plata de alguien, así
+ * que cada visitante tiene un tope por hora. Pasado el tope el juego sigue
+ * andando con el simulador local, que no cuesta nada y nunca se cae.
+ *
+ * El contador vive en la memoria de la función y se pierde cuando Vercel la
+ * recicla: no es un candado, es un techo. El candado de verdad, si algún día
+ * hace falta, es sacar ANTHROPIC_API_KEY.
+ */
+const CLAUDE_POR_HORA = 10;
+const HORA_MS = 60 * 60 * 1000;
+const visitas = new Map<string, number[]>();
+
+function puedeGastarEnClaude(req: NextRequest): boolean {
+  const quien = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "sin-ip";
+  const ahora = Date.now();
+  const suyas = (visitas.get(quien) ?? []).filter((t) => ahora - t < HORA_MS);
+  if (suyas.length >= CLAUDE_POR_HORA) {
+    visitas.set(quien, suyas);
+    return false;
+  }
+  suyas.push(ahora);
+  visitas.set(quien, suyas);
+  // Que el Map no crezca para siempre si el sitio se hace popular.
+  if (visitas.size > 5000) {
+    for (const [k, v] of visitas) {
+      if (v.every((t) => ahora - t >= HORA_MS)) visitas.delete(k);
+    }
+  }
+  return true;
+}
 
 const SISTEMA = `Narrás el desenlace de un operativo en el mundo de "Los Simuladores", la serie argentina de Damián Szifrón.
 
@@ -122,11 +156,15 @@ async function narrarConClaude(caso: Caso, plan: string, local: Resultado): Prom
 }
 
 export async function POST(req: NextRequest) {
+  // Sin sesión: al juego se llega sin nada, es la puerta del sitio.
   const config = leerConfig();
-  const sinSesion = NextResponse.json({ error: "Sin sesión. Entrá con tu código." }, { status: 401 });
-  if (!config.ok) return sinSesion;
+  if (!config.ok) {
+    return NextResponse.json(
+      { error: `El sitio está sin terminar de configurar. ${config.problema}` },
+      { status: 503 },
+    );
+  }
   const sesion = await verificarSesion(req.cookies.get(COOKIE_SESION)?.value, config.config);
-  if (!sesion) return sinSesion;
 
   let cuerpo: { casoId?: unknown; plan?: unknown };
   try {
@@ -145,26 +183,28 @@ export async function POST(req: NextRequest) {
   // Claude: Claude narra, no califica. Un plan copiado del navegador tampoco
   // sirve, porque el texto se vuelve a evaluar acá.
   const minimo = puntajeParaEntrar();
-  const tenia =
-    sesion.libre ||
-    (await verificarPase(req.cookies.get(COOKIE_PASE)?.value, sesion.id, config.config)) !== null;
+  const paseActual = await verificarPase(req.cookies.get(COOKIE_PASE)?.value, config.config);
+  const tenia = !!sesion?.libre || paseActual !== null;
   const abre = local.puntaje >= minimo;
   const puerta = { minimo, puntaje: local.puntaje, paso: abre || tenia, recien: abre && !tenia };
 
   let resultado = local;
   // Un plan vacío no se le manda a Claude: la respuesta ya está y es la misma.
-  if (local.veredicto !== "vacio" && process.env.ANTHROPIC_API_KEY) {
+  if (local.veredicto !== "vacio" && process.env.ANTHROPIC_API_KEY && puedeGastarEnClaude(req)) {
     resultado = (await narrarConClaude(caso, plan, local)) ?? local;
   }
 
   const res = NextResponse.json({ ...resultado, puerta }, { headers: sinCache });
-  if (abre && !sesion.libre) {
+  if (abre && !sesion?.libre) {
+    // El id es el del código si entró con uno, el del pase que ya tenía, o
+    // uno anónimo nuevo: la mayoría de la gente llega sin nada.
+    const id = sesion?.id ?? paseActual?.id ?? idAnonimo();
     res.cookies.set(
       COOKIE_PASE,
-      await crearPase(sesion.id, local.puntaje, config.config),
+      await crearPase(id, local.puntaje, config.config),
       opcionesCookie(process.env.NODE_ENV === "production"),
     );
-    await guardarPase(sesion.id, { puntaje: local.puntaje, caso: caso.id, fecha: Date.now() });
+    await guardarPase(id, { puntaje: local.puntaje, caso: caso.id, fecha: Date.now() });
   }
   return res;
 }

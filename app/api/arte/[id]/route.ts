@@ -4,7 +4,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { almacen, escribirJson, leerJson } from "@/lib/almacen";
-import { COOKIE_SESION, leerConfig, verificarSesion } from "@/lib/auth";
+import { quienPide } from "@/lib/pases";
 import { capturarCuadro, elegirMomento, type PedirRango } from "@/lib/cuadro";
 import { buscar, type Episodio } from "@/lib/episodes";
 import { conArte, KEY_MARCAS, keyArte, MAX_ARTE_BYTES, normalizarMarcas } from "@/lib/marcas";
@@ -64,13 +64,8 @@ async function generarPortada(req: NextRequest, ep: Episodio): Promise<Uint8Arra
   return jpeg;
 }
 
-async function conSesion(req: NextRequest): Promise<boolean> {
-  const config = leerConfig();
-  return !!(config.ok && (await verificarSesion(req.cookies.get(COOKIE_SESION)?.value, config.config)));
-}
-
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await conSesion(req))) return new NextResponse("Sin sesión.", { status: 401 });
+  if (!(await quienPide(req)).entra) return new NextResponse("Todavía no pasaste el juego.", { status: 403 });
   const { id } = await params;
   if (!buscar(id)) return new NextResponse("Ese capítulo no existe.", { status: 404 });
   const ep = buscar(id)!;
@@ -96,7 +91,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await conSesion(req))) return NextResponse.json({ error: "Sin sesión." }, { status: 401 });
+  if (!(await quienPide(req)).entra) return NextResponse.json({ error: "Todavía no pasaste el juego." }, { status: 403 });
   const { id } = await params;
   if (!buscar(id)) return NextResponse.json({ error: "Ese capítulo no existe." }, { status: 404 });
   const datos = new Uint8Array(await req.arrayBuffer());

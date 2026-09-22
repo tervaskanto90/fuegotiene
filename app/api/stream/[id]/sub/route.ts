@@ -3,17 +3,17 @@
 // redirect a R2 lo bloquearía. Son archivos de decenas de KB.
 
 import { NextResponse, type NextRequest } from "next/server";
-import { COOKIE_SESION, leerConfig, verificarSesion } from "@/lib/auth";
 import { buscar } from "@/lib/episodes";
+import { quienPide } from "@/lib/pases";
 import { leerR2, pedirR2 } from "@/lib/r2";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const config = leerConfig();
-  const sesion = config.ok ? await verificarSesion(req.cookies.get(COOKIE_SESION)?.value, config.config) : null;
-  if (!sesion) return new NextResponse("Sin sesión.", { status: 401 });
+  if (!(await quienPide(req)).entra) {
+    return new NextResponse("Todavía no pasaste el juego.", { status: 403 });
+  }
 
   const { id } = await params;
   const ep = buscar(id);

@@ -1,35 +1,46 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { crearPase, verificarPase } from "../lib/auth.ts";
-import { conPase, normalizarPases, puntajeParaEntrar, type Pases } from "../lib/puerta.ts";
+import { crearPase, idAnonimo, verificarPase } from "../lib/auth.ts";
+import { conPase, MAX_PASES, normalizarPases, puntajeParaEntrar, type Pases } from "../lib/puerta.ts";
 
 const secret = "un-secreto-de-prueba-largo-para-firmar-1234567890";
 const config = { secret, codigos: ["codigo-de-octavio"], libres: [], duenos: [] };
 const otro = { secret: "otro-secreto-igual-de-largo-para-firmar-123456", codigos: [], libres: [], duenos: [] };
 
-test("el pase abre sólo para el id que lo ganó", async () => {
-  const pase = await crearPase("id-de-octavio", 82, config);
-  assert.equal(await verificarPase(pase, "id-de-octavio", config), 82);
-  // La misma cookie en la sesión de otra persona no sirve.
-  assert.equal(await verificarPase(pase, "id-de-mama", config), null);
+test("el pase vale por sí mismo y dice quién lo ganó", async () => {
+  // Desde que al sitio se entra sin código, el pase no depende de ninguna
+  // sesión: es lo que deja pasar a quien llegó sin nada y ganó jugando.
+  const pase = await crearPase("aBcD1234wXyZ", 82, config);
+  assert.deepEqual(await verificarPase(pase, config), { id: "aBcD1234wXyZ", puntaje: 82 });
 });
 
 test("el pase no se puede falsificar ni con otro secreto ni a mano", async () => {
-  const pase = await crearPase("id-de-octavio", 82, config);
-  assert.equal(await verificarPase(pase, "id-de-octavio", otro), null);
+  const pase = await crearPase("aBcD1234wXyZ", 82, config);
+  assert.equal(await verificarPase(pase, otro), null);
   // Subirse el puntaje editando la cookie invalida la firma.
-  const inflado = pase.replace(".82.", ".99.");
-  assert.equal(await verificarPase(inflado, "id-de-octavio", config), null);
-  assert.equal(await verificarPase("cualquier.cosa", "id-de-octavio", config), null);
-  assert.equal(await verificarPase(undefined, "id-de-octavio", config), null);
+  assert.equal(await verificarPase(pase.replace(".82.", ".99."), config), null);
+  // Cambiarse el id, también.
+  assert.equal(await verificarPase(pase.replace("aBcD1234wXyZ", "otroIdCualqui"), config), null);
+  assert.equal(await verificarPase("cualquier.cosa", config), null);
+  assert.equal(await verificarPase(undefined, config), null);
 });
 
 test("el pase vence", async () => {
   const hace200dias = Date.now() - 200 * 24 * 60 * 60 * 1000;
-  const viejo = await crearPase("id-de-octavio", 82, config, hace200dias);
-  assert.equal(await verificarPase(viejo, "id-de-octavio", config), null);
-  const reciente = await crearPase("id-de-octavio", 82, config);
-  assert.equal(await verificarPase(reciente, "id-de-octavio", config), 82);
+  const viejo = await crearPase("aBcD1234wXyZ", 82, config, hace200dias);
+  assert.equal(await verificarPase(viejo, config), null);
+  const reciente = await crearPase("aBcD1234wXyZ", 82, config);
+  assert.equal((await verificarPase(reciente, config))?.puntaje, 82);
+});
+
+test("los ids anónimos son distintos y sirven como id de pase", async () => {
+  const unos = new Set(Array.from({ length: 200 }, () => idAnonimo()));
+  assert.equal(unos.size, 200, "no se repiten");
+  const id = idAnonimo();
+  const pase = await crearPase(id, 91, config);
+  assert.deepEqual(await verificarPase(pase, config), { id, puntaje: 91 });
+  // Y pasa la validación de pases.json, que es donde se anota.
+  assert.deepEqual(Object.keys(normalizarPases({ [id]: { puntaje: 91, caso: "panaderia", fecha: 1 } })), [id]);
 });
 
 test("el puntaje para entrar sale de la variable, con un default sensato", () => {
@@ -70,4 +81,17 @@ test("un pase nuevo no pisa uno mejor", () => {
   const nuevo = conPase(base, "mama", { puntaje: 72, caso: "obra", fecha: 4 });
   assert.equal(nuevo.mama.puntaje, 72);
   assert.equal(nuevo.octavio.puntaje, 88, "el de al lado queda intacto");
+});
+
+test("el registro de pases no crece para siempre", () => {
+  // El sitio es público: cada visitante que gana deja una línea. Al llegar al
+  // tope se van los más viejos, y el que se acaba de anotar nunca se cae.
+  let pases: Pases = {};
+  for (let i = 0; i < MAX_PASES + 30; i++) {
+    pases = conPase(pases, `visitante${String(i).padStart(4, "0")}`, { puntaje: 80, caso: "panaderia", fecha: 1000 + i });
+  }
+  const ids = Object.keys(pases);
+  assert.equal(ids.length, MAX_PASES);
+  assert.ok(pases[`visitante${String(MAX_PASES + 29).padStart(4, "0")}`], "el último anotado está");
+  assert.ok(!pases["visitante0000"], "el más viejo se fue");
 });

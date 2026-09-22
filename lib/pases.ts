@@ -7,6 +7,7 @@
 // volver a jugar si entra desde otro navegador o desde el celular.
 
 import { cookies } from "next/headers";
+import type { NextRequest } from "next/server";
 import { almacen, escribirJson, leerJson } from "@/lib/almacen";
 import { COOKIE_PASE, COOKIE_SESION, crearPase, leerConfig, verificarPase, verificarSesion } from "@/lib/auth";
 import {
@@ -46,18 +47,43 @@ export async function guardarPase(id: string, pase: Pase): Promise<void> {
 }
 
 /**
- * El estado de la puerta para una página o la cabecera. Sólo mira la cookie,
- * que es lo que vale: el pase guardado se convierte en cookie al entrar.
+ * El estado de la puerta para una página o la cabecera. Sólo mira las
+ * cookies, que es lo que vale: el pase anotado en el bucket se convierte en
+ * cookie al entrar con un código.
  */
 export async function estadoPuerta(): Promise<EstadoPuerta> {
   const tarro = await cookies();
   const minimo = puntajeParaEntrar();
   const config = leerConfig();
-  const cerrada = { paso: false, puntaje: null, minimo, dueno: false };
-  if (!config.ok) return cerrada;
+  if (!config.ok) return { paso: false, puntaje: null, minimo, dueno: false, sesion: false };
+  // Puede no haber sesión: al sitio se entra sin nada y el pase vale solo.
   const sesion = await verificarSesion(tarro.get(COOKIE_SESION)?.value, config.config);
-  if (!sesion) return cerrada;
-  if (sesion.libre) return { paso: true, puntaje: null, minimo, dueno: sesion.dueno };
-  const puntaje = await verificarPase(tarro.get(COOKIE_PASE)?.value, sesion.id, config.config);
-  return { paso: puntaje !== null, puntaje, minimo, dueno: false };
+  if (sesion?.libre) {
+    return { paso: true, puntaje: null, minimo, dueno: sesion.dueno, sesion: true };
+  }
+  const pase = await verificarPase(tarro.get(COOKIE_PASE)?.value, config.config);
+  return {
+    paso: pase !== null,
+    puntaje: pase?.puntaje ?? null,
+    minimo,
+    dueno: false,
+    sesion: sesion !== null,
+  };
+}
+
+/**
+ * Quién está del otro lado de un pedido a una API. Es lo mismo que decide el
+ * middleware, repetido acá para las rutas que no quieren depender de que el
+ * middleware haya corrido.
+ *
+ * `entra`: ganó el juego, o tiene un código de los que se lo saltean.
+ * `dueno`: además puede tocar el bucket.
+ */
+export async function quienPide(req: NextRequest): Promise<{ entra: boolean; dueno: boolean }> {
+  const config = leerConfig();
+  if (!config.ok) return { entra: false, dueno: false };
+  const sesion = await verificarSesion(req.cookies.get(COOKIE_SESION)?.value, config.config);
+  if (sesion?.libre) return { entra: true, dueno: sesion.dueno };
+  const pase = await verificarPase(req.cookies.get(COOKIE_PASE)?.value, config.config);
+  return { entra: pase !== null, dueno: false };
 }

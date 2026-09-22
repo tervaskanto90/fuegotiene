@@ -3,7 +3,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { almacen, escribirJson, leerJson } from "@/lib/almacen";
-import { COOKIE_SESION, leerConfig, verificarSesion } from "@/lib/auth";
+import { quienPide } from "@/lib/pases";
 import { buscar } from "@/lib/episodes";
 import { conIntro, KEY_MARCAS, normalizarMarcas, validarIntro } from "@/lib/marcas";
 
@@ -12,13 +12,10 @@ export const dynamic = "force-dynamic";
 
 const SIN_CACHE = { "Cache-Control": "private, no-store" };
 
-async function conSesion(req: NextRequest): Promise<boolean> {
-  const config = leerConfig();
-  return !!(config.ok && (await verificarSesion(req.cookies.get(COOKIE_SESION)?.value, config.config)));
-}
+
 
 export async function GET(req: NextRequest) {
-  if (!(await conSesion(req))) return NextResponse.json({ error: "Sin sesión." }, { status: 401 });
+  if (!(await quienPide(req)).entra) return NextResponse.json({ error: "Todavía no pasaste el juego." }, { status: 403 });
   try {
     const marcas = normalizarMarcas(await leerJson(almacen(), KEY_MARCAS));
     return NextResponse.json(marcas, { headers: SIN_CACHE });
@@ -28,7 +25,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!(await conSesion(req))) return NextResponse.json({ error: "Sin sesión." }, { status: 401 });
+  if (!(await quienPide(req)).entra) return NextResponse.json({ error: "Todavía no pasaste el juego." }, { status: 403 });
   let cuerpo: { id?: unknown; intro?: unknown };
   try {
     cuerpo = await req.json();

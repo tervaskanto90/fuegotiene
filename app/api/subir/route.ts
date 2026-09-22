@@ -4,7 +4,7 @@
 // página /subir la muestra lista para pegar.
 
 import { NextResponse, type NextRequest } from "next/server";
-import { COOKIE_SESION, leerConfig, verificarSesion } from "@/lib/auth";
+import { quienPide } from "@/lib/pases";
 import { firmarUrl, leerR2, MAX_SUBIDA_BYTES, nombreDeObjetoValido } from "@/lib/r2";
 
 export const runtime = "nodejs";
@@ -14,12 +14,11 @@ export const dynamic = "force-dynamic";
 const EXPIRA_SUBIDA_S = 12 * 60 * 60;
 
 export async function POST(req: NextRequest) {
-  const config = leerConfig();
-  const sesion = config.ok ? await verificarSesion(req.cookies.get(COOKIE_SESION)?.value, config.config) : null;
-  if (!sesion) return NextResponse.json({ error: "Sin sesión. Entrá con tu código." }, { status: 401 });
   // Vuelve a mirar quién es aunque el middleware ya lo haya hecho: esta ruta
   // firma permisos de escritura sobre el bucket.
-  if (!sesion.dueno) return NextResponse.json({ error: "Esa pantalla es del dueño del sitio." }, { status: 403 });
+  if (!(await quienPide(req)).dueno) {
+    return NextResponse.json({ error: "Esa pantalla es del dueño del sitio." }, { status: 403 });
+  }
 
   const r2 = leerR2();
   if (!r2) {

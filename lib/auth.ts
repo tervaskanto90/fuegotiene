@@ -3,8 +3,12 @@
 //
 // La cookie no guarda el código de acceso, guarda un hash corto del código,
 // la fecha de vencimiento y la firma. Al verificar se comprueba que el código
-// siga existiendo en ACCESS_CODES: sacar un código de la variable desloguea
-// a esa persona en el acto.
+// siga existiendo: sacar un código de la variable desloguea a esa persona en
+// el acto.
+//
+// Entrar con código NO es obligatorio: al sitio se entra sin nada y el juego
+// abre los capítulos. Los códigos sirven para saltearse el juego
+// (CODIGOS_LIBRES) o para llegar al mantenimiento (CODIGOS_DUENO).
 
 export const COOKIE_SESION = "ft_sesion";
 export const DURACION_SESION_S = 180 * 24 * 60 * 60; // 180 días
@@ -55,9 +59,9 @@ export function leerConfig(env: Record<string, string | undefined> = process.env
   const duenos = parsearCodigos(env.CODIGOS_DUENO);
   const libres = [...new Set([...parsearCodigos(env.CODIGOS_LIBRES), ...duenos])];
   const codigos = [...new Set([...parsearCodigos(env.ACCESS_CODES), ...libres])];
-  if (codigos.length === 0) {
-    return { ok: false, problema: "Falta la variable ACCESS_CODES: no hay ningún código de acceso cargado." };
-  }
+  // Ya no hace falta ningún código para entrar al sitio: el juego es la puerta.
+  // Los códigos son para saltearse el juego o para entrar al mantenimiento, y
+  // un sitio sin ninguno anda perfecto.
   const corto = codigos.find((c) => c.length < MIN_CODIGO);
   if (corto) {
     return {
@@ -144,14 +148,23 @@ export async function verificarSesion(
 // --- el pase del juego ---
 //
 // Para ver los capítulos hay que ganárselo en /juego. Lo que lo acredita es
-// otra cookie firmada con el mismo secreto, atada al id del código: copiarla
-// a la sesión de otra persona no sirve. Las reglas (cuánto hay que sacar,
-// cómo se anota en el bucket) están en `lib/puerta.ts`.
+// otra cookie firmada con el mismo secreto. Lleva un id adentro: el de la
+// sesión si la persona entró con código, o uno anónimo si no, que es el caso
+// normal. El pase vale por sí mismo, sin necesidad de sesión: es lo que
+// permite que alguien llegue al sitio sin nada, juegue y entre.
+//
+// Las reglas (cuánto hay que sacar, cómo se anota) están en `lib/puerta.ts`.
 
 export const COOKIE_PASE = "ft_pase";
 export const DURACION_PASE_S = DURACION_SESION_S;
 
-/** Valor de la cookie del pase. Va atado al id de la sesión. */
+/** Id para quien no entró con código. No identifica a nadie: sólo junta sus pases. */
+export function idAnonimo(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(9));
+  return `a${base64url(bytes)}`;
+}
+
+/** Valor de la cookie del pase. */
 export async function crearPase(
   id: string,
   puntaje: number,
@@ -163,28 +176,29 @@ export async function crearPase(
   return `${cuerpo}.${await firmar(config.secret, `pase:${cuerpo}`)}`;
 }
 
+export type Pase = { id: string; puntaje: number };
+
 /**
- * Devuelve el puntaje con el que entró, o null. Pide el id de la sesión: un
- * pase ajeno, aunque esté bien firmado, no abre la puerta de otro.
+ * Devuelve quién lo ganó y con cuánto, o null. No pide sesión: el pase vale
+ * por sí mismo, que es lo que deja entrar a alguien que llegó al sitio sin
+ * ningún código y se ganó los capítulos jugando.
  */
 export async function verificarPase(
   token: string | undefined | null,
-  id: string,
   config: ConfigAuth,
   ahoraMs: number = Date.now(),
-): Promise<number | null> {
+): Promise<Pase | null> {
   if (!token) return null;
   const partes = token.split(".");
   if (partes.length !== 5 || partes[0] !== "v1") return null;
-  const [, suId, puntajeTexto, venceTexto, firma] = partes;
+  const [, id, puntajeTexto, venceTexto, firma] = partes;
   if (!/^\d+$/.test(puntajeTexto) || !/^\d+$/.test(venceTexto)) return null;
-  if (!iguales(suId, id)) return null;
   const vence = Number(venceTexto);
   if (!Number.isFinite(vence) || vence * 1000 < ahoraMs) return null;
-  const cuerpo = `v1.${suId}.${puntajeTexto}.${vence}`;
+  const cuerpo = `v1.${id}.${puntajeTexto}.${vence}`;
   const esperada = await firmar(config.secret, `pase:${cuerpo}`);
   if (!iguales(firma, esperada)) return null;
-  return Number(puntajeTexto);
+  return { id, puntaje: Number(puntajeTexto) };
 }
 
 export function opcionesCookie(segura: boolean) {

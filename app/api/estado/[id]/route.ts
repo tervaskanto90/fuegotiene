@@ -5,7 +5,7 @@
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse, type NextRequest } from "next/server";
-import { COOKIE_SESION, leerConfig, verificarSesion } from "@/lib/auth";
+import { quienPide } from "@/lib/pases";
 import { buscar } from "@/lib/episodes";
 import { analizar, type Analisis, type Lector } from "@/lib/mp4";
 import { leerR2, pedirR2, type ConfigR2 } from "@/lib/r2";
@@ -79,9 +79,8 @@ async function estadoDemo(req: NextRequest, id: string, key: string): Promise<Es
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const config = leerConfig();
-  const sesion = config.ok ? await verificarSesion(req.cookies.get(COOKIE_SESION)?.value, config.config) : null;
-  if (!sesion) return NextResponse.json({ error: "Sin sesión." }, { status: 401 });
+  const quien = await quienPide(req);
+  if (!quien.entra) return NextResponse.json({ error: "Todavía no pasaste el juego." }, { status: 403 });
 
   // `dueno` viaja en la respuesta para que el reproductor sepa si ofrecer los
   // enlaces a /estado: la página del reproductor es estática y no puede leer
@@ -93,7 +92,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const r2 = leerR2();
   const sinCache = { "Cache-Control": "private, no-store" };
   if (!r2) {
-    return NextResponse.json({ ...(await estadoDemo(req, ep.id, ep.key)), dueno: sesion.dueno }, { headers: sinCache });
+    return NextResponse.json({ ...(await estadoDemo(req, ep.id, ep.key)), dueno: quien.dueno }, { headers: sinCache });
   }
 
   const resultado: EstadoCapitulo = {
@@ -111,16 +110,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const cabeza = await pedirR2(r2, ep.key, { method: "HEAD" });
     if (cabeza.status === 404) {
-      return NextResponse.json({ ...resultado, dueno: sesion.dueno }, { headers: sinCache });
+      return NextResponse.json({ ...resultado, dueno: quien.dueno }, { headers: sinCache });
     }
     if (cabeza.status === 403) {
       resultado.error =
         "R2 rechazó las credenciales (403). Revisá R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY y que el token tenga permiso sobre el bucket.";
-      return NextResponse.json({ ...resultado, dueno: sesion.dueno }, { headers: sinCache });
+      return NextResponse.json({ ...resultado, dueno: quien.dueno }, { headers: sinCache });
     }
     if (!cabeza.ok) {
       resultado.error = `R2 respondió ${cabeza.status} al consultar el archivo.`;
-      return NextResponse.json({ ...resultado, dueno: sesion.dueno }, { headers: sinCache });
+      return NextResponse.json({ ...resultado, dueno: quien.dueno }, { headers: sinCache });
     }
     resultado.existe = true;
     resultado.tamano = Number(cabeza.headers.get("content-length") ?? 0) || null;
@@ -138,5 +137,5 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     resultado.error = e instanceof ErrorLegible ? e.message : MENSAJE_RED;
   }
 
-  return NextResponse.json({ ...resultado, dueno: sesion.dueno }, { headers: sinCache });
+  return NextResponse.json({ ...resultado, dueno: quien.dueno }, { headers: sinCache });
 }

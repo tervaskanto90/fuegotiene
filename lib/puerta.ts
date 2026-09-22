@@ -44,15 +44,24 @@ export type Pase = {
 
 export type Pases = Record<string, Pase>;
 
-/** Lo que necesita saber una pantalla. `puntaje` es null si entró sin jugar. */
-export type EstadoPuerta = { paso: boolean; puntaje: number | null; minimo: number; dueno: boolean };
+/**
+ * Lo que necesita saber una pantalla. `puntaje` es null si entró sin jugar, y
+ * `sesion` dice si hay un código detrás (la mayoría entra sin ninguno).
+ */
+export type EstadoPuerta = {
+  paso: boolean;
+  puntaje: number | null;
+  minimo: number;
+  dueno: boolean;
+  sesion: boolean;
+};
 
 /** Deja sólo lo que tiene la forma esperada; lo demás se descarta en silencio. */
 export function normalizarPases(crudo: unknown): Pases {
   const salida: Pases = {};
   if (!crudo || typeof crudo !== "object") return salida;
   for (const [id, valor] of Object.entries(crudo as Record<string, unknown>)) {
-    if (!/^[A-Za-z0-9_-]{8,32}$/.test(id) || !valor || typeof valor !== "object") continue;
+    if (!/^[A-Za-z0-9_-]{8,40}$/.test(id) || !valor || typeof valor !== "object") continue;
     const p = valor as Record<string, unknown>;
     const puntaje = typeof p.puntaje === "number" && Number.isFinite(p.puntaje) ? Math.round(p.puntaje) : NaN;
     if (Number.isNaN(puntaje) || puntaje < 0 || puntaje > 100) continue;
@@ -64,11 +73,27 @@ export function normalizarPases(crudo: unknown): Pases {
 }
 
 /**
+ * Cuántos pases se guardan. Desde que el sitio es público, cada visitante que
+ * gana deja una línea, y el archivo se lee y reescribe entero: con un tope se
+ * mantiene chico para siempre. Al llegar, se van los más viejos. Perder una
+ * línea vieja no le saca la entrada a nadie: lo que vale es la cookie, y esto
+ * es el registro de quiénes pasaron.
+ */
+export const MAX_PASES = 500;
+
+/**
  * Anota el pase. Si ya había uno se queda el mejor puntaje: la puerta se
  * cruza una sola vez y después nadie la pierde por jugar de nuevo y salir peor.
  */
 export function conPase(pases: Pases, id: string, pase: Pase): Pases {
   const previo = pases[id];
   if (previo && previo.puntaje >= pase.puntaje) return pases;
-  return { ...pases, [id]: pase };
+  const salida = { ...pases, [id]: pase };
+  const ids = Object.keys(salida);
+  if (ids.length <= MAX_PASES) return salida;
+  const porFecha = ids.sort((a, b) => salida[a].fecha - salida[b].fecha);
+  for (const viejo of porFecha.slice(0, ids.length - MAX_PASES)) {
+    if (viejo !== id) delete salida[viejo];
+  }
+  return salida;
 }

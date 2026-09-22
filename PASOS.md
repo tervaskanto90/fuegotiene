@@ -22,16 +22,17 @@ R2, después **un solo capítulo**, y recién al final los otros 23.
 
    | Name | Value |
    |---|---|
-   | `SESSION_SECRET` | una frase larga que sólo vos sepas, 32 caracteres o más, con algún número. Firma la cookie de sesión. No la vas a tener que escribir nunca más. |
-   | `ACCESS_CODES` | tu código de acceso. Es lo que vas a escribir para entrar. Mínimo 8 caracteres, mejor 12 o más. Si querés dar acceso a más gente, más códigos separados por coma: `codigo-mio,codigo-de-mama` |
+   | `SESSION_SECRET` | una frase larga que sólo vos sepas, 32 caracteres o más, con algún número. Firma las cookies del sitio. No la vas a tener que escribir nunca más. Es la única obligatoria. |
+   | `CODIGOS_DUENO` | tu clave. Mínimo 8 caracteres, mejor 12 o más. Es la que te deja entrar a `/estado` y a `/subir`, y la única que hace falta para administrar el sitio. |
 
 5. **Deploy**. Tarda un par de minutos. Cuando termina, **Visit**.
-6. El sitio te lleva a `/entrar`. Poné tu código. Vas a ver la portada con
-   los 24 capítulos y, si abrís uno, el clip de muestra de 20 segundos, con
-   un cronómetro y un tic por segundo. Si se escucha el tic, la parte del
-   sitio está bien.
-7. Entrá a **/estado** (escribí la dirección: no está en el menú). Arriba dice cómo está la
-   configuración: los códigos cargados y que todavía está en modo demo.
+6. El sitio te lleva al **juego**: eso es lo que ve cualquiera que entre. Para
+   mirar los capítulos sin jugar, andá a `/entrar` y poné tu clave de
+   `CODIGOS_DUENO`. Vas a ver la portada con los 24 capítulos y, si abrís
+   uno, el clip de muestra de 20 segundos, con un cronómetro y un tic por
+   segundo. Si se escucha el tic, la parte del sitio está bien.
+7. Entrá a **/estado** (escribí la dirección: no está en el menú). Arriba dice
+   cómo está la configuración y que todavía está en modo demo.
 
 Si `/entrar` muestra un aviso rojo en vez del formulario, dice exactamente
 qué variable falta o está corta. Se arregla en **Settings → Environment
@@ -229,33 +230,42 @@ panel de Cloudflare.
 
 ## La puerta: el juego abre los capítulos
 
-Entrar con el código ya no alcanza para ver la serie. Quien entra ve el
-juego, el expediente y el origen; los capítulos se abren cuando arma un
-operativo que saca **70 sobre 100 o más**. Puede intentar las veces que
-quiera, con cualquiera de los seis casos, y una vez que pasa queda pasado
-para siempre, también desde el celular o desde otra compu.
+Quien abre la dirección ve el juego y el origen; los capítulos y el
+expediente se abren cuando arma un operativo que saca **70 sobre 100 o más**.
+Puede intentar las veces que quiera, con cualquiera de los seis casos.
 
-En "capítulos" aparece un candado hasta que lo logra. Si lo toca igual, el
-sitio lo lleva al juego y le explica el trato en una línea.
+En "capítulos" y en "el expediente" aparece un candado hasta que lo logra. Si
+los toca igual, el sitio lo lleva al juego y le explica el trato en una línea.
 
-### Los tres niveles
+El pase queda guardado en su navegador. Si entra desde el celular vuelve a
+jugar, salvo que tenga un código: en ese caso el sitio se lo reconoce.
 
-En Vercel, **Settings**, **Environment Variables**, y **Redeploy** después de
-tocar cualquiera. Ninguna de estas claves hace falta repetirla en otra
-variable: con estar nombrada en una ya sirve para entrar.
+### Al sitio se entra sin contraseña
+
+Quien abre la dirección ve el juego y el origen. No se le pide nada: ni
+código, ni mail, ni registro. Los capítulos y el expediente se abren cuando
+gana el juego. **Cualquiera con el link puede llegar a la serie pasando el
+juego**: tenelo presente antes de repartir la dirección.
+
+Las claves son la excepción, no la regla. En Vercel, **Settings**,
+**Environment Variables**, y **Redeploy** después de tocar cualquiera.
 
 | Variable | Quién es | Qué puede |
 | --- | --- | --- |
-| `ACCESS_CODES` | la gente a la que le pasás el sitio | tiene que ganarse los capítulos en el juego |
+| *(nadie)* | cualquiera que abra el link | juega, y si gana ve la serie |
 | `CODIGOS_LIBRES` | a quien le querés ahorrar el juego | mira la serie sin jugar, y nada más |
 | `CODIGOS_DUENO` | vos | además entra a `/estado` y a `/subir` |
 
 **Poné tu código en `CODIGOS_DUENO`.** Es el único que llega a las pantallas
 de mantenimiento: a mirar qué hay en el bucket y a subir archivos. Nadie más,
-ni siquiera quien pasó el juego con 100, puede escribir en tu bucket.
+ni siquiera quien ganó el juego con 100, puede escribir en tu bucket.
 
-Si a alguien le querés dar la serie sin que juegue —porque no tiene ganas, o
-porque ya la vio— su código va en `CODIGOS_LIBRES`.
+`ACCESS_CODES` quedó casi sin uso: un código de ahí entra, pero tiene que
+jugar como todos. Si a alguien le querés dar la serie sin que juegue, su
+código va en `CODIGOS_LIBRES`.
+
+Ninguna de estas variables es obligatoria. La única que no puede faltar es
+`SESSION_SECRET`: sin ella no se puede firmar el pase y nadie entra.
 
 Si 70 te parece mucho o poco, se cambia sin tocar código: variable
 `PUNTAJE_PARA_ENTRAR` con otro número, y Redeploy. Para tener una referencia:
@@ -263,16 +273,20 @@ un operativo completo y bien contado pasa de 75, uno decente ronda 60, y uno
 de dos renglones o uno que resuelve todo a los golpes no llega a 40.
 
 Dónde queda anotado: en un archivo `pases.json` del bucket, al lado de
-`marcas.json`. Guarda el puntaje de cada persona, no su código. Si lo borrás,
-todos tienen que volver a jugar.
+`marcas.json`. Es el registro de quiénes ganaron y con cuánto, sin ningún dato
+personal. Borrarlo no le saca la entrada a nadie: lo que vale es la cookie.
+
+**Si cargaste una clave de Claude** (`ANTHROPIC_API_KEY`), el juego ahora es
+público y esa clave la usa cualquiera que juegue. Hay un tope de diez
+narraciones por visitante por hora, y pasado ese tope contesta el simulador
+local, que no cuesta nada. Si igual te preocupa la factura, sacá la variable:
+el juego anda exactamente igual.
 
 ## Después
 
-- **Dar acceso a alguien**: agregá otro código a `ACCESS_CODES`, separado por
-  coma, y Redeploy. Le pasás el código y la dirección del sitio. Avisale que
-  para ver los capítulos primero tiene que pasar el juego, o no va a entender
-  por qué el sitio lo manda ahí. Si preferís que entre derecho, su código va
-  en `CODIGOS_LIBRES` en vez de en `ACCESS_CODES`.
+- **Dar acceso a alguien**: pasale la dirección, nada más. Va a caer en el
+  juego y con un buen operativo entra. Si preferís que entre derecho, su
+  código va en `CODIGOS_LIBRES` y Redeploy.
 - **Sacarle el acceso a alguien**: borrá su código de la variable donde esté y
   Redeploy. Queda deslogueado en el acto, sin importar la cookie que tenga.
 - **Sacarle el acceso a alguien**: borrá su código de la variable y Redeploy.
