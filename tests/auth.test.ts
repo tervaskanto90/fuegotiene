@@ -115,11 +115,10 @@ test("CODIGOS_LIBRES marca a quien no tiene que pasar por el juego", async () =>
   const env = {
     SESSION_SECRET: secret,
     ACCESS_CODES: "codigo-de-octavio, codigo-de-mama",
-    CODIGOS_LIBRES: "codigo-de-octavio, uno-que-no-existe",
+    CODIGOS_LIBRES: "codigo-de-octavio",
   };
   const leido = leerConfig(env);
   assert.ok(leido.ok);
-  // Un libre que no está en ACCESS_CODES no sirve de nada y se descarta.
   assert.deepEqual(leido.config.libres, ["codigo-de-octavio"]);
 
   const deOctavio = await crearSesion("codigo-de-octavio", leido.config);
@@ -131,4 +130,33 @@ test("CODIGOS_LIBRES marca a quien no tiene que pasar por el juego", async () =>
   const sinLibres = leerConfig({ SESSION_SECRET: secret, ACCESS_CODES: "codigo-de-octavio" });
   assert.ok(sinLibres.ok);
   assert.deepEqual(sinLibres.config.libres, []);
+});
+
+test("un código que sólo está en CODIGOS_LIBRES igual entra", async () => {
+  // El caso real: se cargó la clave nueva en CODIGOS_LIBRES y no en
+  // ACCESS_CODES, y el login la rechazaba sin decir por qué.
+  const env = {
+    SESSION_SECRET: secret,
+    ACCESS_CODES: "codigo-viejo-de-siempre",
+    CODIGOS_LIBRES: "clave-nueva-del-dueno",
+  };
+  const leido = leerConfig(env);
+  assert.ok(leido.ok);
+  assert.deepEqual(leido.config.codigos, ["codigo-viejo-de-siempre", "clave-nueva-del-dueno"]);
+
+  const nueva = await crearSesion("clave-nueva-del-dueno", leido.config);
+  assert.ok(nueva, "la clave nueva entra");
+  assert.equal((await verificarSesion(nueva, leido.config))?.libre, true, "y además pasa la puerta sin jugar");
+
+  const vieja = await crearSesion("codigo-viejo-de-siempre", leido.config);
+  assert.equal((await verificarSesion(vieja, leido.config))?.libre, false, "la de siempre sigue jugando");
+
+  // Escribir el mismo código en las dos variables no lo duplica.
+  const repetido = leerConfig({ ...env, CODIGOS_LIBRES: "codigo-viejo-de-siempre" });
+  assert.ok(repetido.ok);
+  assert.deepEqual(repetido.config.codigos, ["codigo-viejo-de-siempre"]);
+
+  // Un código corto sigue siendo un error aunque venga por la lista corta.
+  const corto = leerConfig({ SESSION_SECRET: secret, ACCESS_CODES: "codigo-largo-ok", CODIGOS_LIBRES: "abc" });
+  assert.equal(corto.ok, false);
 });

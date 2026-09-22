@@ -338,7 +338,11 @@ los capítulos. Cómo funciona, de punta a punta:
 
 El mínimo es 70 y se cambia con `PUNTAJE_PARA_ENTRAR` sin tocar código. Los
 códigos de `CODIGOS_LIBRES` entran sin jugar: es la salida del dueño, que no
-puede quedarse afuera de `/estado` por un mal operativo. Se puede intentar
+puede quedarse afuera de `/estado` por un mal operativo. **Estar en esa lista
+alcanza para entrar**: `leerConfig` suma esos códigos a los de `ACCESS_CODES`.
+Antes había que escribirlos en las dos variables, y quien se olvidaba veía el
+login rechazar una clave recién cargada sin ninguna explicación. No vuelvas a
+pedir que estén en las dos. Se puede intentar
 las veces que uno quiera, con cualquiera de los seis casos, y el pase se
 queda con el mejor puntaje: nadie pierde la entrada por volver a jugar y
 salir peor.

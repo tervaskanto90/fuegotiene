@@ -239,10 +239,14 @@ En "capítulos" aparece un candado hasta que lo logra. Si lo toca igual, el
 sitio lo lleva al juego y le explica el trato en una línea.
 
 **Ponete en la lista corta.** En Vercel, **Settings**, **Environment
-Variables**, agregá `CODIGOS_LIBRES` con tu propio código (el mismo que está
-en `ACCESS_CODES`) y **Redeploy**. Los códigos de esa lista entran sin jugar.
-Sin eso vas a tener que pasar el juego como todos, y `/estado` y `/subir`
-también te quedan cerrados hasta que lo hagas.
+Variables**, agregá `CODIGOS_LIBRES` con tu propio código y **Redeploy**. Los
+códigos de esa lista entran sin jugar. Sin eso vas a tener que pasar el juego
+como todos, y `/estado` y `/subir` también te quedan cerrados hasta que lo
+hagas.
+
+Ese código no hace falta repetirlo en `ACCESS_CODES`: con estar en
+`CODIGOS_LIBRES` ya sirve para entrar. Si lo ponés en las dos, tampoco pasa
+nada.
 
 Si 70 te parece mucho o poco, se cambia sin tocar código: variable
 `PUNTAJE_PARA_ENTRAR` con otro número, y Redeploy. Para tener una referencia:

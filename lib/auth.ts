@@ -31,7 +31,7 @@ export function parsearCodigos(valor: string | undefined): string[] {
   return [...vistos];
 }
 
-/** Lee SESSION_SECRET y ACCESS_CODES y dice qué falta, en palabras. */
+/** Lee SESSION_SECRET, ACCESS_CODES y CODIGOS_LIBRES y dice qué falta, en palabras. */
 export function leerConfig(env: Record<string, string | undefined> = process.env): ResultadoConfig {
   const secret = (env.SESSION_SECRET ?? "").trim();
   if (!secret) {
@@ -43,7 +43,12 @@ export function leerConfig(env: Record<string, string | undefined> = process.env
       problema: `SESSION_SECRET es muy corto: tiene ${secret.length} caracteres y necesita al menos ${MIN_SECRET}.`,
     };
   }
-  const codigos = parsearCodigos(env.ACCESS_CODES);
+  // Un código de CODIGOS_LIBRES vale como código de acceso aunque no esté en
+  // ACCESS_CODES. Antes había que escribirlo en las dos variables y, si uno se
+  // olvidaba, el login lo rechazaba sin decir por qué: la variable parecía rota.
+  // Estar en la lista corta implica poder entrar.
+  const libres = parsearCodigos(env.CODIGOS_LIBRES);
+  const codigos = [...new Set([...parsearCodigos(env.ACCESS_CODES), ...libres])];
   if (codigos.length === 0) {
     return { ok: false, problema: "Falta la variable ACCESS_CODES: no hay ningún código de acceso cargado." };
   }
@@ -54,9 +59,6 @@ export function leerConfig(env: Record<string, string | undefined> = process.env
       problema: `Hay un código de acceso de ${corto.length} caracteres. Cada código necesita al menos ${MIN_CODIGO}.`,
     };
   }
-  // Los códigos que no tienen que ganarse la entrada jugando. Si alguno no
-  // está en ACCESS_CODES no sirve de nada, pero tampoco molesta: se ignora.
-  const libres = parsearCodigos(env.CODIGOS_LIBRES).filter((c) => codigos.includes(c));
   return { ok: true, config: { secret, codigos, libres } };
 }
 
