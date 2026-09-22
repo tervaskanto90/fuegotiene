@@ -15,7 +15,14 @@ export const DURACION_SESION_S = 180 * 24 * 60 * 60; // 180 días
 export const MIN_SECRET = 32;
 export const MIN_CODIGO = 8;
 
-export type ConfigAuth = { secret: string; codigos: string[]; libres: string[]; duenos: string[] };
+export type ConfigAuth = {
+  secret: string;
+  codigos: string[];
+  libres: string[];
+  duenos: string[];
+  /** Ver VERSION_ACCESO más abajo. */
+  version: string;
+};
 export type ResultadoConfig =
   | { ok: true; config: ConfigAuth }
   | { ok: false; problema: string };
@@ -56,6 +63,12 @@ export function leerConfig(env: Record<string, string | undefined> = process.env
   // códigos nombrados en cualquiera de las tres variables sirven para entrar.
   // Antes había que repetirlos en ACCESS_CODES y, si uno se olvidaba, el login
   // rechazaba una clave recién cargada sin decir por qué.
+  // Subir este número invalida todas las cookies del sitio de una: las
+  // sesiones y los pases ganados en el juego. Es la forma de echar a todos
+  // los que entraron hasta hoy sin tener que cambiar SESSION_SECRET (que hay
+  // que generar y guardar) ni borrar nada del bucket. Quien tiene código
+  // vuelve a entrar en diez segundos; el resto juega de nuevo.
+  const version = (env.VERSION_ACCESO ?? "1").trim() || "1";
   const duenos = parsearCodigos(env.CODIGOS_DUENO);
   const libres = [...new Set([...parsearCodigos(env.CODIGOS_LIBRES), ...duenos])];
   const codigos = [...new Set([...parsearCodigos(env.ACCESS_CODES), ...libres])];
@@ -69,7 +82,7 @@ export function leerConfig(env: Record<string, string | undefined> = process.env
       problema: `Hay un código de acceso de ${corto.length} caracteres. Cada código necesita al menos ${MIN_CODIGO}.`,
     };
   }
-  return { ok: true, config: { secret, codigos, libres, duenos } };
+  return { ok: true, config: { secret, codigos, libres, duenos, version } };
 }
 
 function base64url(bytes: Uint8Array): string {
@@ -119,7 +132,7 @@ export async function crearSesion(
   const id = await idDeCodigo(encontrado, config.secret);
   const vence = Math.floor(ahoraMs / 1000) + DURACION_SESION_S;
   const cuerpo = `v1.${id}.${vence}`;
-  return `${cuerpo}.${await firmar(config.secret, cuerpo)}`;
+  return `${cuerpo}.${await firmar(config.secret, `sesion:${config.version}:${cuerpo}`)}`;
 }
 
 /** Verifica firma, vencimiento y que el código siga vigente. */
@@ -135,7 +148,7 @@ export async function verificarSesion(
   if (!/^\d+$/.test(venceTexto)) return null;
   const vence = Number(venceTexto);
   if (!Number.isFinite(vence) || vence * 1000 < ahoraMs) return null;
-  const esperada = await firmar(config.secret, `v1.${id}.${vence}`);
+  const esperada = await firmar(config.secret, `sesion:${config.version}:v1.${id}.${vence}`);
   if (!iguales(firma, esperada)) return null;
   for (const c of config.codigos) {
     if ((await idDeCodigo(c, config.secret)) === id) {
@@ -173,7 +186,7 @@ export async function crearPase(
 ): Promise<string> {
   const vence = Math.floor(ahoraMs / 1000) + DURACION_PASE_S;
   const cuerpo = `v1.${id}.${Math.round(puntaje)}.${vence}`;
-  return `${cuerpo}.${await firmar(config.secret, `pase:${cuerpo}`)}`;
+  return `${cuerpo}.${await firmar(config.secret, `pase:${config.version}:${cuerpo}`)}`;
 }
 
 export type Pase = { id: string; puntaje: number };
@@ -196,7 +209,7 @@ export async function verificarPase(
   const vence = Number(venceTexto);
   if (!Number.isFinite(vence) || vence * 1000 < ahoraMs) return null;
   const cuerpo = `v1.${id}.${puntajeTexto}.${vence}`;
-  const esperada = await firmar(config.secret, `pase:${cuerpo}`);
+  const esperada = await firmar(config.secret, `pase:${config.version}:${cuerpo}`);
   if (!iguales(firma, esperada)) return null;
   return { id, puntaje: Number(puntajeTexto) };
 }

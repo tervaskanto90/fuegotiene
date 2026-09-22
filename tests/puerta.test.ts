@@ -4,8 +4,8 @@ import { crearPase, idAnonimo, verificarPase } from "../lib/auth.ts";
 import { conPase, MAX_PASES, normalizarPases, puntajeParaEntrar, type Pases } from "../lib/puerta.ts";
 
 const secret = "un-secreto-de-prueba-largo-para-firmar-1234567890";
-const config = { secret, codigos: ["codigo-de-octavio"], libres: [], duenos: [] };
-const otro = { secret: "otro-secreto-igual-de-largo-para-firmar-123456", codigos: [], libres: [], duenos: [] };
+const config = { secret, codigos: ["codigo-de-octavio"], libres: [], duenos: [], version: "1" };
+const otro = { secret: "otro-secreto-igual-de-largo-para-firmar-123456", codigos: [], libres: [], duenos: [], version: "1" };
 
 test("el pase vale por sí mismo y dice quién lo ganó", async () => {
   // Desde que al sitio se entra sin código, el pase no depende de ninguna

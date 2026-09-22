@@ -261,6 +261,24 @@ código va en `CODIGOS_LIBRES`.
 Ninguna de estas variables es obligatoria. La única que no puede faltar es
 `SESSION_SECRET`: sin ella no se puede firmar el pase y nadie entra.
 
+### Echar a todos los que ya están adentro
+
+Si le pasaste el link a alguien y querés que deje de entrar, en Vercel,
+**Settings**, **Environment Variables**, agregá `VERSION_ACCESO` con el
+número **2** y **Redeploy**. Eso tira abajo, de una, todos los pases ganados
+y todas las sesiones, incluida la tuya.
+
+Después entrás a `/entrar` con tu clave y estás como siempre, sin jugar. Los
+demás vuelven a encontrarse con el juego. La próxima vez que lo necesites,
+poné 3, después 4, y así.
+
+Dos cosas que **no** arregla:
+
+- Si le diste una clave de `CODIGOS_LIBRES` a alguien, esa persona sigue
+  entrando sin jugar. Para cortarle el acceso hay que sacar su código de esa
+  variable (y Redeploy).
+- Lo mismo con `CODIGOS_DUENO`, obviamente.
+
 Si 70 te parece mucho o poco, se cambia sin tocar código: variable
 `PUNTAJE_PARA_ENTRAR` con otro número, y Redeploy. Para tener una referencia:
 un operativo completo y bien contado pasa de 75, uno decente ronda 60, y uno

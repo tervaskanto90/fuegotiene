@@ -387,6 +387,15 @@ los capítulos. Cómo funciona, de punta a punta:
    Por lo mismo devuelve a `/` y no a `/entrar`: mandar a la pantalla del
    código a alguien que quizá nunca tuvo uno no tiene sentido.
 
+**Para echar a todos de una** está `VERSION_ACCESO`: subir ese número
+invalida todas las cookies firmadas del sitio, las sesiones y los pases, sin
+tener que cambiar `SESSION_SECRET` (que hay que generar y guardar) ni borrar
+nada del bucket. Entra en el material que se firma, así que las cookies
+viejas dejan de verificar. El dueño vuelve con su clave en diez segundos; el
+resto juega de nuevo. Lo que **no** revoca es una clave: si alguien tiene un
+código de `CODIGOS_LIBRES`, sigue entrando sin jugar hasta que se lo saquen
+de la variable.
+
 El mínimo es 70 y se cambia con `PUNTAJE_PARA_ENTRAR` sin tocar código. Se
 puede intentar las veces que uno quiera, con cualquiera de los seis casos, y
 el pase se queda con el mejor puntaje: nadie pierde la entrada por volver a

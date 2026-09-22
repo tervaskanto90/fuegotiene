@@ -1,18 +1,20 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  crearPase,
   crearSesion,
   iguales,
   leerConfig,
   opcionesCookie,
   parsearCodigos,
   rutaSegura,
+  verificarPase,
   verificarSesion,
   DURACION_SESION_S,
 } from "../lib/auth.ts";
 
 const secret = "un-secreto-de-prueba-largo-para-firmar-1234567890";
-const config = { secret, codigos: ["codigo-de-octavio", "codigo-de-mama"], libres: [], duenos: [] };
+const config = { secret, codigos: ["codigo-de-octavio", "codigo-de-mama"], libres: [], duenos: [], version: "1" };
 
 test("leerConfig explica qué falta", () => {
   assert.match((leerConfig({}) as { problema: string }).problema, /SESSION_SECRET/);
@@ -206,4 +208,29 @@ test("sin CODIGOS_DUENO no hay dueño y nadie llega al mantenimiento", async () 
   const s = await verificarSesion(token, leido.config);
   assert.equal(s?.libre, true);
   assert.equal(s?.dueno, false, "ser libre no alcanza para entrar a /estado");
+});
+
+test("subir VERSION_ACCESO echa a todos los que ya estaban", async () => {
+  const env = { SESSION_SECRET: secret, CODIGOS_DUENO: "clave-del-dueno-del-sitio" };
+  const antes = leerConfig(env);
+  const despues = leerConfig({ ...env, VERSION_ACCESO: "2" });
+  assert.ok(antes.ok && despues.ok);
+  assert.equal(antes.config.version, "1", "sin la variable, la versión es 1");
+
+  // La sesión que había deja de valer, y la nueva no vale para atrás.
+  const sesionVieja = await crearSesion("clave-del-dueno-del-sitio", antes.config);
+  assert.ok(await verificarSesion(sesionVieja, antes.config));
+  assert.equal(await verificarSesion(sesionVieja, despues.config), null, "la sesión vieja se cae");
+  const sesionNueva = await crearSesion("clave-del-dueno-del-sitio", despues.config);
+  assert.ok(await verificarSesion(sesionNueva, despues.config), "y con la versión nueva se entra igual");
+
+  // Y el pase que alguien se ganó jugando, también: vuelve a jugar.
+  const paseViejo = await crearPase("aBcD1234wXyZ", 93, antes.config);
+  assert.ok(await verificarPase(paseViejo, antes.config));
+  assert.equal(await verificarPase(paseViejo, despues.config), null, "el pase viejo se cae");
+
+  // Un valor vacío no deja el sitio sin versión.
+  const vacia = leerConfig({ ...env, VERSION_ACCESO: "  " });
+  assert.ok(vacia.ok);
+  assert.equal(vacia.config.version, "1");
 });
