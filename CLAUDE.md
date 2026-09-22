@@ -245,7 +245,7 @@ lib/cuadro.ts             ffmpeg: saca un cuadro del video para la portada
 lib/marcas.ts             forma de las anotaciones y validación
 lib/almacen.ts            bucket o carpeta temporal (modo demo)
 app/api/entrar            valida el código y pone la cookie
-app/api/salir             borra la cookie
+app/api/salir             cierra la sesión. No toca el pase del juego.
 app/api/stream/[id]       firma la URL de R2 y redirige (302)
 app/api/stream/[id]/sub   subtítulos .vtt, devueltos desde acá
 app/api/estado            prueba el bucket y lista los archivos sueltos
@@ -374,9 +374,18 @@ los capítulos. Cómo funciona, de punta a punta:
    bloque que se abre o dice cuánto falta.
 3. A partir de ahí el middleware lo deja pasar, y `/api/stream/[id]`
    revalida el pase por su cuenta antes de firmar nada.
-4. El pase es una cookie, así que vive en ese navegador. Quien tiene código
-   además lo recupera al entrar: `/api/entrar` busca su puntaje en
+4. El pase es una cookie de 180 días, así que vive en ese navegador: se
+   cierra el navegador, se vuelve mañana y los capítulos están. Se pierde si
+   la persona limpia sus cookies o cambia de dispositivo, y ahí juega de
+   nuevo — es el precio de no pedir registro, y está asumido. Quien tiene
+   código además lo recupera al entrar: `/api/entrar` busca su puntaje en
    `pases.json` y le devuelve el pase sin hacerlo jugar de nuevo.
+5. **Salir no borra el pase.** `/api/salir` cierra la sesión del código y
+   nada más. Borraba las dos cookies de cuando el pase dependía de la
+   sesión, y el resultado era que alguien ganaba el juego, tocaba salir y
+   quedaba afuera de nuevo. Salir cierra la sesión, no te quita la entrada.
+   Por lo mismo devuelve a `/` y no a `/entrar`: mandar a la pantalla del
+   código a alguien que quizá nunca tuvo uno no tiene sentido.
 
 El mínimo es 70 y se cambia con `PUNTAJE_PARA_ENTRAR` sin tocar código. Se
 puede intentar las veces que uno quiera, con cualquiera de los seis casos, y
@@ -388,7 +397,9 @@ sitio la llama sin tener nada. Por eso no puede hacer nada que cueste plata
 ni que tarde: evalúa con una función local y contesta. Si alguna vez se le
 agrega algo que cobre por uso, esa ruta es el primer lugar donde mirar.
 
-Tres cosas que ya se rompieron una vez y conviene no repetir: el enlace a los
+Cuatro cosas que ya se rompieron una vez y conviene no repetir: **salir
+borraba el pase** junto con la sesión, así que el que ganaba el juego volvía
+a estar afuera apenas tocaba el botón (arriba, punto 5); el enlace a los
 capítulos desde el juego es un `<a>` y no un `<Link>`, porque el router de
 Next prefetchea `/` cuando todavía no hay pase y después sirve ese rebote de
 su cache; al abrirse la puerta se llama a `router.refresh()`, porque la

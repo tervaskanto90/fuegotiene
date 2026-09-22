@@ -225,8 +225,14 @@ Puede intentar las veces que quiera, con cualquiera de los seis casos.
 En "capítulos" y en "el expediente" aparece un candado hasta que lo logra. Si
 los toca igual, el sitio lo lleva al juego y le explica el trato en una línea.
 
-El pase queda guardado en su navegador. Si entra desde el celular vuelve a
-jugar, salvo que tenga un código: en ese caso el sitio se lo reconoce.
+El pase queda guardado en su navegador y dura seis meses: puede cerrar todo,
+volver la semana que viene y los capítulos siguen abiertos. Lo pierde si
+limpia las cookies o si entra desde otro dispositivo, y ahí juega de nuevo.
+Es el precio de no pedirle que se registre.
+
+El botón **salir** cierra la sesión de un código, pero no le saca a nadie lo
+que ganó jugando: si tocás salir seguís viendo los capítulos, lo que perdés
+es el acceso a `/estado` y `/subir`.
 
 ### Al sitio se entra sin contraseña
 
