@@ -11,12 +11,13 @@ export const DURACION_SESION_S = 180 * 24 * 60 * 60; // 180 días
 export const MIN_SECRET = 32;
 export const MIN_CODIGO = 8;
 
-export type ConfigAuth = { secret: string; codigos: string[] };
+export type ConfigAuth = { secret: string; codigos: string[]; libres: string[] };
 export type ResultadoConfig =
   | { ok: true; config: ConfigAuth }
   | { ok: false; problema: string };
 
-export type Sesion = { id: string; vence: number };
+/** `libre`: el código está en CODIGOS_LIBRES y no tiene que pasar por el juego. */
+export type Sesion = { id: string; vence: number; libre: boolean };
 
 const enc = new TextEncoder();
 
@@ -53,7 +54,10 @@ export function leerConfig(env: Record<string, string | undefined> = process.env
       problema: `Hay un código de acceso de ${corto.length} caracteres. Cada código necesita al menos ${MIN_CODIGO}.`,
     };
   }
-  return { ok: true, config: { secret, codigos } };
+  // Los códigos que no tienen que ganarse la entrada jugando. Si alguno no
+  // está en ACCESS_CODES no sirve de nada, pero tampoco molesta: se ignora.
+  const libres = parsearCodigos(env.CODIGOS_LIBRES).filter((c) => codigos.includes(c));
+  return { ok: true, config: { secret, codigos, libres } };
 }
 
 function base64url(bytes: Uint8Array): string {
@@ -62,7 +66,8 @@ function base64url(bytes: Uint8Array): string {
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-async function hmac(secret: string, datos: string): Promise<string> {
+/** HMAC-SHA256 en base64url. Lo usa la sesión y también el pase de `lib/puerta.ts`. */
+export async function firmar(secret: string, datos: string): Promise<string> {
   const clave = await crypto.subtle.importKey(
     "raw",
     enc.encode(secret),
@@ -76,7 +81,7 @@ async function hmac(secret: string, datos: string): Promise<string> {
 
 /** Identificador del código para la cookie: HMAC con el secreto, así la cookie no permite adivinar el código por fuerza bruta. */
 async function idDeCodigo(codigo: string, secret: string): Promise<string> {
-  return (await hmac(secret, `id:${codigo}`)).slice(0, 16);
+  return (await firmar(secret, `id:${codigo}`)).slice(0, 16);
 }
 
 /** Comparación en tiempo constante para strings del mismo largo. */
@@ -102,7 +107,7 @@ export async function crearSesion(
   const id = await idDeCodigo(encontrado, config.secret);
   const vence = Math.floor(ahoraMs / 1000) + DURACION_SESION_S;
   const cuerpo = `v1.${id}.${vence}`;
-  return `${cuerpo}.${await hmac(config.secret, cuerpo)}`;
+  return `${cuerpo}.${await firmar(config.secret, cuerpo)}`;
 }
 
 /** Verifica firma, vencimiento y que el código siga vigente. */
@@ -118,12 +123,60 @@ export async function verificarSesion(
   if (!/^\d+$/.test(venceTexto)) return null;
   const vence = Number(venceTexto);
   if (!Number.isFinite(vence) || vence * 1000 < ahoraMs) return null;
-  const esperada = await hmac(config.secret, `v1.${id}.${vence}`);
+  const esperada = await firmar(config.secret, `v1.${id}.${vence}`);
   if (!iguales(firma, esperada)) return null;
   for (const c of config.codigos) {
-    if ((await idDeCodigo(c, config.secret)) === id) return { id, vence };
+    if ((await idDeCodigo(c, config.secret)) === id) {
+      return { id, vence, libre: config.libres.includes(c) };
+    }
   }
   return null;
+}
+
+// --- el pase del juego ---
+//
+// Para ver los capítulos hay que ganárselo en /juego. Lo que lo acredita es
+// otra cookie firmada con el mismo secreto, atada al id del código: copiarla
+// a la sesión de otra persona no sirve. Las reglas (cuánto hay que sacar,
+// cómo se anota en el bucket) están en `lib/puerta.ts`.
+
+export const COOKIE_PASE = "ft_pase";
+export const DURACION_PASE_S = DURACION_SESION_S;
+
+/** Valor de la cookie del pase. Va atado al id de la sesión. */
+export async function crearPase(
+  id: string,
+  puntaje: number,
+  config: ConfigAuth,
+  ahoraMs: number = Date.now(),
+): Promise<string> {
+  const vence = Math.floor(ahoraMs / 1000) + DURACION_PASE_S;
+  const cuerpo = `v1.${id}.${Math.round(puntaje)}.${vence}`;
+  return `${cuerpo}.${await firmar(config.secret, `pase:${cuerpo}`)}`;
+}
+
+/**
+ * Devuelve el puntaje con el que entró, o null. Pide el id de la sesión: un
+ * pase ajeno, aunque esté bien firmado, no abre la puerta de otro.
+ */
+export async function verificarPase(
+  token: string | undefined | null,
+  id: string,
+  config: ConfigAuth,
+  ahoraMs: number = Date.now(),
+): Promise<number | null> {
+  if (!token) return null;
+  const partes = token.split(".");
+  if (partes.length !== 5 || partes[0] !== "v1") return null;
+  const [, suId, puntajeTexto, venceTexto, firma] = partes;
+  if (!/^\d+$/.test(puntajeTexto) || !/^\d+$/.test(venceTexto)) return null;
+  if (!iguales(suId, id)) return null;
+  const vence = Number(venceTexto);
+  if (!Number.isFinite(vence) || vence * 1000 < ahoraMs) return null;
+  const cuerpo = `v1.${suId}.${puntajeTexto}.${vence}`;
+  const esperada = await firmar(config.secret, `pase:${cuerpo}`);
+  if (!iguales(firma, esperada)) return null;
+  return Number(puntajeTexto);
 }
 
 export function opcionesCookie(segura: boolean) {

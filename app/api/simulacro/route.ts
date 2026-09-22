@@ -7,7 +7,17 @@
 // el juego nunca se queda sin respuesta.
 
 import { NextResponse, type NextRequest } from "next/server";
-import { COOKIE_SESION, leerConfig, verificarSesion } from "@/lib/auth";
+import {
+  COOKIE_PASE,
+  COOKIE_SESION,
+  crearPase,
+  leerConfig,
+  opcionesCookie,
+  verificarPase,
+  verificarSesion,
+} from "@/lib/auth";
+import { puntajeParaEntrar } from "@/lib/puerta";
+import { guardarPase } from "@/lib/pases";
 import { buscarCaso, evaluarPlan, MAX_PLAN, type Caso, type Resultado } from "@/lib/simulacro";
 
 export const runtime = "nodejs";
@@ -113,8 +123,10 @@ async function narrarConClaude(caso: Caso, plan: string, local: Resultado): Prom
 
 export async function POST(req: NextRequest) {
   const config = leerConfig();
-  const sesion = config.ok ? await verificarSesion(req.cookies.get(COOKIE_SESION)?.value, config.config) : null;
-  if (!sesion) return NextResponse.json({ error: "Sin sesión. Entrá con tu código." }, { status: 401 });
+  const sinSesion = NextResponse.json({ error: "Sin sesión. Entrá con tu código." }, { status: 401 });
+  if (!config.ok) return sinSesion;
+  const sesion = await verificarSesion(req.cookies.get(COOKIE_SESION)?.value, config.config);
+  if (!sesion) return sinSesion;
 
   let cuerpo: { casoId?: unknown; plan?: unknown };
   try {
@@ -128,10 +140,31 @@ export async function POST(req: NextRequest) {
 
   const local = evaluarPlan(caso, plan);
   const sinCache = { "Cache-Control": "private, no-store" };
+
+  // La puerta la decide este puntaje, el del motor local, y nunca el de
+  // Claude: Claude narra, no califica. Un plan copiado del navegador tampoco
+  // sirve, porque el texto se vuelve a evaluar acá.
+  const minimo = puntajeParaEntrar();
+  const tenia =
+    sesion.libre ||
+    (await verificarPase(req.cookies.get(COOKIE_PASE)?.value, sesion.id, config.config)) !== null;
+  const abre = local.puntaje >= minimo;
+  const puerta = { minimo, puntaje: local.puntaje, paso: abre || tenia, recien: abre && !tenia };
+
+  let resultado = local;
   // Un plan vacío no se le manda a Claude: la respuesta ya está y es la misma.
-  if (local.veredicto === "vacio" || !process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json(local, { headers: sinCache });
+  if (local.veredicto !== "vacio" && process.env.ANTHROPIC_API_KEY) {
+    resultado = (await narrarConClaude(caso, plan, local)) ?? local;
   }
-  const conClaude = await narrarConClaude(caso, plan, local);
-  return NextResponse.json(conClaude ?? local, { headers: sinCache });
+
+  const res = NextResponse.json({ ...resultado, puerta }, { headers: sinCache });
+  if (abre && !sesion.libre) {
+    res.cookies.set(
+      COOKIE_PASE,
+      await crearPase(sesion.id, local.puntaje, config.config),
+      opcionesCookie(process.env.NODE_ENV === "production"),
+    );
+    await guardarPase(sesion.id, { puntaje: local.puntaje, caso: caso.id, fecha: Date.now() });
+  }
+  return res;
 }

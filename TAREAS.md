@@ -43,40 +43,37 @@ los archivos locales, o `node scripts/convertir.mjs entrada salida.mp4`.
       aparece otro plan bueno que puntúa bajo, el arreglo es un detector
       nuevo en `ELEMENTOS` más su test, no tocar las bandas.
 
-## Usuarios, para más adelante
+## La puerta y los usuarios
 
-Pedido y **no implementado a propósito**: que cada persona se haga su cuenta,
-con un admin (el dueño) que administre las que se creen, y un usuario común
-que sólo pueda ver capítulos, leer el expediente y el origen, y jugar.
+Los capítulos se ganan jugando: quien entra con su código ve el juego, el
+expediente y el origen, y la serie se abre cuando arma un operativo que saca
+70 sobre 100. Está andando; lo que queda abierto es esto:
 
-Hoy la identidad es el código de acceso de `ACCESS_CODES`, y no hay base de
-datos. La forma de hacerlo sin traicionar eso, cuando se decida:
+- [ ] **El número.** 70 es la primera calibración, elegida contra los planes
+      de prueba. Cuando juegue gente de verdad va a quedar claro si deja
+      afuera a alguien que se tomó el trabajo. Se cambia con la variable
+      `PUNTAJE_PARA_ENTRAR`, sin tocar código ni perder los pases ya dados.
+- [ ] **Poner el código del dueño en `CODIGOS_LIBRES`** (Vercel, Settings,
+      Environment Variables, Redeploy). Sin eso `/estado` y `/subir` quedan
+      del otro lado de la puerta hasta pasar el juego.
+- [ ] Nadie puede perder el pase: `pases.json` se queda con el mejor puntaje
+      y el pase dura 180 días como la sesión. Si alguna vez hay que sacarle
+      la entrada a alguien, hoy se hace borrando su línea de `pases.json` con
+      Cyberduck. Si eso pasa seguido, conviene una pantalla.
+- [ ] El plan se puede copiar de otra persona. Es un sitio entre conocidos y
+      no vale la pena defenderlo; anotado por las dudas.
 
-- **Dónde viven los usuarios.** Un `usuarios.json` en el bucket, al lado de
-  `marcas.json`, leído y reescrito entero (`lib/almacen.ts` ya sabe hacerlo).
-  Cada entrada: nombre, hash de la contraseña, rol (`admin` o `mira`), fecha
-  de alta y si está aprobada. Nada de una base de datos: son treinta filas
-  como mucho, y el bucket ya es el lugar donde vive lo compartido.
-- **Contraseñas.** PBKDF2 con Web Crypto, que es lo que ya usa `lib/auth.ts`
-  y anda en Edge y en Node. Nunca la contraseña en claro, ni en la cookie ni
-  en el JSON.
-- **La cookie.** La misma de ahora, firmada, pero llevando el nombre de
-  usuario y el rol en vez del hash del código. El middleware sigue siendo la
-  puerta; el rol se chequea además en cada ruta que lo necesite, igual que
-  `/api/stream/[id]` revalida la sesión por su cuenta.
-- **Qué ve cada rol.** `mira`: `/`, `/ver/[id]`, `/expediente`, `/origen`,
-  `/juego`. `admin`: eso más `/subir`, `/estado` y la pantalla de altas.
-  Las escrituras que hoy hace cualquiera con sesión (marcar la intro, subir
-  una portada, subir un archivo) pasan a pedir `admin`.
-- **El alta.** Alguien se registra y queda pendiente; el admin aprueba desde
-  una pantalla que lista las cuentas. Sin mails: no hay servicio de correo
-  y agregarlo es otra cuenta y otra cosa que se rompe.
-- **El código de acceso no se tira.** Sigue sirviendo para entrar como
-  siempre, así el día que se migre nadie queda afuera.
+**Cuentas de usuario**, que era la idea anterior y quedó reemplazada por la
+puerta. Si algún día se retoma (para que cada uno tenga su nombre y su
+progreso, no sólo un código), el camino que no traiciona el "sin base de
+datos" es el mismo que usa `pases.json`:
 
-Lo que hay que mirar antes de arrancar: dos personas aprobando cuentas al
-mismo tiempo pueden pisarse, porque el JSON se reescribe entero. Con este
-tamaño no importa, pero conviene saberlo.
+- Un `usuarios.json` en el bucket: nombre, hash de la contraseña con PBKDF2
+  (Web Crypto, que anda en Edge y en Node), rol y fecha de alta.
+- Rol `admin` (el dueño) para aprobar altas, subir y ver `/estado`; rol
+  común para ver, leer y jugar. La puerta seguiría valiendo para el rol común.
+- Sin mails: el alta queda pendiente y el admin la aprueba desde una pantalla.
+- Cuidado con dos personas aprobando a la vez: el JSON se reescribe entero.
 
 ## Datos
 

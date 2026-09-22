@@ -2,11 +2,11 @@
 // directo a R2, con sus Range requests. Esta ruta NUNCA debe leer el objeto
 // y devolverlo: rompe el seek y quema ancho de banda de Vercel.
 //
-// Vuelve a validar la sesión aunque el middleware ya lo haya hecho: es la
-// única ruta que expone URLs firmadas.
+// Vuelve a validar la sesión y el pase del juego aunque el middleware ya lo
+// haya hecho: es la única ruta que expone URLs firmadas.
 
 import { NextResponse, type NextRequest } from "next/server";
-import { COOKIE_SESION, leerConfig, verificarSesion } from "@/lib/auth";
+import { COOKIE_PASE, COOKIE_SESION, leerConfig, verificarPase, verificarSesion } from "@/lib/auth";
 import { buscar } from "@/lib/episodes";
 import { firmarUrl, leerR2 } from "@/lib/r2";
 
@@ -18,8 +18,17 @@ const SIN_CACHE = { "Cache-Control": "private, no-store" };
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const config = leerConfig();
   const sesion = config.ok ? await verificarSesion(req.cookies.get(COOKIE_SESION)?.value, config.config) : null;
-  if (!sesion) {
+  if (!sesion || !config.ok) {
     return NextResponse.json({ error: "Sin sesión. Entrá con tu código." }, { status: 401, headers: SIN_CACHE });
+  }
+
+  const pase =
+    sesion.libre || (await verificarPase(req.cookies.get(COOKIE_PASE)?.value, sesion.id, config.config)) !== null;
+  if (!pase) {
+    return NextResponse.json(
+      { error: "Todavía no pasaste el juego." },
+      { status: 403, headers: SIN_CACHE },
+    );
   }
 
   const { id } = await params;

@@ -11,8 +11,8 @@ Cyberduck. Cada decisión de este repo tiene que sostener eso. Si una tarea
 
 ## Invariantes de arquitectura
 
-Estas cinco cosas son decisiones tomadas, no defaults. Si vas a cambiar
-alguna, avisá antes en vez de hacerlo al pasar.
+Estas cosas son decisiones tomadas, no defaults. Si vas a cambiar alguna,
+avisá antes en vez de hacerlo al pasar.
 
 **El video nunca pasa por Vercel.** `/api/stream/[id]` firma una URL de R2 y
 devuelve un 302. El navegador le pide los bytes directo a R2. Convertir esa
@@ -44,14 +44,27 @@ decenas de KB: no es la excepción que confirma la regla, es otra regla.
 esa ruta es la única que expone URLs firmadas y no queremos que dependa de
 que el middleware se haya ejecutado. No la "limpies".
 
+**Los capítulos se ganan jugando.** `/juego` no es un adorno al costado: es
+la puerta. Quien entra con su código ve el juego, el expediente y el origen,
+pero los capítulos recién se abren cuando arma un operativo que saca 70 sobre
+100 o más. Lo decide el servidor con `evaluarPlan`, que es determinista, y
+nunca el navegador ni Claude: Claude narra el desenlace, no califica. Lo que
+acredita haber pasado es el "pase", otra cookie firmada con el mismo HMAC de
+la sesión (`lib/auth.ts`) y atada al id del código, así prestarla no sirve.
+El middleware la mira en cada pedido y `/api/stream/[id]` la vuelve a mirar
+por su cuenta. Si vas a tocar `lib/simulacro.ts`, tené presente que ahora los
+puntajes son una puerta: bajarle el puntaje a un plan bueno deja gente afuera.
+
 **No hay base de datos.** El código de acceso es la identidad, y sale de la
 variable de entorno `ACCESS_CODES`. La cookie guarda un hash del código, no
 el código: sacar un código de la variable desloguea a esa persona. El
 progreso de reproducción vive en el `localStorage` de cada navegador. Lo
-único compartido entre navegadores son las anotaciones por capítulo (dónde
-está la intro, si hay portada): un JSON chico, `marcas.json`, que vive en el
-bucket al lado de los videos y que el sitio lee y reescribe entero
-(`lib/marcas.ts`, `lib/almacen.ts`). Las portadas son JPEG de ~50 KB en
+compartido entre navegadores son dos JSON chicos que viven en el bucket al
+lado de los videos y que el sitio lee y reescribe enteros: `marcas.json`, con
+las anotaciones por capítulo (dónde está la intro, si hay portada), y
+`pases.json`, con el mejor puntaje de quien ya pasó el juego, para que no
+tenga que jugar de nuevo desde otro navegador (`lib/marcas.ts`,
+`lib/puerta.ts`, `lib/pases.ts`, `lib/almacen.ts`). Las portadas son JPEG de ~50 KB en
 `art/<id>.jpg`, capturados por el reproductor. Si algo parece necesitar una
 tabla, primero replanteá el feature.
 
@@ -114,7 +127,10 @@ las cuatro variables: no hay un flag que prender.
 ## Las secciones y el menú
 
 El menú tiene cuatro: **capítulos** (`/`), **el expediente** (`/expediente`),
-**el juego** (`/juego`) y **el origen** (`/origen`). Más salir.
+**el juego** (`/juego`) y **el origen** (`/origen`). Más salir. "capítulos"
+lleva un candado al lado hasta que la persona pasa el juego, y el enlace sigue
+vivo a propósito: quien lo toca cae en `/juego?puerta=1`, que explica el trato.
+Eso enseña la regla mejor que un enlace muerto.
 
 `/subir` y `/estado` **no están en el menú a propósito**: los 24 capítulos ya
 están cargados y son pantallas de mantenimiento. No se borraron: se llega
@@ -140,7 +156,7 @@ porque cada capítulo va envuelto en su propio `Revelar`).
 ```bash
 npm run dev                      # local en :3000
 npm run build                    # verificar que compila antes de deployar
-npm test                         # tests de auth, r2, mp4, marcas, simulacro, serie y episodes.json
+npm test                         # tests de auth, puerta, r2, mp4, marcas, simulacro, serie y episodes.json
 npm run prepare-videos -- <dir>  # ffmpeg: normaliza, cuadros, srt->vtt (requiere ffmpeg)
 npm run upload -- ./listos       # sube a R2 con multipart (requiere las variables)
 npm run demo                     # regenera public/demo/muestra.mp4 (requiere ffmpeg)
@@ -177,6 +193,10 @@ app/api/simulacro         evalúa el plan del juego (local, y Claude si hay clav
 lib/serie.ts              datos de la serie, los cuatro y Szifrón. Escrito, no copiado.
 lib/origen.ts             el relato de por qué existe el sitio. Cinco capítulos.
 lib/simulacro.ts          casos del juego + motor que puntúa y narra
+lib/puerta.ts             las reglas de la puerta: cuánto hay que sacar y cómo
+                          se anota. No importa nada: se testea solo.
+lib/pases.ts              pases.json en el bucket + el estado para las páginas.
+                          Es la parte de la puerta que necesita Node.
 lib/cuadro.ts             ffmpeg: saca un cuadro del video para la portada
 lib/marcas.ts             forma de las anotaciones y validación
 lib/almacen.ts            bucket o carpeta temporal (modo demo)
@@ -299,6 +319,36 @@ lo local: **el juego nunca se queda sin respuesta**. El modelo por defecto es
 Al agregar detectores, cuidado con el español: "Santos **arma** el
 operativo" no es un arma, y "amena**c**e" no lleva z. Los dos casos están en
 los tests.
+
+**El juego es la puerta.** El puntaje no es sólo un número: de él dependen
+los capítulos. Cómo funciona, de punta a punta:
+
+1. Alguien entra con su código y va a `/`. El middleware no le ve el pase y
+   lo manda a `/juego?puerta=1`, donde un cartel dice el trato y cuánto hay
+   que sacar.
+2. Escribe un plan y lo manda. `/api/simulacro` lo evalúa con `evaluarPlan`.
+   Si el puntaje llega al mínimo, la misma respuesta trae la cookie del pase
+   y anota el puntaje en `pases.json`. El cliente recibe además un objeto
+   `puerta` con `minimo`, `puntaje`, `paso` y `recien`, y con eso muestra el
+   bloque que se abre o dice cuánto falta.
+3. A partir de ahí el middleware lo deja pasar, y `/api/stream/[id]`
+   revalida el pase por su cuenta antes de firmar nada.
+4. Si entra desde otro navegador, `/api/entrar` encuentra su puntaje en
+   `pases.json` y le devuelve el pase sin hacerlo jugar de nuevo.
+
+El mínimo es 70 y se cambia con `PUNTAJE_PARA_ENTRAR` sin tocar código. Los
+códigos de `CODIGOS_LIBRES` entran sin jugar: es la salida del dueño, que no
+puede quedarse afuera de `/estado` por un mal operativo. Se puede intentar
+las veces que uno quiera, con cualquiera de los seis casos, y el pase se
+queda con el mejor puntaje: nadie pierde la entrada por volver a jugar y
+salir peor.
+
+Dos cosas que ya se rompieron una vez y conviene no repetir: el enlace a los
+capítulos desde el juego es un `<a>` y no un `<Link>`, porque el router de
+Next prefetchea `/` cuando todavía no hay pase y después sirve ese rebote de
+su cache; y al abrirse la puerta se llama a `router.refresh()`, porque la
+cabecera se arma en el servidor y si no el candado se queda puesto
+contradiciendo al cartel.
 
 ## Textos
 

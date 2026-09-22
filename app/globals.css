@@ -1628,6 +1628,80 @@ kbd {
   }
 }
 
+/* la puerta: el juego decide quién ve los capítulos */
+.puerta {
+  margin-top: 28px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-left-width: 2px;
+  border-radius: var(--radio);
+  background: var(--ink-2);
+  animation: entrar 300ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.puerta__rotulo {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.puerta p {
+  margin: 0;
+  color: var(--bone);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.puerta b {
+  color: var(--bone);
+}
+/* Abierta va en menta, no en ladrillo: el acento de esta pantalla es el
+   botón que pone en marcha el operativo, y hay uno solo por pantalla. */
+.puerta--abierta {
+  border-left-color: var(--mint);
+}
+.puerta--abierta .puerta__rotulo {
+  color: var(--mint);
+}
+
+.abrio {
+  animation: entrar 320ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+  margin-top: 22px;
+  padding: 18px;
+  border: 1px solid var(--mint);
+  border-radius: var(--radio);
+  background: color-mix(in srgb, var(--mint) 8%, var(--ink-2));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+}
+.abrio p {
+  margin: 0;
+  max-width: 46ch;
+  color: var(--bone);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.falta {
+  animation: entrar 320ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.candado {
+  width: 9px;
+  height: 11px;
+  margin-left: 5px;
+  vertical-align: -1px;
+  opacity: 0.75;
+}
+
 /* el juego */
 .casos {
   display: flex;

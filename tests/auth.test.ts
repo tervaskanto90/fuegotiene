@@ -12,7 +12,7 @@ import {
 } from "../lib/auth.ts";
 
 const secret = "un-secreto-de-prueba-largo-para-firmar-1234567890";
-const config = { secret, codigos: ["codigo-de-octavio", "codigo-de-mama"] };
+const config = { secret, codigos: ["codigo-de-octavio", "codigo-de-mama"], libres: [] };
 
 test("leerConfig explica qué falta", () => {
   assert.match((leerConfig({}) as { problema: string }).problema, /SESSION_SECRET/);
@@ -109,4 +109,26 @@ test("la cookie no deja adivinar el código: el id depende del secreto", async (
 test("opcionesCookie", () => {
   assert.deepEqual(opcionesCookie(true), { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: DURACION_SESION_S });
   assert.equal(opcionesCookie(false).secure, false);
+});
+
+test("CODIGOS_LIBRES marca a quien no tiene que pasar por el juego", async () => {
+  const env = {
+    SESSION_SECRET: secret,
+    ACCESS_CODES: "codigo-de-octavio, codigo-de-mama",
+    CODIGOS_LIBRES: "codigo-de-octavio, uno-que-no-existe",
+  };
+  const leido = leerConfig(env);
+  assert.ok(leido.ok);
+  // Un libre que no está en ACCESS_CODES no sirve de nada y se descarta.
+  assert.deepEqual(leido.config.libres, ["codigo-de-octavio"]);
+
+  const deOctavio = await crearSesion("codigo-de-octavio", leido.config);
+  const deMama = await crearSesion("codigo-de-mama", leido.config);
+  assert.equal((await verificarSesion(deOctavio, leido.config))?.libre, true);
+  assert.equal((await verificarSesion(deMama, leido.config))?.libre, false);
+
+  // Sin la variable no hay libres: todos juegan.
+  const sinLibres = leerConfig({ SESSION_SECRET: secret, ACCESS_CODES: "codigo-de-octavio" });
+  assert.ok(sinLibres.ok);
+  assert.deepEqual(sinLibres.config.libres, []);
 });

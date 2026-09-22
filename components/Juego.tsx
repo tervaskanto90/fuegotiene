@@ -1,9 +1,21 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import type { EstadoPuerta } from "@/lib/puerta";
 import { casos, contarPalabras, MAX_PLAN, type Resultado } from "@/lib/simulacro";
 
 type Fase = "escribiendo" | "montando" | "resultado";
+
+/** Lo que /api/simulacro agrega al resultado para contar cómo quedó la puerta. */
+type Puerta = { minimo: number; puntaje: number; paso: boolean; recien: boolean };
+type Respuesta = Resultado & { puerta?: Puerta };
+
+type Props = {
+  puerta: EstadoPuerta;
+  /** llegó rebotado del middleware por querer ver los capítulos */
+  rebotado: boolean;
+};
 
 const MIENTRAS = [
   "Medina sale a averiguar quién es el otro…",
@@ -21,16 +33,21 @@ const COLOR: Record<Resultado["veredicto"], string> = {
   vacio: "mal",
 };
 
-export default function Juego() {
+export default function Juego({ puerta, rebotado }: Props) {
   const [casoId, setCasoId] = useState(casos[0].id);
   const [planes, setPlanes] = useState<Record<string, string>>({});
   const [fase, setFase] = useState<Fase>("escribiendo");
-  const [resultado, setResultado] = useState<Resultado | null>(null);
+  const [resultado, setResultado] = useState<Respuesta | null>(null);
+  // Arranca con lo que sabe el servidor y se actualiza sin recargar en cuanto
+  // un operativo alcanza el puntaje.
+  const [abierta, setAbierta] = useState(puerta.paso);
   const [error, setError] = useState<string | null>(null);
   const [paso, setPaso] = useState(0);
   const area = useRef<HTMLTextAreaElement>(null);
+  const router = useRouter();
 
   const caso = casos.find((c) => c.id === casoId)!;
+  const puntajeLogrado = resultado?.puerta?.paso ? resultado.puerta.puntaje : puerta.puntaje;
   const plan = planes[casoId] ?? "";
   const palabras = contarPalabras(plan);
 
@@ -54,7 +71,14 @@ export default function Juego() {
       if (res.status === 401) throw new Error("Tu sesión venció: entrá de nuevo y volvé a intentar.");
       const d = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(d.error ?? `El sitio respondió ${res.status}.`);
-      setResultado(d as Resultado);
+      const r = d as Respuesta;
+      setResultado(r);
+      if (r.puerta?.paso) {
+        setAbierta(true);
+        // La cabecera se arma en el servidor: sin esto el candado se queda
+        // puesto hasta la próxima navegación, contradiciendo al cartel.
+        if (r.puerta.recien) router.refresh();
+      }
       setFase("resultado");
     } catch (e) {
       setError(e instanceof Error ? e.message : "No pude correr el simulacro.");
@@ -79,6 +103,25 @@ export default function Juego() {
           que se caen a la mitad.
         </p>
       </section>
+
+      <aside className={`puerta${abierta ? " puerta--abierta" : ""}`}>
+        <span className="puerta__rotulo narrow">{abierta ? "la puerta, abierta" : "la puerta"}</span>
+        {abierta ? (
+          <p>
+            {puntajeLogrado === null
+              ? "Entrás sin jugar: tu código está en la lista corta."
+              : `Pasaste con ${puntajeLogrado}.`}{" "}
+            Los capítulos están de este lado. <a href="/">ver los capítulos</a>
+          </p>
+        ) : (
+          <p>
+            {rebotado ? "Fuiste derecho a los capítulos y te trajimos acá. " : ""}
+            Los capítulos están del otro lado. Se abren cuando armás un operativo que salga bien:{" "}
+            <b className="num">{puerta.minimo}</b> sobre 100 o más, en cualquiera de los seis casos. Podés intentar las
+            veces que quieras.
+          </p>
+        )}
+      </aside>
 
       <div className="casos" role="tablist" aria-label="casos">
         {casos.map((c, i) => (
@@ -222,7 +265,30 @@ export default function Juego() {
             </div>
           )}
 
-          <div className="desenlace__pie" style={{ "--i": resultado.fases.length + 2 } as React.CSSProperties}>
+          {resultado.puerta?.recien && (
+            <div className="abrio" style={{ "--i": resultado.fases.length + 2 } as React.CSSProperties}>
+              <p>
+                <b>Se abrió la puerta.</b> Hacían falta {resultado.puerta.minimo} y el operativo sacó{" "}
+                <span className="num">{resultado.puerta.puntaje}</span>. Los capítulos ya están.
+              </p>
+              {/* <a> y no <Link>: el router ya se había prefetcheado /
+                  sin pase y serviría ese rebote de su cache. Además una carga
+                  entera refresca la cabecera y le saca el candado. */}
+              <a className="boton boton--acento" href="/">
+                ver los capítulos
+              </a>
+            </div>
+          )}
+
+          {resultado.puerta && !resultado.puerta.paso && resultado.veredicto !== "vacio" && (
+            <p className="falta" style={{ "--i": resultado.fases.length + 2 } as React.CSSProperties}>
+              Para abrir la puerta faltan{" "}
+              <span className="num">{resultado.puerta.minimo - resultado.puerta.puntaje}</span>. Corregí el plan o
+              probá con otro caso.
+            </p>
+          )}
+
+          <div className="desenlace__pie" style={{ "--i": resultado.fases.length + 3 } as React.CSSProperties}>
             <button
               className="boton"
               type="button"

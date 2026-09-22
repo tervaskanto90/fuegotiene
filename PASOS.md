@@ -211,7 +211,8 @@ panel de Cloudflare.
   en `lib/origen.ts`, todo junto: si querés cambiar una frase, es ahí y no
   hace falta tocar nada más.
 - **el juego**: te dan un caso, escribís el operativo y se simula cómo sale.
-  Funciona sin configurar nada y sin costo.
+  Funciona sin configurar nada y sin costo. **Es la puerta a los capítulos**:
+  ver más abajo.
 
   Si querés que el desenlace lo escriba Claude en vez del simulador que ya
   tiene el sitio, hace falta una clave de la API de Anthropic, que se paga
@@ -226,10 +227,38 @@ panel de Cloudflare.
   Cada partida cuesta centavos. Si no cargás la clave, o si un día se queda
   sin crédito, el juego sigue andando con el simulador local y ni te enterás.
 
+## La puerta: el juego abre los capítulos
+
+Entrar con el código ya no alcanza para ver la serie. Quien entra ve el
+juego, el expediente y el origen; los capítulos se abren cuando arma un
+operativo que saca **70 sobre 100 o más**. Puede intentar las veces que
+quiera, con cualquiera de los seis casos, y una vez que pasa queda pasado
+para siempre, también desde el celular o desde otra compu.
+
+En "capítulos" aparece un candado hasta que lo logra. Si lo toca igual, el
+sitio lo lleva al juego y le explica el trato en una línea.
+
+**Ponete en la lista corta.** En Vercel, **Settings**, **Environment
+Variables**, agregá `CODIGOS_LIBRES` con tu propio código (el mismo que está
+en `ACCESS_CODES`) y **Redeploy**. Los códigos de esa lista entran sin jugar.
+Sin eso vas a tener que pasar el juego como todos, y `/estado` y `/subir`
+también te quedan cerrados hasta que lo hagas.
+
+Si 70 te parece mucho o poco, se cambia sin tocar código: variable
+`PUNTAJE_PARA_ENTRAR` con otro número, y Redeploy. Para tener una referencia:
+un operativo completo y bien contado pasa de 75, uno decente ronda 60, y uno
+de dos renglones o uno que resuelve todo a los golpes no llega a 40.
+
+Dónde queda anotado: en un archivo `pases.json` del bucket, al lado de
+`marcas.json`. Guarda el puntaje de cada persona, no su código. Si lo borrás,
+todos tienen que volver a jugar.
+
 ## Después
 
 - **Dar acceso a alguien**: agregá otro código a `ACCESS_CODES`, separado por
-  coma, y Redeploy. Le pasás el código y la dirección del sitio.
+  coma, y Redeploy. Le pasás el código y la dirección del sitio. Avisale que
+  para ver los capítulos primero tiene que pasar el juego, o no va a entender
+  por qué el sitio lo manda ahí.
 - **Sacarle el acceso a alguien**: borrá su código de la variable y Redeploy.
   Su sesión deja de valer en el acto.
 - **Dominio propio**: en Vercel, Settings → Domains. Opcional.

@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { COOKIE_SESION, crearSesion, leerConfig, opcionesCookie, rutaSegura } from "@/lib/auth";
+import { COOKIE_PASE, COOKIE_SESION, crearPase, crearSesion, leerConfig, opcionesCookie, rutaSegura } from "@/lib/auth";
+import { puntajeParaEntrar } from "@/lib/puerta";
+import { paseGuardado } from "@/lib/pases";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,7 +26,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.redirect(destino, 303);
   }
 
+  const opciones = opcionesCookie(process.env.NODE_ENV === "production");
   const res = NextResponse.redirect(new URL(volverA, req.url), 303);
-  res.cookies.set(COOKIE_SESION, token, opcionesCookie(process.env.NODE_ENV === "production"));
+  res.cookies.set(COOKIE_SESION, token, opciones);
+
+  // Si esta persona ya pasó el juego alguna vez, el pase la estaba esperando
+  // en el bucket: no lo tiene que ganar de nuevo por cambiar de navegador.
+  const id = token.split(".")[1];
+  const previo = await paseGuardado(id);
+  if (previo && previo.puntaje >= puntajeParaEntrar()) {
+    res.cookies.set(COOKIE_PASE, await crearPase(id, previo.puntaje, config.config), opciones);
+  }
   return res;
 }
