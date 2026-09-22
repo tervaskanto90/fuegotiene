@@ -15,6 +15,18 @@ Cyberduck. Cada decisión de este repo tiene que sostener eso. Si una tarea
 Estas cosas son decisiones tomadas, no defaults. Si vas a cambiar alguna,
 avisá antes en vez de hacerlo al pasar.
 
+**El sitio no puede costar plata.** No llama a ninguna API paga y no hay que
+dejarlo así por descuido: es la condición para que exista. El desenlace del
+juego lo escribe `lib/simulacro.ts`, código local y determinista. Hubo una
+versión que se lo pedía a Claude cuando había una clave cargada, y se sacó
+—junto con la dependencia— el día que el sitio pasó a ser público: entra
+cualquiera con el link y cada partida se le facturaba al dueño. Si alguna vez
+vuelve, tiene que venir con algo que la haga imposible de gastar sin querer
+(un tope duro del lado del proveedor, o sólo para el dueño), no con un
+contador en memoria. Lo mismo vale para cualquier otro servicio con factura:
+esto se banca con el plan gratis de Vercel y el de R2, que no cobra por lo
+que se baja.
+
 **El video nunca pasa por Vercel.** `/api/stream/[id]` firma una URL de R2 y
 devuelve un 302. El navegador le pide los bytes directo a R2. Convertir esa
 ruta en un proxy (leer el objeto y devolverlo en el response) rompe los Range
@@ -52,7 +64,8 @@ capítulos y el expediente se abren cuando arma un operativo que saca 70 sobre
 pantalla que ve cualquiera.
 
 Lo decide el servidor con `evaluarPlan`, que es determinista, y nunca el
-navegador ni Claude: Claude narra el desenlace, no califica. Lo que acredita
+navegador: si el puntaje dependiera del cliente, cualquiera pediría 100. Lo
+que acredita
 haber pasado es el "pase", una cookie firmada con el mismo HMAC de la sesión
 (`lib/auth.ts`). **El pase vale por sí mismo, sin sesión**: es lo que deja
 entrar a alguien que llegó sin ningún código. Lleva adentro un id —el del
@@ -219,7 +232,7 @@ app/subir/page.tsx        mantenimiento: subida al bucket. Fuera del menú.
 app/api/subir             firma una URL de PUT para un nombre válido
 app/api/marcas            lee y escribe marcas.json (intro por capítulo)
 app/api/arte/[id]         portada JPEG: la devuelve (GET) o la guarda (POST)
-app/api/simulacro         evalúa el plan del juego (local, y Claude si hay clave)
+app/api/simulacro         evalúa el plan del juego. Local: no sale a internet.
 lib/serie.ts              datos de la serie, los cuatro y Szifrón. Escrito, no copiado.
 lib/origen.ts             el relato de por qué existe el sitio. Cinco capítulos.
 lib/simulacro.ts          casos del juego + motor que puntúa y narra
@@ -340,12 +353,9 @@ justicia, y arma el relato en cuatro fases. **Es determinista y no usa red**:
 la variedad sale de un hash del propio texto, con tres variantes por fase.
 Por eso se puede testear como cualquier función.
 
-Si además hay una clave en `ANTHROPIC_API_KEY`, `/api/simulacro` le pasa a
-Claude el caso, el plan y la lectura del motor local, y Claude narra el
-desenlace. Si Claude falla, tarda o devuelve algo que no parsea, se responde
-lo local: **el juego nunca se queda sin respuesta**. El modelo por defecto es
-`claude-opus-5`; con `SIMULACRO_MODELO` se puede poner uno más barato
-(`claude-haiku-4-5`). Sin clave el juego anda igual y no cuesta nada.
+`/api/simulacro` no sale a internet: recibe el plan, lo evalúa y devuelve el
+relato en el mismo pedido, en milisegundos. **El juego nunca se queda sin
+respuesta y nunca genera un gasto.**
 
 Al agregar detectores, cuidado con el español: "Santos **arma** el
 operativo" no es un arma, y "amena**c**e" no lleva z. Los dos casos están en
@@ -373,12 +383,10 @@ puede intentar las veces que uno quiera, con cualquiera de los seis casos, y
 el pase se queda con el mejor puntaje: nadie pierde la entrada por volver a
 jugar y salir peor.
 
-**`/api/simulacro` es pública**, porque es la puerta. Si hay una clave de
-Claude cargada, eso es plata de alguien, así que la ruta tiene un tope por
-visitante y por hora; pasado el tope responde el simulador local, que no
-cuesta nada. El contador vive en la memoria de la función y se pierde cuando
-Vercel la recicla: es un techo, no un candado. El candado de verdad es sacar
-`ANTHROPIC_API_KEY`.
+**`/api/simulacro` es pública**, porque es la puerta: cualquiera que abra el
+sitio la llama sin tener nada. Por eso no puede hacer nada que cueste plata
+ni que tarde: evalúa con una función local y contesta. Si alguna vez se le
+agrega algo que cobre por uso, esa ruta es el primer lugar donde mirar.
 
 Tres cosas que ya se rompieron una vez y conviene no repetir: el enlace a los
 capítulos desde el juego es un `<a>` y no un `<Link>`, porque el router de

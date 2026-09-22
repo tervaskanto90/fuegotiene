@@ -32,7 +32,6 @@ test("un plan con todas las piezas sale redondo", () => {
     ["el estudio", "el montaje", "el operativo", "la salida"],
   );
   assert.equal(r.falto.length, 0);
-  assert.equal(r.porQuien, "local");
   for (const f of r.fases) assert.ok(f.texto.length > 40, f.titulo);
 });
 

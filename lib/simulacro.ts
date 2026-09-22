@@ -1,10 +1,11 @@
 // El juego: te dan un caso, escribís el operativo y se simula cómo sale.
 //
-// Este archivo es el simulador local: mira el plan, detecta qué elementos de
-// un operativo tiene y cuáles le faltan, y arma el relato del desenlace. No
-// usa red ni azar: el mismo plan da siempre el mismo resultado (la variedad
-// sale de un hash del propio texto). Si hay una clave de Claude cargada, la
-// ruta /api/simulacro le pide a Claude que narre; si no, narra esto.
+// Este archivo escribe el desenlace entero: mira el plan, detecta qué
+// elementos de un operativo tiene y cuáles le faltan, puntúa y arma el
+// relato. **No usa red ni azar**: el mismo plan da siempre el mismo
+// resultado, la variedad sale de un hash del propio texto. Por eso el juego
+// no puede costar plata ni quedarse sin respuesta, y se testea como
+// cualquier función.
 
 export type Caso = {
   id: string;
@@ -27,7 +28,6 @@ export type Resultado = {
   tuvo: string[];
   falto: string[];
   nota: string;
-  porQuien: "local" | "claude";
 };
 
 export const MAX_PLAN = 4000;
@@ -244,7 +244,6 @@ export function evaluarPlan(caso: Caso, plan: string): Resultado {
       tuvo: [],
       falto: SENALES.map((s) => s.etiqueta),
       nota: "Escribí el operativo con un poco más de detalle: quién se hace pasar por quién, qué se monta y en qué orden pasan las cosas.",
-      porQuien: "local",
     };
   }
 
@@ -373,6 +372,5 @@ export function evaluarPlan(caso: Caso, plan: string): Resultado {
     tuvo: presentes.map((s) => s.etiqueta),
     falto: [...ausentes.map((s) => s.etiqueta), ...penas.map((p) => p.etiqueta)],
     nota,
-    porQuien: "local",
   };
 }

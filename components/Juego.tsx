@@ -305,9 +305,7 @@ export default function Juego({ puerta }: Props) {
               otro caso
             </button>
             <span className="espacio" />
-            <span className="muted narrow">
-              {resultado.porQuien === "claude" ? "narrado por Claude" : "simulador local"}
-            </span>
+            <span className="muted narrow">simulador local</span>
           </div>
         </section>
       )}

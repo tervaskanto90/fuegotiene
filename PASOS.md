@@ -212,21 +212,9 @@ panel de Cloudflare.
   en `lib/origen.ts`, todo junto: si querés cambiar una frase, es ahí y no
   hace falta tocar nada más.
 - **el juego**: te dan un caso, escribís el operativo y se simula cómo sale.
-  Funciona sin configurar nada y sin costo. **Es la puerta a los capítulos**:
-  ver más abajo.
-
-  Si querés que el desenlace lo escriba Claude en vez del simulador que ya
-  tiene el sitio, hace falta una clave de la API de Anthropic, que se paga
-  aparte del plan de Claude:
-
-  1. En **console.anthropic.com**, creá una API key y cargá crédito.
-  2. En Vercel, **Settings**, **Environment Variables**: `ANTHROPIC_API_KEY`
-     con esa clave. **Redeploy**.
-  3. Opcional: `SIMULACRO_MODELO` con `claude-haiku-4-5` para que salga más
-     barato.
-
-  Cada partida cuesta centavos. Si no cargás la clave, o si un día se queda
-  sin crédito, el juego sigue andando con el simulador local y ni te enterás.
+  **Es la puerta a los capítulos**: ver más abajo. Funciona sin configurar
+  nada y sin costo: el desenlace lo escribe el propio sitio, no una API que
+  cobre por uso.
 
 ## La puerta: el juego abre los capítulos
 
@@ -276,11 +264,19 @@ Dónde queda anotado: en un archivo `pases.json` del bucket, al lado de
 `marcas.json`. Es el registro de quiénes ganaron y con cuánto, sin ningún dato
 personal. Borrarlo no le saca la entrada a nadie: lo que vale es la cookie.
 
-**Si cargaste una clave de Claude** (`ANTHROPIC_API_KEY`), el juego ahora es
-público y esa clave la usa cualquiera que juegue. Hay un tope de diez
-narraciones por visitante por hora, y pasado ese tope contesta el simulador
-local, que no cuesta nada. Si igual te preocupa la factura, sacá la variable:
-el juego anda exactamente igual.
+**Esto no te puede generar una factura.** El sitio no llama a ninguna API que
+cobre por uso: el desenlace del juego lo escribe código del propio sitio, en
+milisegundos. Si alguna vez cargaste `ANTHROPIC_API_KEY` en Vercel, podés
+borrarla tranquilo: no se usa.
+
+Lo único con números a mirar son los dos planes gratis, y ninguno te cobra de
+un día para el otro:
+
+- **R2** no cobra por lo que la gente baja, que es la parte cara de un sitio
+  de video y la razón por la que está ahí. El plan gratis cubre 10 GB
+  guardados y la serie ocupa 7,5.
+- **Vercel** en plan Hobby es gratis. Si un mes el sitio se hiciera muy
+  popular, Vercel avisa y te pide pasar a un plan pago; no te cobra solo.
 
 ## Después
 

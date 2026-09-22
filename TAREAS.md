@@ -67,11 +67,12 @@ saca 70 sobre 100. Está andando; lo que queda abierto es esto:
       pasando el juego. Si algún día hay que cerrarlo de nuevo, el cambio es
       chico: volver a pedir sesión en el middleware para todo lo que no sea
       /entrar.
-- [ ] **`/api/simulacro` es pública y puede gastar la clave de Claude.** Hay
-      un tope de diez narraciones por visitante por hora, pero vive en la
-      memoria de la función de Vercel y se pierde cuando la reciclan. Si
-      aparece una factura rara, sacar `ANTHROPIC_API_KEY`: el juego anda
-      igual con el simulador local.
+- [x] **El sitio no puede costar plata.** La narración con Claude se sacó
+      del juego, junto con la dependencia: `/api/simulacro` es pública y no
+      puede quedar una ruta que cobre por uso abierta a cualquiera con el
+      link. El desenlace lo escribe el simulador local, en milisegundos. Si
+      algún día se quiere volver a la versión narrada, tiene que venir con un
+      tope duro del lado del proveedor o quedar sólo para el dueño.
 - [ ] Marcar la intro y guardar una portada lo puede hacer cualquiera que
       gane el juego, no sólo el dueño. Es lo que había antes y no molesta,
       pero ahora el conjunto es más grande. Si alguna vez molesta, esas dos
