@@ -6,8 +6,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Adelante10,
   Atras10,
-  Cerrar,
-  Engranaje,
   Flecha,
   PantallaCompleta,
   Pausa,
@@ -24,7 +22,6 @@ import { reanudable, useProgreso } from "@/lib/progress";
 
 type Props = { ep: Episodio; sig: Episodio | null; ant: Episodio | null };
 type Fase = "cargando" | "viendo" | "terminado" | "error";
-type Toast = { texto: string; accion?: { etiqueta: string; alHacer: () => void } };
 
 const CADA_MS = 5000;
 const SEGUNDOS_PARA_SIGUIENTE = 12;
@@ -83,9 +80,7 @@ export default function Reproductor({ ep, sig, ant }: Props) {
   const [silencio, setSilencio] = useState(false);
   const [pantallaCompleta, setPantallaCompleta] = useState(false);
   const [visibles, setVisibles] = useState(true);
-  const [panelAbierto, setPanelAbierto] = useState(false);
   const [subsActivos, setSubsActivos] = useState(false);
-  const [toast, setToast] = useState<Toast | null>(null);
   const [arrastrando, setArrastrando] = useState(false);
   const [hoverT, setHoverT] = useState<number | null>(null);
   const [sinImagen, setSinImagen] = useState<string | null>(null);
@@ -96,10 +91,6 @@ export default function Reproductor({ ep, sig, ant }: Props) {
   const [marca, setMarca] = useState<Marca>({});
   const [marcasCargadas, setMarcasCargadas] = useState(false);
   const [mostrarSaltear, setMostrarSaltear] = useState(false);
-  const [introInicio, setIntroInicio] = useState<number | null>(null);
-  const [introFin, setIntroFin] = useState<number | null>(null);
-  const [avisoAjustes, setAvisoAjustes] = useState<string | null>(null);
-  const [guardando, setGuardando] = useState(false);
 
   // El video se pide en modo CORS para poder capturar cuadros. Si el bucket no
   // tiene la política CORS, la primera carga falla y se vuelve a pedir sin CORS.
@@ -114,10 +105,8 @@ export default function Reproductor({ ep, sig, ant }: Props) {
   const decidido = useRef(false);
   const guardadoInicial = useRef<number | null>(null);
   const temporizadorOcultar = useRef(0);
-  const temporizadorToast = useRef(0);
   const temporizadorSalto = useRef(0);
   const reproduciendoRef = useRef(false);
-  const panelRef = useRef(false);
   const arrastrandoRef = useRef(false);
   /** Los controles tal como estaban cuando el dedo tocó la pantalla, antes de que el toque los prenda. */
   const visiblesRef = useRef(true);
@@ -128,9 +117,6 @@ export default function Reproductor({ ep, sig, ant }: Props) {
   useEffect(() => {
     reproduciendoRef.current = reproduciendo;
   }, [reproduciendo]);
-  useEffect(() => {
-    panelRef.current = panelAbierto;
-  }, [panelAbierto]);
   useEffect(() => {
     visiblesRef.current = visibles;
   }, [visibles]);
@@ -145,18 +131,12 @@ export default function Reproductor({ ep, sig, ant }: Props) {
     ultimoGuardado.current = Date.now();
   }, [ep.id, guardar]);
 
-  const mostrarToast = useCallback((t: Toast, ms = 6000) => {
-    setToast(t);
-    window.clearTimeout(temporizadorToast.current);
-    temporizadorToast.current = window.setTimeout(() => setToast(null), ms);
-  }, []);
-
   /** Muestra los controles y programa que se escondan solos si el video anda. */
   const despertar = useCallback(() => {
     setVisibles(true);
     window.clearTimeout(temporizadorOcultar.current);
     temporizadorOcultar.current = window.setTimeout(() => {
-      if (reproduciendoRef.current && !panelRef.current && !arrastrandoRef.current) setVisibles(false);
+      if (reproduciendoRef.current && !arrastrandoRef.current) setVisibles(false);
     }, esTactil() ? OCULTAR_TACTIL_MS : OCULTAR_MS);
   }, []);
 
@@ -169,13 +149,13 @@ export default function Reproductor({ ep, sig, ant }: Props) {
   }, [despertar]);
 
   useEffect(() => {
-    if (!reproduciendo || panelAbierto) {
+    if (!reproduciendo) {
       setVisibles(true);
       window.clearTimeout(temporizadorOcultar.current);
     } else {
       despertar();
     }
-  }, [reproduciendo, panelAbierto, despertar]);
+  }, [reproduciendo, despertar]);
 
   // Volumen recordado.
   useEffect(() => {
@@ -219,8 +199,6 @@ export default function Reproductor({ ep, sig, ant }: Props) {
         if (!vivo) return;
         const mia = m?.[ep.id] ?? {};
         setMarca(mia);
-        setIntroInicio(mia.intro?.[0] ?? null);
-        setIntroFin(mia.intro?.[1] ?? null);
       })
       .catch(() => {})
       .finally(() => {
@@ -254,22 +232,10 @@ export default function Reproductor({ ep, sig, ant }: Props) {
       const t = guardadoInicial.current;
       v.currentTime = t;
       setTiempo(t);
-      mostrarToast({
-        texto: `seguís desde ${tiempoTexto(t)}`,
-        accion: {
-          etiqueta: "empezar de nuevo",
-          alHacer: () => {
-            v.currentTime = 0;
-            setTiempo(0);
-            v.play().catch(() => {});
-            setToast(null);
-          },
-        },
-      });
     }
     // Si el navegador no deja arrancar solo, queda el botón grande de play.
     v.play().catch(() => {});
-  }, [listo, mapa, ep.id, mostrarToast]);
+  }, [listo, mapa, ep.id]);
 
   /** Los controles nativos ya no se usan, pero por las dudas: si algo puso el <video> solo en pantalla completa, salir. */
   const salirDePantallaCompletaNativa = () => {
@@ -409,10 +375,6 @@ export default function Reproductor({ ep, sig, ant }: Props) {
       const objetivo = e.target as HTMLElement | null;
       if (objetivo && ["INPUT", "TEXTAREA", "SELECT"].includes(objetivo.tagName)) return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
-      if (e.key === "Escape") {
-        setPanelAbierto(false);
-        return;
-      }
       if (objetivo && ["BUTTON", "A"].includes(objetivo.tagName) && (e.key === " " || e.key === "Enter")) return;
       despertar();
       switch (e.key) {
@@ -601,29 +563,6 @@ export default function Reproductor({ ep, sig, ant }: Props) {
     }
   };
 
-  const guardarIntro = async (intro: [number, number] | null) => {
-    setGuardando(true);
-    setAvisoAjustes(null);
-    try {
-      const res = await fetch("/api/marcas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: ep.id, intro }),
-      });
-      const d = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(d.error ?? `El sitio respondió ${res.status}.`);
-      const mia: Marca = d?.[ep.id] ?? {};
-      setMarca(mia);
-      setIntroInicio(mia.intro?.[0] ?? null);
-      setIntroFin(mia.intro?.[1] ?? null);
-      setAvisoAjustes(intro ? "Intro guardada: el botón para saltearla aparece en todos los navegadores." : "Intro borrada.");
-    } catch (e) {
-      setAvisoAjustes(e instanceof Error ? e.message : "No pude guardar.");
-    } finally {
-      setGuardando(false);
-    }
-  };
-
   // Barra de tiempo: arrastre y vista previa.
   const razonDe = (clientX: number) => {
     const r = barra.current?.getBoundingClientRect();
@@ -655,7 +594,7 @@ export default function Reproductor({ ep, sig, ant }: Props) {
       los controles — y dos toques seguidos en un costado saltan 10 segundos. */
   const alClicPantalla = (e: React.MouseEvent<HTMLDivElement>) => {
     const objetivo = e.target as HTMLElement;
-    if (objetivo.closest("button, a, input, .panel, .cine__abajo, .capa, .toast, .aviso-cine")) return;
+    if (objetivo.closest("button, a, input, .cine__abajo, .capa, .aviso-cine")) return;
     if (fase !== "viendo") return;
     if (!esTactil()) {
       alternarPlay();
@@ -687,13 +626,12 @@ export default function Reproductor({ ep, sig, ant }: Props) {
   };
   const alDobleClic = (e: React.MouseEvent<HTMLDivElement>) => {
     const objetivo = e.target as HTMLElement;
-    if (objetivo.closest("button, a, input, .panel, .cine__abajo, .capa, .toast")) return;
+    if (objetivo.closest("button, a, input, .cine__abajo, .capa")) return;
     if (!esTactil()) alternarPantallaCompleta();
   };
 
   const pct = duracion > 0 ? (tiempo / duracion) * 100 : 0;
   const pctBuffer = duracion > 0 ? Math.min(100, (bufferHasta / duracion) * 100) : 0;
-  const introLista = introInicio !== null && introFin !== null && introFin > introInicio;
   const mostrarControles = visibles || !reproduciendo || fase !== "viendo";
 
   return (
@@ -804,17 +742,6 @@ export default function Reproductor({ ep, sig, ant }: Props) {
         </button>
       )}
 
-      {toast && (
-        <div className="toast" role="status">
-          <span>{toast.texto}</span>
-          {toast.accion && (
-            <button className="boton boton--chico" type="button" onClick={toast.accion.alHacer}>
-              {toast.accion.etiqueta}
-            </button>
-          )}
-        </div>
-      )}
-
       <div className="cine__abajo">
         <div
           ref={barra}
@@ -899,15 +826,6 @@ export default function Reproductor({ ep, sig, ant }: Props) {
               <Subtitulos />
             </button>
           )}
-          <button
-            className={`cine__boton${panelAbierto ? " cine__boton--activo" : ""}`}
-            type="button"
-            onClick={() => setPanelAbierto((a) => !a)}
-            aria-label="ajustes del capítulo"
-            aria-expanded={panelAbierto}
-          >
-            <Engranaje />
-          </button>
 {hayPantallaCompleta && (
             <button className="cine__boton" type="button" onClick={alternarPantallaCompleta} aria-label={pantallaCompleta ? "salir de pantalla completa" : "pantalla completa"}>
               {pantallaCompleta ? <SalirPantalla /> : <PantallaCompleta />}
@@ -915,109 +833,6 @@ export default function Reproductor({ ep, sig, ant }: Props) {
           )}
         </div>
       </div>
-
-      {panelAbierto && (
-        <aside className="panel" aria-label="ajustes del capítulo">
-          <button className="cine__boton cerrar" type="button" onClick={() => setPanelAbierto(false)} aria-label="cerrar">
-            <Cerrar />
-          </button>
-          <h2>intro</h2>
-          <section>
-            <div>
-              {marca.intro ? (
-                <>
-                  Va de <span className="num">{tiempoTexto(marca.intro[0])}</span> a{" "}
-                  <span className="num">{tiempoTexto(marca.intro[1])}</span>. Mientras pasa aparece el botón para saltearla, también con la
-                  tecla <kbd>s</kbd>.
-                </>
-              ) : (
-                <>Marcá dónde empieza y termina la intro de este capítulo, una sola vez, y después se puede saltear.</>
-              )}
-            </div>
-            <div className="ajustes__fila">
-              <button className="boton boton--chico" type="button" onClick={() => setIntroInicio(Math.round((video.current?.currentTime ?? 0) * 10) / 10)}>
-                empieza acá
-              </button>
-              <span className="num">{introInicio !== null ? tiempoTexto(introInicio) : "–"}</span>
-              <button className="boton boton--chico" type="button" onClick={() => setIntroFin(Math.round((video.current?.currentTime ?? 0) * 10) / 10)}>
-                termina acá
-              </button>
-              <span className="num">{introFin !== null ? tiempoTexto(introFin) : "–"}</span>
-            </div>
-            <div className="ajustes__fila">
-              <button className="boton boton--chico" type="button" disabled={!introLista || guardando} onClick={() => guardarIntro([introInicio!, introFin!])}>
-                guardar la intro
-              </button>
-              {marca.intro && (
-                <button className="boton boton--chico" type="button" disabled={guardando} onClick={() => guardarIntro(null)}>
-                  borrar
-                </button>
-              )}
-            </div>
-          </section>
-          <h2 style={{ marginTop: 26 }}>portada</h2>
-          <section>
-            <div>
-              {marca.arte
-                ? "Este capítulo tiene portada elegida a mano. Para cambiarla, pausá en un buen cuadro y tocá el botón."
-                : "La portada se genera sola. Si preferís otro cuadro, pausá donde te guste y tocá el botón."}
-            </div>
-            <div className="ajustes__fila">
-              <button
-                className="boton boton--chico"
-                type="button"
-                disabled={!conCors}
-                onClick={async () => {
-                  setAvisoAjustes(null);
-                  const problema = await capturarPortada();
-                  setAvisoAjustes(problema ?? "Portada guardada: ya se ve en la portada del sitio.");
-                }}
-              >
-                usar este cuadro de portada
-              </button>
-            </div>
-            {avisoAjustes && <div className="detalle">{avisoAjustes}</div>}
-          </section>
-          <h2 style={{ marginTop: 26 }}>teclas</h2>
-          <section>
-            <ul className="teclas__lista">
-              <li>
-                <kbd>espacio</kbd> pausa y sigue
-              </li>
-              <li>
-                <kbd>←</kbd>
-                <kbd>→</kbd> 10 segundos
-              </li>
-              <li>
-                <kbd>j</kbd>
-                <kbd>l</kbd> 30 segundos
-              </li>
-              <li>
-                <kbd>↑</kbd>
-                <kbd>↓</kbd> volumen
-              </li>
-              <li>
-                <kbd>m</kbd> silencio
-              </li>
-              <li>
-                <kbd>s</kbd> saltear la intro
-              </li>
-              <li>
-                <kbd>f</kbd> pantalla completa, también con doble clic
-              </li>
-              <li>
-                <kbd>n</kbd> siguiente capítulo
-              </li>
-              <li>
-                <kbd>p</kbd> capítulo anterior
-              </li>
-              <li>
-                <kbd>0</kbd>…<kbd>9</kbd> saltar al 0%…90%
-              </li>
-            </ul>
-          </section>
-        </aside>
-      )}
 
       {fase === "terminado" && (
         <div className="capa">

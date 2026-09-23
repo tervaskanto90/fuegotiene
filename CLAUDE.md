@@ -57,12 +57,14 @@ URL firmada de PUT y el navegador manda el archivo directo a R2. Para eso el
 bucket necesita una política CORS que nombre al sitio; la página la genera.
 Sin esa política, la subida falla en el navegador y la página lo explica.
 
-**El video se pide con `crossorigin="anonymous"`, con retroceso.** Es lo
-que permite dibujar un cuadro en un canvas cuando alguien elige una portada
-a mano desde el reproductor. Exige que el bucket tenga la política CORS (la
-misma de `/subir`). Si no la tiene, la primera carga falla y el reproductor
-vuelve a pedir el video sin CORS: se ve igual, sólo no hay capturas manuales.
-No saques ese retroceso. Las portadas automáticas no dependen de esto.
+**El video se pide con `crossorigin="anonymous"`, con retroceso.** Es lo que
+permite dibujar un cuadro en un canvas: pasado cierto punto del capítulo, y
+una sola vez por visita, el reproductor captura una portada si ese capítulo
+no tiene. Exige que el bucket tenga la política CORS (la misma de `/subir`).
+Si no la tiene, la primera carga falla y el reproductor vuelve a pedir el
+video sin CORS: se ve igual, sólo que esa captura no sale. No saques ese
+retroceso. Las portadas que genera el servidor con ffmpeg no dependen de
+esto.
 
 **Los subtítulos sí pasan por Vercel, a propósito.** `/api/stream/[id]/sub`
 lee el .vtt de R2 y lo devuelve. Un `<track>` sólo acepta archivos del mismo
@@ -250,7 +252,10 @@ app/juego/page.tsx        el simulacro -> Juego (client)
 app/estado/page.tsx       mantenimiento: estado de cada archivo. Fuera del menú.
 app/subir/page.tsx        mantenimiento: subida al bucket. Fuera del menú.
 app/api/subir             firma una URL de PUT para un nombre válido
-app/api/marcas            lee y escribe marcas.json (intro por capítulo)
+app/api/marcas            lee marcas.json. El POST que anota la intro sigue
+                          existiendo pero ya no lo llama ninguna pantalla:
+                          el panel que lo usaba se sacó. La escritura viva es
+                          la de /api/arte, que anota la portada.
 app/api/arte/[id]         portada JPEG: la devuelve (GET) o la guarda (POST)
 app/api/simulacro         evalúa el plan del juego. Local: no sale a internet.
 lib/serie.ts              datos de la serie, los cuatro y Szifrón. Escrito, no copiado.
@@ -276,7 +281,7 @@ components/Biblioteca.tsx destacado + grilla por temporada
 components/Tarjeta.tsx    una tarjeta de capítulo
 components/Arte.tsx       imagen del capítulo o trama con el número
 components/Reproductor.tsx reproductor a pantalla entera: controles propios,
-                          progreso, intro, portada, atajos, siguiente, errores
+                          progreso, siguiente, errores. Sin panel de ajustes
 components/Iconos.tsx     íconos SVG del reproductor
 components/Expediente.tsx las cuatro fichas y el legajo que se abre
 components/Reparto.tsx    las caras que vuelven + el reparto por capítulo
@@ -328,11 +333,22 @@ wordmark va en caja baja: es una frase hablada, no una placa.
 
 **El reproductor** (`/ver/[id]`) no tiene cabecera ni márgenes: ocupa la
 ventana entera, fondo negro, con controles propios sobre el video que se
-esconden a los 3 s con el mouse y a los 5 s con el dedo (`.cine`). Reanuda solo desde el progreso guardado con
-un toast para empezar de nuevo, arranca solo si el navegador lo permite y
-si no muestra el botón grande. El engranaje abre un panel con la intro, la
-portada y las teclas. Progreso en menta; el botón ladrillo sólo aparece en
-las capas de fin de capítulo y de error.
+esconden a los 3 s con el mouse y a los 5 s con el dedo (`.cine`). Reanuda
+solo desde el progreso guardado, sin decir nada, y arranca solo si el
+navegador lo permite; si no, muestra el botón grande. Progreso en menta; el
+botón ladrillo sólo aparece en las capas de fin de capítulo y de error.
+
+**Encima del video hay lo justo, y eso es una decisión.** Arriba, volver y el
+título. Abajo, la barra, el tiempo, el siguiente capítulo, los subtítulos si
+los hay y pantalla completa. En el medio, play y ±10. Nada más. Había un
+panel detrás de un engranaje —marcar la intro, elegir la portada, la lista de
+teclas— y se sacó: eran herramientas de mantenimiento puestas donde mira
+cualquiera, y en un teléfono no se le explican las teclas a nadie. También se
+sacó el cartel de "seguís desde 12:41" con su botón para empezar de nuevo:
+llevaba `white-space: nowrap` y en un teléfono parado no entraba, se cortaba
+contra los dos bordes. El capítulo sigue reanudando igual; para volver al
+principio se arrastra la barra. Si algo nuevo quiere vivir sobre el video,
+que justifique primero por qué no puede estar en otro lado.
 
 **Teléfonos.** Mucha gente entra desde el celular, así que el sitio se revisa
 ahí igual que en la compu. Las reglas viven en un bloque al final de
@@ -346,6 +362,9 @@ pelear con la especificidad.
   que no ocupa lugar.
 - **El menú no parte palabras.** Sin `white-space: nowrap`, "el expediente"
   caía en dos renglones y quedaba ilegible.
+- **Los atajos de teclado siguen funcionando**, lo que se sacó es la lista que
+  los mostraba. En una compu se descubren solos o no se descubren, y ese era
+  el precio de tener un panel abierto para todo el mundo.
 - **El reproductor con el dedo.** Un toque trae los controles y el siguiente
   los esconde; dos toques seguidos en un costado saltan 10 segundos, con un
   cartel redondo que dice cuánto. Cuidado con esto, que ya se rompió una vez:
@@ -406,8 +425,8 @@ fuera del bundle (`serverExternalPackages`) y se incluye en la función con
 `outputFileTracingIncludes`. Como ese binario estático no resuelve nombres
 de dominio, no se le da la URL de R2: un servidor HTTP mínimo en 127.0.0.1
 reenvía los Range firmados por Node. `/estado` tiene un botón que las pide
-de a una para ver si alguna falla, y el reproductor permite elegir otro
-cuadro a mano.
+de a una para ver si alguna falla. Elegir el cuadro a mano desde el
+reproductor ya no se puede: estaba en el panel del engranaje, que se sacó.
 
 ## El juego (`/juego`)
 

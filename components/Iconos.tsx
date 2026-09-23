@@ -64,19 +64,8 @@ export const Subtitulos = ({ className }: P) => (
     <path d="M7 12h4M13 12h4M7 15.5h6" />
   </svg>
 );
-export const Engranaje = ({ className }: P) => (
-  <svg {...base} className={className}>
-    <circle cx="12" cy="12" r="3" />
-    <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" />
-  </svg>
-);
 export const Flecha = ({ className }: P) => (
   <svg {...base} className={className}>
     <path d="M19 12H5M11 6l-6 6 6 6" />
-  </svg>
-);
-export const Cerrar = ({ className }: P) => (
-  <svg {...base} className={className}>
-    <path d="M6 6l12 12M18 6L6 18" />
   </svg>
 );
