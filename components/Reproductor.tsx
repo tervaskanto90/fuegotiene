@@ -29,6 +29,10 @@ type Toast = { texto: string; accion?: { etiqueta: string; alHacer: () => void }
 const CADA_MS = 5000;
 const SEGUNDOS_PARA_SIGUIENTE = 12;
 const OCULTAR_MS = 3000;
+/** Con el dedo los controles duran más: no hay "mover el mouse" para revivirlos. */
+const OCULTAR_TACTIL_MS = 5000;
+/** Dos toques seguidos en un costado saltan 10 s, como en cualquier reproductor de teléfono. */
+const DOBLE_TOQUE_MS = 320;
 /** La portada se captura sola pasado este punto del capítulo (o al minuto, lo que llegue antes), si no hay una. */
 const PORTADA_EN = 0.2;
 const PORTADA_TOPE_S = 60;
@@ -85,6 +89,8 @@ export default function Reproductor({ ep, sig, ant }: Props) {
   const [arrastrando, setArrastrando] = useState(false);
   const [hoverT, setHoverT] = useState<number | null>(null);
   const [sinImagen, setSinImagen] = useState<string | null>(null);
+  /** -1 o 1 mientras se muestra el cartel de "10 s" del doble toque. */
+  const [salto, setSalto] = useState<-1 | 1 | null>(null);
 
   // Anotaciones del capítulo: intro y portada, compartidas vía el bucket.
   const [marca, setMarca] = useState<Marca>({});
@@ -109,8 +115,14 @@ export default function Reproductor({ ep, sig, ant }: Props) {
   const guardadoInicial = useRef<number | null>(null);
   const temporizadorOcultar = useRef(0);
   const temporizadorToast = useRef(0);
+  const temporizadorSalto = useRef(0);
   const reproduciendoRef = useRef(false);
   const panelRef = useRef(false);
+  const arrastrandoRef = useRef(false);
+  /** Los controles tal como estaban cuando el dedo tocó la pantalla, antes de que el toque los prenda. */
+  const visiblesRef = useRef(true);
+  const visiblesAlTocar = useRef(true);
+  const ultimoToque = useRef({ t: 0, x: 0 });
   const imagenRevisada = useRef(false);
 
   useEffect(() => {
@@ -119,6 +131,12 @@ export default function Reproductor({ ep, sig, ant }: Props) {
   useEffect(() => {
     panelRef.current = panelAbierto;
   }, [panelAbierto]);
+  useEffect(() => {
+    visiblesRef.current = visibles;
+  }, [visibles]);
+  useEffect(() => {
+    arrastrandoRef.current = arrastrando;
+  }, [arrastrando]);
 
   const guardarAhora = useCallback(() => {
     const v = video.current;
@@ -138,9 +156,17 @@ export default function Reproductor({ ep, sig, ant }: Props) {
     setVisibles(true);
     window.clearTimeout(temporizadorOcultar.current);
     temporizadorOcultar.current = window.setTimeout(() => {
-      if (reproduciendoRef.current && !panelRef.current) setVisibles(false);
-    }, OCULTAR_MS);
+      if (reproduciendoRef.current && !panelRef.current && !arrastrandoRef.current) setVisibles(false);
+    }, esTactil() ? OCULTAR_TACTIL_MS : OCULTAR_MS);
   }, []);
+
+  /** El dedo toca: se anota cómo estaban los controles antes, porque el click que
+      viene después decide con eso. Sin esto el touchstart los prende y el click los
+      apaga en el mismo toque, que es el parpadeo que se veía en el teléfono. */
+  const alTocarPantalla = useCallback(() => {
+    visiblesAlTocar.current = visiblesRef.current;
+    despertar();
+  }, [despertar]);
 
   useEffect(() => {
     if (!reproduciendo || panelAbierto) {
@@ -319,8 +345,25 @@ export default function Reproductor({ ep, sig, ant }: Props) {
   }, []);
 
   const alternarPantallaCompleta = useCallback(() => {
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    else pantalla.current?.requestFullscreen?.().catch(() => {});
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+      return;
+    }
+    if (document.fullscreenEnabled && pantalla.current?.requestFullscreen) {
+      pantalla.current.requestFullscreen().catch(() => {});
+      return;
+    }
+    // iPhone: Safari no pone un <div> a pantalla completa, sólo el <video>, y ahí
+    // manda sus propios controles. Es el único caso donde se le cede la pantalla.
+    const v = video.current as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null;
+    v?.webkitEnterFullscreen?.();
+  }, []);
+
+  /** Si el navegador no sabe hacer ninguna de las dos, el botón no va: ya ocupa la ventana entera. */
+  const [hayPantallaCompleta, setHayPantallaCompleta] = useState(true);
+  useEffect(() => {
+    const v = video.current as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null;
+    setHayPantallaCompleta(document.fullscreenEnabled || typeof v?.webkitEnterFullscreen === "function");
   }, []);
 
   const saltearIntro = useCallback(() => {
@@ -608,13 +651,39 @@ export default function Reproductor({ ep, sig, ant }: Props) {
   };
   const alSoltarBarra = () => setArrastrando(false);
 
-  /** Clic sobre el video: en pantallas táctiles muestra u oculta los controles; con mouse, pausa y sigue. */
+  /** Clic sobre el video: con mouse, pausa y sigue. Con el dedo, muestra o esconde
+      los controles — y dos toques seguidos en un costado saltan 10 segundos. */
   const alClicPantalla = (e: React.MouseEvent<HTMLDivElement>) => {
     const objetivo = e.target as HTMLElement;
     if (objetivo.closest("button, a, input, .panel, .cine__abajo, .capa, .toast, .aviso-cine")) return;
     if (fase !== "viendo") return;
-    if (esTactil()) setVisibles((s) => !s);
-    else alternarPlay();
+    if (!esTactil()) {
+      alternarPlay();
+      return;
+    }
+
+    const ahora = Date.now();
+    const anterior = ultimoToque.current;
+    const ancho = pantalla.current?.clientWidth ?? 0;
+    const zona = ancho > 0 ? (e.clientX < ancho * 0.33 ? -1 : e.clientX > ancho * 0.67 ? 1 : 0) : 0;
+    ultimoToque.current = { t: ahora, x: e.clientX };
+
+    // Segundo toque rápido en el mismo costado: salta y deja los controles puestos.
+    if (zona !== 0 && ahora - anterior.t < DOBLE_TOQUE_MS && Math.abs(e.clientX - anterior.x) < ancho * 0.2) {
+      saltar(zona * 10);
+      setSalto(zona);
+      window.clearTimeout(temporizadorSalto.current);
+      temporizadorSalto.current = window.setTimeout(() => setSalto(null), 520);
+      ultimoToque.current = { t: 0, x: 0 };
+      despertar();
+      return;
+    }
+
+    // Toque simple: si estaban escondidos, el touchstart ya los mostró y se quedan.
+    if (visiblesAlTocar.current) {
+      setVisibles(false);
+      window.clearTimeout(temporizadorOcultar.current);
+    }
   };
   const alDobleClic = (e: React.MouseEvent<HTMLDivElement>) => {
     const objetivo = e.target as HTMLElement;
@@ -632,14 +701,24 @@ export default function Reproductor({ ep, sig, ant }: Props) {
       ref={pantalla}
       className={`cine${mostrarControles ? "" : " cine--oculto"}${fase === "error" ? " cine--error" : ""}`}
       onMouseMove={despertar}
-      onTouchStart={despertar}
+      onTouchStart={alTocarPantalla}
       onClick={alClicPantalla}
       onDoubleClick={alDobleClic}
     >
+      {/* El video no se puede blindar: el navegador tiene que bajar los bytes para
+          mostrarlos. Lo que sí se cierran son los caminos de un clic — el menú del
+          botón derecho, el toque largo del teléfono, el arrastre y el botón de
+          descarga que aparece si algún navegador muestra sus controles nativos. */}
       <video
         ref={video}
         playsInline
         preload="metadata"
+        controlsList="nodownload noplaybackrate noremoteplayback"
+        disablePictureInPicture
+        disableRemotePlayback
+        draggable={false}
+        onContextMenu={(e) => e.preventDefault()}
+        onDragStart={(e) => e.preventDefault()}
         crossOrigin={conCors ? "anonymous" : undefined}
         src={`/api/stream/${ep.id}`}
         onLoadedMetadata={(e) => setDuracion(e.currentTarget.duration || 0)}
@@ -669,6 +748,12 @@ export default function Reproductor({ ep, sig, ant }: Props) {
       </video>
 
       <div className="cine__sombra" aria-hidden="true" />
+
+      {salto !== null && (
+        <div className={`cine__salto cine__salto--${salto === 1 ? "adelante" : "atras"}`} aria-hidden="true">
+          <span className="narrow">10 s</span>
+        </div>
+      )}
 
       <div className="cine__arriba">
         <Link href="/" className="cine__volver" onClick={guardarAhora} aria-label="volver a los capítulos">
@@ -823,9 +908,11 @@ export default function Reproductor({ ep, sig, ant }: Props) {
           >
             <Engranaje />
           </button>
-          <button className="cine__boton" type="button" onClick={alternarPantallaCompleta} aria-label={pantallaCompleta ? "salir de pantalla completa" : "pantalla completa"}>
-            {pantallaCompleta ? <SalirPantalla /> : <PantallaCompleta />}
-          </button>
+{hayPantallaCompleta && (
+            <button className="cine__boton" type="button" onClick={alternarPantallaCompleta} aria-label={pantallaCompleta ? "salir de pantalla completa" : "pantalla completa"}>
+              {pantallaCompleta ? <SalirPantalla /> : <PantallaCompleta />}
+            </button>
+          )}
         </div>
       </div>
 

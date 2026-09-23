@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { faltantesR2, leerR2, nombreDeObjetoValido, parsearListado, politicaCors, revisarConfigR2, urlObjeto } from "../lib/r2.ts";
+import { faltantesR2, firmarUrl, leerR2, nombreDeObjetoValido, parsearListado, politicaCors, revisarConfigR2, urlObjeto } from "../lib/r2.ts";
 
 const config = { accountId: "0123456789abcdef0123456789abcdef", accessKeyId: "k", secretAccessKey: "s", bucket: "fuego-tiene" };
 
@@ -60,4 +60,13 @@ test("politicaCors es JSON válido con el origen del sitio", () => {
   const p = JSON.parse(politicaCors("https://fuegotiene.vercel.app"));
   assert.deepEqual(p[0].AllowedOrigins, ["https://fuegotiene.vercel.app"]);
   assert.ok(p[0].AllowedMethods.includes("PUT"));
+});
+
+test("firmarUrl firma la URL con el plazo de tres horas", async () => {
+  const url = new URL(await firmarUrl(config, "s01e01.mp4"));
+  assert.equal(url.searchParams.get("X-Amz-Expires"), String(3 * 60 * 60));
+  assert.ok(url.searchParams.get("X-Amz-Signature"));
+  // Nada de response-content-disposition: no está verificado que R2 lo acepte y
+  // un parámetro que R2 rechace deja el sitio sin video para todos.
+  assert.equal(url.searchParams.get("response-content-disposition"), null);
 });

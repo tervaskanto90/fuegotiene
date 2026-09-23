@@ -30,6 +30,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     );
   }
 
+  // Esta URL es para que la pida el reproductor, no para pegarla en la barra de
+  // direcciones y guardar el archivo. Los navegadores dicen para qué piden cada
+  // cosa: "video" o "audio" es un <video>, "document" es alguien abriéndola a mano.
+  // Los que no mandan el dato (Safari viejo) pasan igual: acá no se rechaza a ciegas.
+  const paraQue = req.headers.get("sec-fetch-dest");
+  if (paraQue === "document" || paraQue === "iframe" || paraQue === "object") {
+    return NextResponse.json(
+      { error: "Los capítulos se miran desde el sitio." },
+      { status: 403, headers: SIN_CACHE },
+    );
+  }
+
   const { id } = await params;
   const ep = buscar(id);
   if (!ep) {

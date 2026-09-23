@@ -818,6 +818,10 @@ kbd {
 }
 .cine video {
   display: block;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -828,6 +832,42 @@ kbd {
 }
 .cine--oculto {
   cursor: none;
+}
+.cine__salto {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: rgba(13, 31, 38, 0.72);
+  color: var(--bone);
+  font-family: var(--fuente-narrow);
+  font-size: 17px;
+  pointer-events: none;
+  animation: salto 520ms ease forwards;
+}
+.cine__salto--atras {
+  left: 8%;
+}
+.cine__salto--adelante {
+  right: 8%;
+}
+@keyframes salto {
+  from {
+    opacity: 0;
+    scale: 0.85;
+  }
+  30% {
+    opacity: 1;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+    scale: 1;
+  }
 }
 .cine__sombra {
   position: absolute;
@@ -1201,6 +1241,81 @@ kbd {
   .cine .saltear {
     bottom: 84px;
     right: 12px;
+  }
+  /* Con el dedo no hay hover: la barra tiene que ser gruesa siempre y el punto
+     tiene que verse, que es lo único que dice dónde va a caer el dedo. */
+  .barra-t {
+    height: 40px;
+  }
+  .barra-t__pista {
+    height: 6px;
+  }
+  .barra-t--arrastrando .barra-t__pista {
+    height: 8px;
+  }
+  .barra-t__punto {
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    opacity: 1;
+  }
+  /* Arrastrar la barra no tiene que arrastrar la página ni disparar el
+     "tirar para recargar" del navegador. */
+  .cine {
+    overscroll-behavior: none;
+  }
+  /* 44 px va por dedo, no por ancho de ventana: acostado la pantalla mide 844 px
+     de ancho y el dedo sigue siendo el mismo. */
+  .cine__boton {
+    width: 44px;
+    height: 44px;
+  }
+  .cine__volver,
+  .cine__siguiente {
+    min-height: 44px;
+  }
+  /* El hover queda pegado después de tocar: en táctil no cambia nada. */
+  .cine__grande:hover {
+    background: rgba(13, 31, 38, 0.55);
+    border-color: rgba(232, 226, 212, 0.45);
+  }
+  .cine__boton:hover,
+  .cine__volver:hover {
+    background: transparent;
+  }
+}
+
+/* Teléfono acostado: la ventana queda de 350 px de alto y los botones del
+   centro se comen el video. */
+@media (max-height: 460px) and (pointer: coarse) {
+  .cine__grande {
+    width: 58px;
+    height: 58px;
+  }
+  .cine__grande svg {
+    width: 26px;
+    height: 26px;
+  }
+  .cine__grande--lado {
+    width: 46px;
+    height: 46px;
+  }
+  .cine__grande--lado svg {
+    width: 22px;
+    height: 22px;
+  }
+  .cine__centro {
+    gap: 30px;
+  }
+  .cine__arriba {
+    padding: 8px 12px;
+  }
+  .cine__abajo {
+    padding: 0 12px 6px;
+  }
+  .cine__salto {
+    width: 74px;
+    height: 74px;
   }
 }
 @media (max-width: 640px) {
@@ -2308,17 +2423,8 @@ kbd {
   .cine__volumen {
     display: none;
   }
-  .cine__boton {
-    width: 44px;
-    height: 44px;
-  }
   .cine__controles {
     gap: 2px;
-  }
-  /* volver y siguiente también se tocan con el dedo */
-  .cine__volver,
-  .cine__siguiente {
-    min-height: 44px;
   }
 }
 

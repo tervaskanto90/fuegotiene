@@ -35,6 +35,23 @@ error más fácil de cometer acá. Las dos excepciones leen pedazos, no el
 video: `/api/estado/[id]` lee la cabecera y el índice para el diagnóstico, y
 `/api/arte/[id]` lee unos MB alrededor de un cuadro para generar la portada.
 
+**El video no se puede blindar, y conviene saber hasta dónde llega lo que hay.**
+El navegador tiene que bajar los bytes para mostrarlos: cualquiera con las
+herramientas de desarrollador saca la URL firmada y se guarda el archivo.
+Impedirlo de verdad requiere DRM, que cuesta plata y está fuera de la mesa. Lo
+que sí está cerrado es el camino de un clic: el `<video>` va con
+`controlsList="nodownload …"`, `disablePictureInPicture` y
+`disableRemotePlayback`, no se arrastra, y lleva `pointer-events: none` con
+`-webkit-touch-callout: none`, así que ni el botón derecho ni el toque largo
+ofrecen guardarlo (los clics los recibe el contenedor, que es quien maneja
+todo). Además `/api/stream/[id]` mira `Sec-Fetch-Dest` y rechaza los pedidos
+que dicen `document`, `iframe` u `object`: la URL sirve para que la pida un
+`<video>`, no para pegarla en la barra de direcciones. Los navegadores que no
+mandan ese dato pasan igual — no se rechaza a ciegas. **Lo que no se hace es
+tocar la URL firmada**: se probó agregarle `response-content-disposition` y se
+sacó porque no está verificado que R2 lo acepte, y un parámetro que R2 rechace
+deja a todo el mundo sin video.
+
 **Las subidas tampoco pasan por Vercel.** `/subir` pide a `/api/subir` una
 URL firmada de PUT y el navegador manda el archivo directo a R2. Para eso el
 bucket necesita una política CORS que nombre al sitio; la página la genera.
@@ -311,7 +328,7 @@ wordmark va en caja baja: es una frase hablada, no una placa.
 
 **El reproductor** (`/ver/[id]`) no tiene cabecera ni márgenes: ocupa la
 ventana entera, fondo negro, con controles propios sobre el video que se
-esconden a los 3 s (`.cine`). Reanuda solo desde el progreso guardado con
+esconden a los 3 s con el mouse y a los 5 s con el dedo (`.cine`). Reanuda solo desde el progreso guardado con
 un toast para empezar de nuevo, arranca solo si el navegador lo permite y
 si no muestra el botón grande. El engranaje abre un panel con la intro, la
 portada y las teclas. Progreso en menta; el botón ladrillo sólo aparece en
@@ -329,6 +346,21 @@ pelear con la especificidad.
   que no ocupa lugar.
 - **El menú no parte palabras.** Sin `white-space: nowrap`, "el expediente"
   caía en dos renglones y quedaba ilegible.
+- **El reproductor con el dedo.** Un toque trae los controles y el siguiente
+  los esconde; dos toques seguidos en un costado saltan 10 segundos, con un
+  cartel redondo que dice cuánto. Cuidado con esto, que ya se rompió una vez:
+  el `touchstart` prende los controles y el `click` que viene después llega
+  unos milisegundos más tarde, así que si los dos escriben el mismo estado el
+  toque los prende y los apaga solo — el parpadeo que se veía en el teléfono.
+  Por eso el click decide con `visiblesAlTocar`, que es cómo estaban **antes**
+  del toque. Los 44 px y los tamaños del reproductor van por `pointer: coarse`
+  y no por ancho de ventana: acostado el teléfono mide 844 px y el dedo sigue
+  siendo el mismo.
+- **Pantalla completa en iPhone.** Safari no pone un `<div>` a pantalla
+  completa, sólo el `<video>`, y ahí manda sus propios controles: es el único
+  caso donde se le cede la pantalla (`webkitEnterFullscreen`). Si el navegador
+  no sabe hacer ninguna de las dos, el botón no aparece — la página ya ocupa
+  la ventana entera.
 - **La barra del reproductor no entra entera en un teléfono**: ocho botones
   más el tiempo se iban 45 px fuera de la pantalla. Abajo de 700 px se
   esconden play y ±10 (`.cine__boton--tambien-arriba`), que ya están grandes
