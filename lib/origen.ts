@@ -33,19 +33,19 @@ export const origen = {
       numero: "03",
       titulo: "dónde se guarda una serie",
       parrafos: [
-        "Siete giga y medio. No es mucho para un disco y es bastante para internet: subirlo a cualquier lado es gratis, el problema es lo que sale bajarlo cada vez que alguien le da play.",
+        "Siete gigas y medio. No es mucho para un disco y es bastante para internet: subirlo a cualquier lado es gratis, el problema es lo que sale bajarlo cada vez que alguien le da play.",
         "Ahí está la decisión que sostiene todo lo demás. Los videos viven en un depósito que no cobra por lo que se baja, y el sitio nunca los toca: cuando alguien abre un capítulo, el sitio firma un permiso que dura tres horas y el navegador va a buscar los bytes directo al depósito.",
-        "Suena a detalle técnico y es lo contrario: es la razón por la que este sitio puede existir sin que nadie ponga plata todos los meses. Si el video pasara por el medio, la primera tanda de amigos mirando en simultáneo se llevaría puesto el plan gratis. Como no pasa, no hay factura que llegue.",
       ],
     },
     {
       numero: "04",
-      titulo: "los dos que llegaron rotos",
+      titulo: "por qué ésta",
       parrafos: [
-        "Veintidós capítulos subieron y anduvieron. Dos no.",
-        "Uno era un .avi, un formato de otra época que los navegadores directamente no abren. El otro era peor porque engañaba: se escuchaba perfecto y la pantalla quedaba en negro, con el video codificado de una manera que Chrome dejó de entender hace años.",
-        "El problema tenía una vuelta de tuerca: el dueño de todo esto no puede instalar programas en su computadora. Nada de bajarse un conversor de video, nada de escribir comandos. Así que la conversión se la terminó haciendo una máquina prestada de GitHub: baja el archivo, lo convierte, guarda el original por las dudas y lo vuelve a subir con el mismo nombre. Se dispara apretando un botón en una página web y tarda unos minutos.",
-        "Los dos capítulos están hoy en el sitio y se ven como los otros veintidós. Nadie que los mire se entera de que estuvieron rotos, que es exactamente el punto.",
+        "Podría haber sido cualquier serie. No lo es.",
+        "Los Simuladores salió al aire en marzo de 2002, tres meses después de que en este país se cayera casi todo. Y contaba, una vez por semana, el problema de alguien que no tenía a quién recurrir: un tipo al que querían echar del trabajo por viejo, un padre al que un usurero le amenazaba a los hijos, un pibe que se había llevado siete materias y no podía decírselo a la madre enferma. Problemas del tamaño de una cuadra, en un país donde las cosas grandes no se estaban arreglando.",
+        "Y cuatro tipos que los resolvían sin pegarle a nadie. Sin gritar, sin denunciar, sin esperar que alguien hiciera justicia. Armaban una mentira enorme y prolija, la sostenían el tiempo justo, y la realidad se acomodaba sola.",
+        "Nadie la cita por el final. La gente cita el momento en que las piezas encajan y uno entiende, dos segundos antes que el personaje, que ya estaba todo armado desde la primera escena. Veinte años después se sigue contando en las mesas como si hubiera pasado el mes pasado.",
+        "Por eso ésta y no otra. Una serie así no merecía depender de que a alguien le cerraran los números.",
       ],
     },
     {
@@ -99,9 +99,5 @@ export const origen = {
     { clave: "capítulos", valor: "24" },
     { clave: "emitidos", valor: "2002-2004" },
     { clave: "en el estante", valor: "7,5 GB" },
-    { clave: "capítulos rescatados", valor: "2" },
-    { clave: "contraseñas", valor: "ninguna" },
-    { clave: "bases de datos", valor: "ninguna" },
-    { clave: "lo que cuesta por mes", valor: "nada" },
   ],
 };
