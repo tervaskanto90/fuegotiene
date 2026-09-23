@@ -71,7 +71,7 @@ export default function Portadas({ episodios, modo }: Props) {
               <span className="num">{conPortada}</span> de <span className="num">{episodios.length}</span> capítulos con portada.{" "}
               {faltan.length > 0
                 ? "Se generan solas la primera vez que alguien abre la portada del sitio; también podés generarlas acá, de a una, y ver si alguna falla."
-                : "Para cambiar alguna, en el reproductor: intro y portada."}
+                : "Están todas. Se regeneran si se borra el archivo de art/ en el bucket."}
               {modo === "demo" && faltan.length > 0 ? " En modo demo salen del clip de muestra." : ""}
             </>
           )}

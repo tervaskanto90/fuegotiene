@@ -19,10 +19,10 @@ import type { ReadableStream as WebReadableStream } from "node:stream/web";
 /** Devuelve la respuesta upstream para un Range dado (o sin Range). */
 export type PedirRango = (rango: string | null, signal: AbortSignal) => Promise<Response>;
 
-/** Segundo del capítulo del que sacar la portada: después de la intro si está marcada; si no, pasado el arranque. */
-export function elegirMomento(duracion: number | null, intro?: [number, number]): number {
+/** Segundo del capítulo del que sacar la portada: pasado el arranque, ni en la placa ni al final. */
+export function elegirMomento(duracion: number | null): number {
   const d = duracion && Number.isFinite(duracion) ? duracion : 0;
-  let t = intro ? intro[1] + 20 : Math.min(300, Math.max(60, d * 0.12));
+  let t = Math.min(300, Math.max(60, d * 0.12));
   if (d > 0 && t > d - 5) t = Math.max(0, d * 0.5);
   return Math.round(t * 10) / 10;
 }

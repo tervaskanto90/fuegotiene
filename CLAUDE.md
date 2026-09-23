@@ -119,8 +119,8 @@ entorno, y la cookie guarda un hash del código, no el código: sacar un código
 de la variable desloguea a esa persona en el acto. El
 progreso de reproducción vive en el `localStorage` de cada navegador. Lo
 compartido entre navegadores son dos JSON chicos que viven en el bucket al
-lado de los videos y que el sitio lee y reescribe enteros: `marcas.json`, con
-las anotaciones por capítulo (dónde está la intro, si hay portada), y
+lado de los videos y que el sitio lee y reescribe enteros: `marcas.json`, que
+anota qué capítulos ya tienen portada, y
 `pases.json`, el registro de quiénes ganaron el juego y con cuánto. Para
 quien entró con código sirve además para no hacerlo jugar de nuevo desde otro
 navegador; para el resto es la bitácora, acotada a `MAX_PASES` porque el
@@ -252,10 +252,8 @@ app/juego/page.tsx        el simulacro -> Juego (client)
 app/estado/page.tsx       mantenimiento: estado de cada archivo. Fuera del menú.
 app/subir/page.tsx        mantenimiento: subida al bucket. Fuera del menú.
 app/api/subir             firma una URL de PUT para un nombre válido
-app/api/marcas            lee marcas.json. El POST que anota la intro sigue
-                          existiendo pero ya no lo llama ninguna pantalla:
-                          el panel que lo usaba se sacó. La escritura viva es
-                          la de /api/arte, que anota la portada.
+app/api/marcas            lee marcas.json (qué capítulos tienen portada).
+                          Sólo GET: la única escritura es la de /api/arte.
 app/api/arte/[id]         portada JPEG: la devuelve (GET) o la guarda (POST)
 app/api/simulacro         evalúa el plan del juego. Local: no sale a internet.
 lib/serie.ts              datos de la serie, los cuatro y Szifrón. Escrito, no copiado.
@@ -269,7 +267,8 @@ lib/pases.ts              pases.json en el bucket, el estado para las páginas
                           y quienPide() para las rutas. La parte de la puerta
                           que necesita Node.
 lib/cuadro.ts             ffmpeg: saca un cuadro del video para la portada
-lib/marcas.ts             forma de las anotaciones y validación
+lib/marcas.ts             forma de las anotaciones y validación. Sin intro:
+                          se fue con el panel que era el único que la ponía
 lib/almacen.ts            bucket o carpeta temporal (modo demo)
 app/api/entrar            valida el código y pone la cookie
 app/api/salir             cierra la sesión. No toca el pase del juego.
@@ -340,15 +339,23 @@ botón ladrillo sólo aparece en las capas de fin de capítulo y de error.
 
 **Encima del video hay lo justo, y eso es una decisión.** Arriba, volver y el
 título. Abajo, la barra, el tiempo, el siguiente capítulo, los subtítulos si
-los hay y pantalla completa. En el medio, play y ±10. Nada más. Había un
-panel detrás de un engranaje —marcar la intro, elegir la portada, la lista de
-teclas— y se sacó: eran herramientas de mantenimiento puestas donde mira
-cualquiera, y en un teléfono no se le explican las teclas a nadie. También se
-sacó el cartel de "seguís desde 12:41" con su botón para empezar de nuevo:
-llevaba `white-space: nowrap` y en un teléfono parado no entraba, se cortaba
-contra los dos bordes. El capítulo sigue reanudando igual; para volver al
-principio se arrastra la barra. Si algo nuevo quiere vivir sobre el video,
-que justifique primero por qué no puede estar en otro lado.
+los hay y pantalla completa. En el medio, play y ±10. Nada más. Se fueron, en
+este orden y por la misma razón:
+
+- el panel detrás de un engranaje (marcar la intro, elegir la portada, la
+  lista de teclas): herramientas de mantenimiento puestas donde mira
+  cualquiera, y en un teléfono a nadie se le explican las teclas;
+- el cartel de "seguís desde 12:41" con su botón para empezar de nuevo: iba
+  con `white-space: nowrap` y en un teléfono parado no entraba, se cortaba
+  contra los dos bordes. El capítulo reanuda igual, sin decir nada; para
+  volver al principio se arrastra la barra;
+- el botón de saltear la intro, y con él la marca de intro entera: cuando se
+  fue el panel no quedó forma de ponerla, y un dato que nadie puede escribir
+  no es un dato. `marcas.json` quedó anotando sólo qué capítulos tienen
+  portada, y los archivos viejos que traen el campo lo pierden al reescribirse.
+
+Si algo nuevo quiere vivir sobre el video, que justifique primero por qué no
+puede estar en otro lado.
 
 **Teléfonos.** Mucha gente entra desde el celular, así que el sitio se revisa
 ahí igual que en la compu. Las reglas viven en un bloque al final de
@@ -362,9 +369,10 @@ pelear con la especificidad.
   que no ocupa lugar.
 - **El menú no parte palabras.** Sin `white-space: nowrap`, "el expediente"
   caía en dos renglones y quedaba ilegible.
-- **Los atajos de teclado siguen funcionando**, lo que se sacó es la lista que
-  los mostraba. En una compu se descubren solos o no se descubren, y ese era
-  el precio de tener un panel abierto para todo el mundo.
+- **Los atajos de teclado siguen funcionando** (espacio, flechas, j/l, m, c, f,
+  n, p y 0-9), lo que se sacó es la lista que los mostraba. En una compu se
+  descubren solos o no se descubren, y ese era el precio de tener un panel
+  abierto para todo el mundo.
 - **El reproductor con el dedo.** Un toque trae los controles y el siguiente
   los esconde; dos toques seguidos en un costado saltan 10 segundos, con un
   cartel redondo que dice cuánto. Cuidado con esto, que ya se rompió una vez:
@@ -418,8 +426,8 @@ el reproductor capturó del video (`/api/arte/[id]`, anotada en
 `marcas.json`) o, si alguien corrió `prepare-videos`, la de `public/art/`
 del campo `arte`. Las portadas las genera el servidor la primera vez que
 alguien las pide (`/api/arte/[id]`, `lib/cuadro.ts`): lee el índice del mp4
-para saber la duración, elige un momento (20 s después de la intro si está
-marcada; si no, el 12 % del capítulo, entre 1 y 5 minutos) y le pide ese
+para saber la duración, elige un momento (el 12 % del capítulo,
+entre 1 y 5 minutos) y le pide ese
 cuadro a ffmpeg. ffmpeg viene del paquete `@ffmpeg-installer/ffmpeg`, se deja
 fuera del bundle (`serverExternalPackages`) y se incluye en la función con
 `outputFileTracingIncludes`. Como ese binario estático no resuelve nombres

@@ -17,7 +17,7 @@ import {
   Volumen,
 } from "@/components/Iconos";
 import { codigo, fechaCorta, tiempoTexto, type Episodio } from "@/lib/episodes";
-import { enIntro, type Marca, type Marcas } from "@/lib/marcas";
+import type { Marca, Marcas } from "@/lib/marcas";
 import { reanudable, useProgreso } from "@/lib/progress";
 
 type Props = { ep: Episodio; sig: Episodio | null; ant: Episodio | null };
@@ -87,10 +87,9 @@ export default function Reproductor({ ep, sig, ant }: Props) {
   /** -1 o 1 mientras se muestra el cartel de "10 s" del doble toque. */
   const [salto, setSalto] = useState<-1 | 1 | null>(null);
 
-  // Anotaciones del capítulo: intro y portada, compartidas vía el bucket.
+  // Lo anotado del capítulo: si ya tiene portada. Vive en el bucket, compartido.
   const [marca, setMarca] = useState<Marca>({});
   const [marcasCargadas, setMarcasCargadas] = useState(false);
-  const [mostrarSaltear, setMostrarSaltear] = useState(false);
 
   // El video se pide en modo CORS para poder capturar cuadros. Si el bucket no
   // tiene la política CORS, la primera carga falla y se vuelve a pedir sin CORS.
@@ -332,20 +331,12 @@ export default function Reproductor({ ep, sig, ant }: Props) {
     setHayPantallaCompleta(document.fullscreenEnabled || typeof v?.webkitEnterFullscreen === "function");
   }, []);
 
-  const saltearIntro = useCallback(() => {
+  /** Dibuja el cuadro actual en un canvas y lo guarda como portada del capítulo.
+      Corre sola, una vez por visita, y si no sale no se dice nada: la portada
+      también la puede generar el servidor con ffmpeg cuando alguien la pida. */
+  const capturarPortada = useCallback(async () => {
     const v = video.current;
-    if (!v || !marca.intro) return;
-    v.currentTime = marca.intro[1];
-    setTiempo(v.currentTime);
-    setMostrarSaltear(false);
-  }, [marca.intro]);
-
-  /** Dibuja el cuadro actual en un canvas y lo guarda como portada. */
-  const capturarPortada = useCallback(async (): Promise<string | null> => {
-    const v = video.current;
-    if (!v) return "No hay video.";
-    if (!conCors) return "Para elegir la portada a mano el bucket necesita la política CORS (está en la página subir). Las automáticas salen igual.";
-    if (v.readyState < 2 || !v.videoWidth) return "Esperá a que se vea la imagen.";
+    if (!v || !conCors || v.readyState < 2 || !v.videoWidth) return;
     try {
       const ancho = Math.min(640, v.videoWidth);
       const alto = Math.round((ancho * v.videoHeight) / v.videoWidth);
@@ -353,17 +344,16 @@ export default function Reproductor({ ep, sig, ant }: Props) {
       canvas.width = ancho;
       canvas.height = alto;
       const ctx = canvas.getContext("2d");
-      if (!ctx) return "El navegador no dejó dibujar el cuadro.";
+      if (!ctx) return;
       ctx.drawImage(v, 0, 0, ancho, alto);
       const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.82));
-      if (!blob) return "No pude armar la imagen.";
+      if (!blob) return;
       const res = await fetch(`/api/arte/${ep.id}`, { method: "POST", headers: { "Content-Type": "image/jpeg" }, body: blob });
+      if (!res.ok) return;
       const d = await res.json().catch(() => ({}));
-      if (!res.ok) return d.error ?? `El sitio respondió ${res.status}.`;
       setMarca((m) => ({ ...m, arte: d.arte }));
-      return null;
     } catch {
-      return "El navegador no dejó leer el cuadro: el video vino sin permiso CORS.";
+      // El video vino sin permiso CORS: la portada la genera el servidor.
     }
   }, [ep.id, conCors]);
 
@@ -411,9 +401,6 @@ export default function Reproductor({ ep, sig, ant }: Props) {
         case "c":
           if (ep.sub) setSubsActivos((s) => !s);
           break;
-        case "s":
-          if (mostrarSaltear) saltearIntro();
-          break;
         case "f":
           alternarPantallaCompleta();
           break;
@@ -439,14 +426,14 @@ export default function Reproductor({ ep, sig, ant }: Props) {
     window.addEventListener("keydown", alTeclear);
     return () => window.removeEventListener("keydown", alTeclear);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fase, sig, ant, router, guardarAhora, mostrarSaltear, saltearIntro, alternarPlay, saltar, alternarPantallaCompleta, despertar, ep.sub]);
+  }, [fase, sig, ant, router, guardarAhora, alternarPlay, saltar, alternarPantallaCompleta, despertar, ep.sub]);
 
   const alError = async () => {
     const v = video.current;
     if (!v) return;
     // Primer intento en modo CORS que falla antes de arrancar: casi seguro el
     // bucket no tiene la política CORS. Se vuelve a pedir sin CORS (el video
-    // anda igual; sólo no se pueden capturar portadas a mano).
+    // anda igual; sólo no sale la portada que captura el reproductor).
     if (conCors && !probadoSinCors.current && v.currentTime === 0) {
       probadoSinCors.current = true;
       setConCors(false);
@@ -535,8 +522,6 @@ export default function Reproductor({ ep, sig, ant }: Props) {
     if (!v) return;
     if (!arrastrando) setTiempo(v.currentTime);
     if (Date.now() - ultimoGuardado.current > CADA_MS) guardarAhora();
-    const dentro = enIntro(marca.intro, v.currentTime);
-    if (dentro !== mostrarSaltear) setMostrarSaltear(dentro);
     // Portada automática: una vez por visita, si no hay.
     if (
       marcasCargadas &&
@@ -545,7 +530,7 @@ export default function Reproductor({ ep, sig, ant }: Props) {
       conCors &&
       !v.paused &&
       v.duration &&
-      v.currentTime >= Math.max((marca.intro?.[1] ?? 0) + 15, Math.min(v.duration * PORTADA_EN, PORTADA_TOPE_S))
+      v.currentTime >= Math.min(v.duration * PORTADA_EN, PORTADA_TOPE_S)
     ) {
       capturaIntentada.current = true;
       void capturarPortada();
@@ -736,12 +721,6 @@ export default function Reproductor({ ep, sig, ant }: Props) {
         </div>
       )}
 
-      {mostrarSaltear && fase === "viendo" && (
-        <button className="boton saltear" onClick={saltearIntro} type="button">
-          saltear la intro
-        </button>
-      )}
-
       <div className="cine__abajo">
         <div
           ref={barra}
@@ -764,12 +743,6 @@ export default function Reproductor({ ep, sig, ant }: Props) {
         >
           <div className="barra-t__pista">
             <div className="barra-t__buffer" style={{ width: `${pctBuffer}%` }} />
-            {marca.intro && duracion > 0 && (
-              <div
-                className="barra-t__intro"
-                style={{ left: `${(marca.intro[0] / duracion) * 100}%`, width: `${((marca.intro[1] - marca.intro[0]) / duracion) * 100}%` }}
-              />
-            )}
             <div className="barra-t__visto" style={{ width: `${pct}%` }} />
             <div className="barra-t__punto" style={{ left: `${pct}%` }} />
           </div>

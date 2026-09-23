@@ -17,8 +17,8 @@ export const maxDuration = 60;
 
 /**
  * Si no hay portada, la genera: lee la cabecera del mp4 para saber la
- * duración, elige un momento pasado el arranque (o después de la intro) y
- * le pide a ffmpeg ese cuadro. Se hace una sola vez por capítulo.
+ * duración, elige un momento pasado el arranque y le pide a ffmpeg ese
+ * cuadro. Se hace una sola vez por capítulo.
  */
 async function generarPortada(req: NextRequest, ep: Episodio): Promise<Uint8Array> {
   const a = almacen();
@@ -56,7 +56,7 @@ async function generarPortada(req: NextRequest, ep: Episodio): Promise<Uint8Arra
   } catch {
     // sin duración se elige un momento fijo
   }
-  const momento = elegirMomento(duracion, marcas[ep.id]?.intro);
+  const momento = elegirMomento(duracion);
   const jpeg = await capturarCuadro(pedir, momento);
   // Sólo se guarda la imagen: 24 generaciones a la vez pisarían marcas.json
   // entre sí. Quién tiene portada se sabe listando art/, no por las marcas.

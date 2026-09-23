@@ -150,24 +150,26 @@ falta configurar nada más.
 - **Seguir donde quedaste**: cada navegador recuerda dónde dejaste cada
   capítulo (a partir de 15 segundos vistos). La portada ofrece "seguir desde"
   con el último que quedó a medias.
-- **El reproductor** ocupa la ventana entera, como en las plataformas. Los
-  controles se esconden solos mientras el video anda y vuelven al mover el
-  mouse o tocar la pantalla. Un clic pausa y sigue, doble clic pone pantalla
-  completa, la flecha de arriba vuelve a los capítulos. Al entrar a un
-  capítulo que dejaste a medias arranca solo desde ahí y avisa; si el
-  navegador no deja arrancar solo, queda el botón grande de play.
-- **Saltear la intro**: en el reproductor, el engranaje abre un panel. Cuando
-  empiece la intro tocá **empieza acá**, cuando termine **termina acá**, y
-  **guardar la intro**. Es una vez por capítulo y vale para todos los que
-  entren al sitio: mientras pasa la intro aparece el botón para saltearla,
-  también con la tecla `s`, y la barra la marca con un tramo más claro.
-- **Portadas**: se generan solas. La primera vez que alguien abre la
-  portada del sitio, el servidor saca un cuadro de cada capítulo (pasado el
-  arranque, o después de la intro si está marcada) y lo guarda; tardan unos
-  segundos en aparecer y después quedan. En **estado** hay un botón para
-  generarlas de a una y ver si alguna falla. Si preferís otro cuadro para
-  algún capítulo, en el reproductor pausá donde te guste y tocá **usar este
-  cuadro de portada**; eso sí necesita la política CORS del bucket.
+- **El reproductor** ocupa la ventana entera, como en las plataformas, y
+  arriba del video no hay más que lo necesario para mirar un capítulo. Los
+  controles se esconden solos mientras el video anda. Al entrar a un capítulo
+  que dejaste a medias arranca solo desde ahí, sin decir nada; si el navegador
+  no deja arrancar solo, queda el botón grande de play. Para volver al
+  principio, arrastrá la barra hasta el comienzo.
+  - **Con el mouse**: se mueve el mouse y vuelven los controles. Un clic pausa
+    y sigue, doble clic pone pantalla completa, la flecha de arriba vuelve a
+    los capítulos. Hay teclas: espacio pausa, las flechas saltan 10 segundos,
+    `j` y `l` 30, `m` silencia, `f` pantalla completa, `n` y `p` cambian de
+    capítulo, y los números del 0 al 9 saltan al 0 %…90 %.
+  - **Con el dedo**: un toque trae los controles y el siguiente los esconde;
+    solos se van a los 5 segundos. Dos toques seguidos en un costado saltan
+    10 segundos para ese lado.
+- **Portadas**: se generan solas y no hay que tocar nada. La primera vez que
+  alguien abre la portada del sitio, el servidor saca un cuadro de cada
+  capítulo, pasado el arranque para que no sea la placa negra, y lo guarda;
+  tardan unos segundos en aparecer y después quedan. En **estado** hay un
+  botón para generarlas de a una y ver si alguna falla. Si alguna quedó fea,
+  se borra ese archivo de `art/` en el bucket y se vuelve a generar sola.
 
 ## Si un capítulo se escucha pero no se ve
 
@@ -193,8 +195,7 @@ Y para convertir un capítulo:
    `originales/s02e05.mp4`, lo convierte a H.264 + AAC con el índice al
    principio, y lo sube con el mismo nombre.
 4. Cuando termina en verde, entrá a `/estado`, **revisar de nuevo**: el
-   capítulo tiene que decir **listo**. Abrilo y listo. Si la portada quedó
-   fea, en el reproductor, engranaje, **usar este cuadro de portada**.
+   capítulo tiene que decir **listo**. Abrilo y listo.
 
 GitHub regala 2000 minutos por mes en repos privados, así que hay para
 convertir la serie entera si hiciera falta. El respaldo en `originales/`

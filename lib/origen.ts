@@ -53,7 +53,8 @@ export const origen = {
       titulo: "la máquina de mirar",
       parrafos: [
         "Después hubo que construir la parte que uno no nota cuando funciona.",
-        "El reproductor ocupa la pantalla entera y esconde los controles a los tres segundos. Se acuerda de dónde quedaste en cada capítulo y te ofrece seguir desde ahí con el minuto exacto escrito en el botón. Deja marcar dónde empieza y termina la intro, una sola vez, y a partir de ahí aparece el cartel para saltearla — y esa marca la comparten todos, así el laburo que hace uno le sirve al resto.",
+        "El reproductor ocupa la pantalla entera y esconde los controles cuando arranca el capítulo. Se acuerda de dónde quedaste en cada capítulo —cada navegador por su cuenta, sin cuenta de usuario ni nada— y la próxima vez sigue desde ahí sin preguntarte nada. En el teléfono, un toque trae los controles y dos toques en un costado saltan diez segundos.",
+        "Lo que más trabajo dio fue sacar cosas. Hubo un panel con ajustes, un cartel que te avisaba desde qué minuto seguías, botones para marcar dónde empezaba la intro. Todo eso funcionaba y todo eso se fue: arriba del video quedó lo que hace falta para mirar un capítulo y nada más.",
         "Las portadas de los capítulos no son fotos que alguien buscó por ahí: las saca el propio sitio del video, eligiendo un momento lo bastante adelantado como para que no sea la placa negra del principio. Cuando un video falla, en vez de un cuadro negro sale una frase que dice qué pasó y qué hacer.",
         "Nada de eso es imprescindible. Todo eso es la diferencia entre un archivo y una serie.",
       ],

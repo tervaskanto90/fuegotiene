@@ -752,16 +752,6 @@ kbd {
 .arte__foto--lista {
   opacity: 1;
 }
-.saltear {
-  position: absolute;
-  right: 16px;
-  bottom: 72px;
-  z-index: 2;
-  background: rgba(13, 31, 38, 0.88);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  animation: entrar 260ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
 .ajustes {
   color: var(--muted);
   font-size: 14px;
@@ -884,8 +874,7 @@ kbd {
 .cine--oculto .cine__sombra,
 .cine--oculto .cine__arriba,
 .cine--oculto .cine__abajo,
-.cine--oculto .cine__centro,
-.cine--oculto .saltear {
+.cine--oculto .cine__centro {
   opacity: 0;
   pointer-events: none;
 }
@@ -1006,8 +995,7 @@ kbd {
   height: 6px;
 }
 .barra-t__buffer,
-.barra-t__visto,
-.barra-t__intro {
+.barra-t__visto {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -1016,9 +1004,6 @@ kbd {
 }
 .barra-t__buffer {
   background: rgba(232, 226, 212, 0.28);
-}
-.barra-t__intro {
-  background: rgba(232, 226, 212, 0.38);
 }
 .barra-t__visto {
   background: var(--mint);
@@ -1137,13 +1122,6 @@ kbd {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.cine .saltear {
-  position: absolute;
-  right: 20px;
-  bottom: 92px;
-  z-index: 4;
-  transition: opacity 280ms ease;
-}
 .aviso-cine {
   position: absolute;
   top: 76px;
@@ -1169,10 +1147,6 @@ kbd {
   }
   .cine__abajo {
     padding: 0 12px 10px;
-  }
-  .cine .saltear {
-    bottom: 84px;
-    right: 12px;
   }
   /* Con el dedo no hay hover: la barra tiene que ser gruesa siempre y el punto
      tiene que verse, que es lo único que dice dónde va a caer el dedo. */
