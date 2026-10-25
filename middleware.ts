@@ -26,6 +26,12 @@ const PUBLICAS = [
   /^\/api\/salir$/,
   /^\/demo\//,
   /^\/robots\.txt$/,
+  // Lo que el teléfono pide para "agregar a la pantalla de inicio": el
+  // manifest, sus íconos y el de Apple. Sin esto el pedido rebota a /juego
+  // y el ícono queda en blanco.
+  /^\/manifest\.webmanifest$/,
+  /^\/iconos\//,
+  /^\/apple-icon\.png$/,
 ];
 
 /**

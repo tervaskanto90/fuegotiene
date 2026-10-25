@@ -243,6 +243,9 @@ lib/mp4.ts                lector de cajas mp4: códecs, moov, veredicto
 lib/episodes.ts           lee data/episodes.json, helpers de navegación y formato
 lib/progress.ts           localStorage + hook useProgreso
 middleware.ts             puerta de acceso, corre en Edge
+app/manifest.ts           manifest para "agregar a la pantalla de inicio";
+                          íconos PNG en public/iconos/ y app/apple-icon.png,
+                          generados de app/icon.svg. Sin service worker.
 app/page.tsx              portada (server) -> Biblioteca (client)
 app/entrar/page.tsx       login. Form HTML común, sin JS obligatorio.
 app/ver/[id]/page.tsx     reproductor
