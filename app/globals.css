@@ -7,6 +7,7 @@
   --muted: #8aa0a5;
   --brick: #c1544a;
   --brick-2: #d3675d;
+  --brick-texto: #e06d63; /* ladrillo para texto chico sobre --ink-2: el más oscuro que llega a 4,5:1 */
   --mint: #7fb09c;
   --radio: 3px;
   --ancho: 1120px;
@@ -204,7 +205,7 @@ main {
 .boton--acento {
   background: var(--brick);
   border-color: var(--brick);
-  color: #fff6ee;
+  color: #fff; /* #fff6ee daba 4,24:1 sobre ladrillo; el blanco llega a 4,5 */
   font-weight: 600;
 }
 .boton--acento:hover {
@@ -1891,7 +1892,7 @@ kbd {
   padding: 2px 8px;
   border: 1px solid var(--brick);
   border-radius: var(--radio);
-  color: var(--brick-2);
+  color: var(--brick-texto);
   font-size: 12px;
   letter-spacing: 0.04em;
 }

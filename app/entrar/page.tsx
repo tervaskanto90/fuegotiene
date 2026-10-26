@@ -16,10 +16,10 @@ export default async function Entrar({ searchParams }: Props) {
 
   return (
     <main className="entrar">
-      <span className="wordmark">
+      <h1 className="wordmark">
         {sitio.nombre.replace("?", "")}
         <span className="wordmark__signo">?</span>
-      </span>
+      </h1>
       <p className="entrar__bajada">{sitio.bajada}</p>
 
       {!config.ok ? (

@@ -79,10 +79,12 @@ saca 70 sobre 100. Está andando; lo que queda abierto es esto:
       link. El desenlace lo escribe el simulador local, en milisegundos. Si
       algún día se quiere volver a la versión narrada, tiene que venir con un
       tope duro del lado del proveedor o quedar sólo para el dueño.
-- [ ] Marcar la intro y guardar una portada lo puede hacer cualquiera que
-      gane el juego, no sólo el dueño. Es lo que había antes y no molesta,
-      pero ahora el conjunto es más grande. Si alguna vez molesta, esas dos
-      rutas piden `dueno` en vez de `entra`.
+- [ ] Guardar una portada (`POST /api/arte/[id]`, la captura que hace sola
+      el reproductor) lo puede hacer cualquiera que gane el juego, no sólo el
+      dueño. Es lo que había antes y no molesta, pero ahora el conjunto es
+      más grande. Si alguna vez molesta, esa ruta pide `dueno` en vez de
+      `entra`. Marcar la intro ya no existe: se fue con el panel del
+      engranaje.
 
 **Cuentas de usuario**, que era la idea anterior y quedó reemplazada por la
 puerta, ahora que ni siquiera hay códigos de por medio. Si algún día se retoma (para que cada uno tenga su nombre y su
@@ -115,8 +117,9 @@ datos" es el mismo que usa `pases.json`:
 - [x] Imágenes de los capítulos: el reproductor las captura solo y las
       guarda en el bucket (`art/<id>.jpg`). `prepare-videos` sigue pudiendo
       generar las de `public/art/`, que tienen prioridad si existen.
-- [x] Saltear la intro: se marca una vez por capítulo desde el reproductor
-      y queda en `marcas.json`, en el bucket.
+- [x] Saltear la intro: existió (se marcaba desde el reproductor y quedaba
+      en `marcas.json`) y se sacó junto con el panel del engranaje, porque
+      sin el panel nadie podía ponerla. Está contado en `CLAUDE.md`.
 
 ## Técnicas, ya verificadas contra el bucket real
 
@@ -129,9 +132,10 @@ datos" es el mismo que usa `pases.json`:
 - [x] **Portadas con ffmpeg en Vercel.** El binario de
       `@ffmpeg-installer/ffmpeg` viaja en la función y corre; los 24
       capítulos tienen su portada capturada del video.
-- [x] **Portada manual y CORS.** Con la política puesta, elegir un cuadro a
-      mano desde el reproductor funciona. Sin ella el video anda igual, por
-      el retroceso automático.
+- [x] **Portada capturada en el navegador y CORS.** Con la política puesta,
+      el reproductor captura solo un cuadro para los capítulos sin portada.
+      Sin ella el video anda igual, por el retroceso automático. Elegir el
+      cuadro a mano se fue con el panel del engranaje.
 - [ ] Vercel elige como rama de producción `main`, después `master`, después
       la rama por defecto del repo. Hoy la única rama es
       `claude/fuego-tiene-project-q2crcs`. Si se renombra a `main` en

@@ -319,6 +319,8 @@ seguí estos tokens en vez de inventar otros. Están todos arriba de
 --bone   #e8e2d4   texto principal, color papel
 --muted  #8aa0a5   texto secundario
 --brick  #c1544a   acento. Solo lo que se puede tocar.
+--brick-texto #e06d63 ladrillo como texto chico sobre --ink-2 (la etiqueta
+                   del caso): --brick-2 ahí no llega a 4,5:1 de contraste.
 --mint   #7fb09c   progreso y "visto". Nada más.
 ```
 
