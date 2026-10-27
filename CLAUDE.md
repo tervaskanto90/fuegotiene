@@ -105,7 +105,10 @@ obligatoria**: un sitio sin un solo código anda perfecto, que es el caso
 normal ahora. Lo único que no puede faltar es `SESSION_SECRET`, que firma el
 pase.
 
-El middleware tiene la lista `SOLO_DUENO`, y `/api/subir` y `/api/estado` lo
+Las listas `PUBLICAS` y `SOLO_DUENO`, y la decisión que el middleware aplica
+(`decidirPuerta`), viven en `lib/puerta.ts`, con tests en
+`tests/puerta.test.ts`: si una ruta nueva tiene que entrar sin pase (como el
+manifest), se agrega ahí y se prueba ahí. `/api/subir` y `/api/estado` lo
 vuelven a chequear por su cuenta, porque una firma de escritura sobre el
 bucket no depende de que el middleware haya corrido. `/api/estado/[id]` queda
 afuera de esa lista a propósito: es el diagnóstico de un capítulo y el
@@ -242,7 +245,8 @@ lib/r2.ts                 firma de URLs y pedidos a R2 con aws4fetch
 lib/mp4.ts                lector de cajas mp4: códecs, moov, veredicto
 lib/episodes.ts           lee data/episodes.json, helpers de navegación y formato
 lib/progress.ts           localStorage + hook useProgreso
-middleware.ts             puerta de acceso, corre en Edge
+middleware.ts             puerta de acceso, corre en Edge. Lee las cookies y
+                          aplica decidirPuerta() de lib/puerta.ts
 app/manifest.ts           manifest para "agregar a la pantalla de inicio";
                           íconos PNG en public/iconos/ y app/apple-icon.png,
                           generados de app/icon.svg. Sin service worker.
@@ -264,8 +268,9 @@ lib/reparto.ts            quién actuó en cada capítulo + las caras que vuelve
 data/reparto.json         463 nombres, de la lista de Wikipedia. Datos, no texto.
 lib/origen.ts             el relato de por qué existe el sitio. Cinco capítulos.
 lib/simulacro.ts          casos del juego + motor que puntúa y narra
-lib/puerta.ts             las reglas de la puerta: cuánto hay que sacar y cómo
-                          se anota. No importa nada: se testea solo.
+lib/puerta.ts             las reglas de la puerta: cuánto hay que sacar, cómo
+                          se anota y qué pide cada ruta (decidirPuerta).
+                          No importa nada: se testea solo.
 lib/pases.ts              pases.json en el bucket, el estado para las páginas
                           y quienPide() para las rutas. La parte de la puerta
                           que necesita Node.

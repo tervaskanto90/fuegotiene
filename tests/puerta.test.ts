@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { crearPase, idAnonimo, verificarPase } from "../lib/auth.ts";
-import { conPase, MAX_PASES, normalizarPases, puntajeParaEntrar, type Pases } from "../lib/puerta.ts";
+import { conPase, decidirPuerta, MAX_PASES, normalizarPases, puntajeParaEntrar, type Pases } from "../lib/puerta.ts";
 
 const secret = "un-secreto-de-prueba-largo-para-firmar-1234567890";
 const config = { secret, codigos: ["codigo-de-octavio"], libres: [], duenos: [], version: "1" };
@@ -94,4 +94,78 @@ test("el registro de pases no crece para siempre", () => {
   assert.equal(ids.length, MAX_PASES);
   assert.ok(pases[`visitante${String(MAX_PASES + 29).padStart(4, "0")}`], "el último anotado está");
   assert.ok(!pases["visitante0000"], "el más viejo se fue");
+});
+
+// --- qué pide cada ruta (lo que aplica el middleware) ---
+
+const nadie = null;
+const comun = { libre: false, dueno: false };
+const libre = { libre: true, dueno: false };
+const dueno = { libre: true, dueno: true };
+/** Un pase que anota si lo consultaron: las rutas públicas no deberían. */
+function pase(tiene: boolean) {
+  const p = { consultado: false, async tiene() { p.consultado = true; return tiene; } };
+  return p;
+}
+
+test("lo público entra sin nada, y sin mirar el pase", async () => {
+  for (const ruta of [
+    "/juego", "/origen", "/entrar", "/api/simulacro", "/api/entrar", "/api/salir",
+    "/demo/muestra.mp4", "/robots.txt",
+    // Lo del teléfono: si esto rebota, el ícono de la pantalla de inicio queda en blanco.
+    "/manifest.webmanifest", "/iconos/icono-192.png", "/iconos/icono-512-recortable.png", "/apple-icon.png",
+  ]) {
+    const p = pase(false);
+    assert.deepEqual(await decidirPuerta(ruta, nadie, p.tiene), { tipo: "pasa" }, ruta);
+    assert.equal(p.consultado, false, `${ruta} no tiene por qué mirar el pase`);
+  }
+});
+
+test("público es exacto: parecidos no entran", async () => {
+  for (const ruta of ["/juegos", "/origen/2", "/juego/", "/entrar2", "/api/simulacro/x", "/manifest.webmanifest.bak", "/apple-icon.png/x"]) {
+    assert.notDeepEqual(await decidirPuerta(ruta, nadie, () => false), { tipo: "pasa" }, ruta);
+  }
+});
+
+test("quien ya tiene sesión no vuelve a /entrar", async () => {
+  assert.deepEqual(await decidirPuerta("/entrar", comun, () => false), { tipo: "redirige", a: "/" });
+  assert.deepEqual(await decidirPuerta("/entrar", nadie, () => true), { tipo: "pasa" }, "con pase y sin código, sí");
+});
+
+test("el mantenimiento es del dueño: ganar el juego no abre el bucket", async () => {
+  for (const ruta of ["/estado", "/subir"]) {
+    assert.deepEqual(await decidirPuerta(ruta, nadie, () => true), { tipo: "redirige", a: "/" }, ruta);
+    assert.deepEqual(await decidirPuerta(ruta, libre, () => true), { tipo: "redirige", a: "/" }, `${ruta} con código libre`);
+    assert.deepEqual(await decidirPuerta(ruta, dueno, () => false), { tipo: "pasa" }, `${ruta} con el dueño`);
+  }
+  for (const ruta of ["/api/estado", "/api/subir"]) {
+    const d = await decidirPuerta(ruta, libre, () => true);
+    assert.equal(d.tipo, "rechaza", `${ruta} contesta JSON, no redirige`);
+    assert.deepEqual(await decidirPuerta(ruta, dueno, () => false), { tipo: "pasa" }, ruta);
+  }
+  // El diagnóstico de un capítulo no es del dueño: el reproductor lo usa en
+  // la pantalla de cualquiera.
+  assert.deepEqual(await decidirPuerta("/api/estado/s01e01", nadie, () => true), { tipo: "pasa" });
+  assert.equal((await decidirPuerta("/api/estado/s01e01", nadie, () => false)).tipo, "rechaza");
+});
+
+test("los capítulos piden el juego ganado o un código que se lo saltee", async () => {
+  const paginas = ["/", "/ver/s01e01", "/expediente", "/capitulos", "/cualquier-cosa"];
+  const apis = ["/api/stream/s01e01", "/api/stream/s01e01/sub", "/api/marcas", "/api/arte/s01e01"];
+  for (const ruta of [...paginas, ...apis]) {
+    assert.deepEqual(await decidirPuerta(ruta, nadie, () => true), { tipo: "pasa" }, `${ruta} con pase`);
+    const p = pase(false);
+    assert.deepEqual(await decidirPuerta(ruta, libre, p.tiene), { tipo: "pasa" }, `${ruta} con código libre`);
+    assert.equal(p.consultado, false, "con código libre no hace falta mirar el pase");
+    assert.deepEqual(await decidirPuerta(ruta, dueno, () => false), { tipo: "pasa" }, `${ruta} con el dueño`);
+  }
+  for (const ruta of paginas) {
+    assert.deepEqual(await decidirPuerta(ruta, nadie, () => false), { tipo: "redirige", a: "/juego" }, ruta);
+    assert.deepEqual(await decidirPuerta(ruta, comun, () => false), { tipo: "redirige", a: "/juego" }, `${ruta}: un código común no se saltea el juego`);
+  }
+  for (const ruta of apis) {
+    const d = await decidirPuerta(ruta, comun, () => false);
+    assert.equal(d.tipo, "rechaza", ruta);
+    assert.match(d.tipo === "rechaza" ? d.error : "", /juego/, "el 403 dice por qué");
+  }
 });

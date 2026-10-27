@@ -97,3 +97,80 @@ export function conPase(pases: Pases, id: string, pase: Pase): Pases {
   }
   return salida;
 }
+
+// --- qué pide cada ruta ---
+//
+// Lo que aplica el middleware, puesto acá para que se pueda testear sin
+// levantar Next: el 25/10 el manifest y los íconos rebotaban a /juego porque
+// no estaban en la lista, y nada lo avisó.
+
+/**
+ * Lo que ve alguien que entra por primera vez, sin código y sin haber jugado:
+ * el juego, que es la puerta, y el origen, que cuenta por qué existe esto.
+ * Más el login, para quien tiene un código.
+ */
+export const PUBLICAS: RegExp[] = [
+  /^\/juego$/,
+  /^\/origen$/,
+  /^\/api\/simulacro$/,
+  /^\/entrar$/,
+  /^\/api\/entrar$/,
+  /^\/api\/salir$/,
+  /^\/demo\//,
+  /^\/robots\.txt$/,
+  // Lo que el teléfono pide para "agregar a la pantalla de inicio": el
+  // manifest, sus íconos y el de Apple. Sin esto el pedido rebota a /juego
+  // y el ícono queda en blanco.
+  /^\/manifest\.webmanifest$/,
+  /^\/iconos\//,
+  /^\/apple-icon\.png$/,
+];
+
+/**
+ * Las pantallas de mantenimiento, sólo para los códigos de CODIGOS_DUENO.
+ * Ganar el juego abre los capítulos, no el bucket.
+ *
+ * `/api/estado/[id]` queda afuera de esta lista a propósito: es el
+ * diagnóstico de un capítulo y el reproductor lo usa para explicar en
+ * palabras por qué un video no anda, en la pantalla de cualquiera.
+ */
+export const SOLO_DUENO: RegExp[] = [/^\/subir$/, /^\/estado$/, /^\/api\/subir$/, /^\/api\/estado$/];
+
+/** Lo que importa de la sesión para decidir; null si no hay código detrás. */
+export type QuienLlega = { libre: boolean; dueno: boolean } | null;
+
+export type Decision =
+  | { tipo: "pasa" }
+  | { tipo: "redirige"; a: "/" | "/juego" }
+  /** Para las rutas de API: un 403 con el motivo en palabras. */
+  | { tipo: "rechaza"; error: string };
+
+/**
+ * Qué hace la puerta con un pedido. `tienePase` se consulta sólo cuando hace
+ * falta: verificar el pase es una firma más, y las rutas públicas y las del
+ * dueño se resuelven sin mirarlo.
+ */
+export async function decidirPuerta(
+  pathname: string,
+  sesion: QuienLlega,
+  tienePase: () => Promise<boolean> | boolean,
+): Promise<Decision> {
+  if (PUBLICAS.some((r) => r.test(pathname))) {
+    if (pathname === "/entrar" && sesion) return { tipo: "redirige", a: "/" };
+    return { tipo: "pasa" };
+  }
+
+  if (SOLO_DUENO.some((r) => r.test(pathname))) {
+    if (sesion?.dueno) return { tipo: "pasa" };
+    if (pathname.startsWith("/api/")) return { tipo: "rechaza", error: "Esa pantalla es del dueño del sitio." };
+    return { tipo: "redirige", a: "/" };
+  }
+
+  // Todo lo demás —capítulos, reproductor, expediente— pide el juego ganado.
+  // Los códigos de CODIGOS_LIBRES y CODIGOS_DUENO se lo saltean.
+  if (sesion?.libre) return { tipo: "pasa" };
+  if (await tienePase()) return { tipo: "pasa" };
+
+  if (pathname.startsWith("/api/")) return { tipo: "rechaza", error: "Todavía no pasaste el juego." };
+  return { tipo: "redirige", a: "/juego" };
+}
