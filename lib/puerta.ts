@@ -124,6 +124,9 @@ export const PUBLICAS: RegExp[] = [
   /^\/manifest\.webmanifest$/,
   /^\/iconos\//,
   /^\/apple-icon\.png$/,
+  // La imagen de la tarjeta de compartir: la pide el servidor de WhatsApp o
+  // Telegram, que no tiene pase ni lo va a tener.
+  /^\/opengraph-image\.png$/,
 ];
 
 /**

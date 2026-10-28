@@ -114,6 +114,8 @@ test("lo público entra sin nada, y sin mirar el pase", async () => {
     "/demo/muestra.mp4", "/robots.txt",
     // Lo del teléfono: si esto rebota, el ícono de la pantalla de inicio queda en blanco.
     "/manifest.webmanifest", "/iconos/icono-192.png", "/iconos/icono-512-recortable.png", "/apple-icon.png",
+    // La tarjeta de compartir: la pide el servidor del mensajero, sin cookies.
+    "/opengraph-image.png",
   ]) {
     const p = pase(false);
     assert.deepEqual(await decidirPuerta(ruta, nadie, p.tiene), { tipo: "pasa" }, ruta);
@@ -122,7 +124,7 @@ test("lo público entra sin nada, y sin mirar el pase", async () => {
 });
 
 test("público es exacto: parecidos no entran", async () => {
-  for (const ruta of ["/juegos", "/origen/2", "/juego/", "/entrar2", "/api/simulacro/x", "/manifest.webmanifest.bak", "/apple-icon.png/x"]) {
+  for (const ruta of ["/juegos", "/origen/2", "/juego/", "/entrar2", "/api/simulacro/x", "/manifest.webmanifest.bak", "/apple-icon.png/x", "/opengraph-image.png.bak", "/opengraph-image"]) {
     assert.notDeepEqual(await decidirPuerta(ruta, nadie, () => false), { tipo: "pasa" }, ruta);
   }
 });

@@ -250,6 +250,10 @@ middleware.ts             puerta de acceso, corre en Edge. Lee las cookies y
 app/manifest.ts           manifest para "agregar a la pantalla de inicio";
                           íconos PNG en public/iconos/ y app/apple-icon.png,
                           generados de app/icon.svg. Sin service worker.
+app/opengraph-image.png   la tarjeta que muestran WhatsApp, Telegram e
+                          iMessage al pegar el link (1200×630, estática, con
+                          su .alt.txt al lado). Next la enlaza solo desde el
+                          <head>; los textos de la tarjeta salen de lib/site.ts.
 app/page.tsx              portada (server) -> Biblioteca (client)
 app/entrar/page.tsx       login. Form HTML común, sin JS obligatorio.
 app/ver/[id]/page.tsx     reproductor
