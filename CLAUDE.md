@@ -254,6 +254,11 @@ app/opengraph-image.png   la tarjeta que muestran WhatsApp, Telegram e
                           iMessage al pegar el link (1200×630, estática, con
                           su .alt.txt al lado). Next la enlaza solo desde el
                           <head>; los textos de la tarjeta salen de lib/site.ts.
+app/error.tsx             la pantalla rota: reemplaza el cartel en inglés de
+                          Next cuando una página tira un error de JavaScript.
+                          Cliente, sin Cabecera (lee cookies en el servidor):
+                          wordmark, qué pasó, "probar de nuevo" e "ir al inicio".
+                          Los errores del video no pasan por acá.
 app/page.tsx              portada (server) -> Biblioteca (client)
 app/entrar/page.tsx       login. Form HTML común, sin JS obligatorio.
 app/ver/[id]/page.tsx     reproductor
@@ -370,6 +375,17 @@ este orden y por la misma razón:
 
 Si algo nuevo quiere vivir sobre el video, que justifique primero por qué no
 puede estar en otro lado.
+
+**Lo que ve el sistema operativo** sale de la Media Session API, en el mismo
+`Reproductor.tsx`: la pantalla de bloqueo del teléfono, la notificación y la
+barra de medios del navegador muestran "1x02 Diagnóstico rectoscópico · Los
+Simuladores · temporada 1" con la portada (la capturada si la hay, si no el
+ícono del sitio), y los botones de los auriculares, del auto o del teclado
+hacen pausar, ±10 y capítulo anterior o siguiente (sólo si existen; si no, el
+botón no aparece). La posición se le informa con `setPositionState` al
+cargar, al buscar, al pausar y cada vez que se guarda el progreso, así la
+pantalla de bloqueo dibuja la barra. Cada acción se registra con `try`, porque
+un navegador puede no conocer alguna; sin la API no pasa nada.
 
 **Teléfonos.** Mucha gente entra desde el celular, así que el sitio se revisa
 ahí igual que en la compu. Las reglas viven en un bloque al final de

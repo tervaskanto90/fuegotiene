@@ -428,6 +428,77 @@ export default function Reproductor({ ep, sig, ant }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fase, sig, ant, router, guardarAhora, alternarPlay, saltar, alternarPantallaCompleta, despertar, ep.sub]);
 
+  // Media Session: lo que el teléfono muestra en la pantalla de bloqueo y en la
+  // notificación (capítulo, temporada, portada) y lo que hacen los botones de
+  // los auriculares, del auto o de la barra del navegador de escritorio:
+  // pausar, ±10, capítulo siguiente y anterior. Sin esto el sistema muestra
+  // "fuegotiene.vercel.app" y nada más. Si el navegador no lo tiene (Firefox
+  // viejo), no pasa nada.
+  useEffect(() => {
+    const ms = typeof navigator !== "undefined" ? navigator.mediaSession : undefined;
+    if (!ms || typeof MediaMetadata === "undefined") return;
+    const artwork: MediaImage[] = [];
+    if (marca.arte) artwork.push({ src: `/api/arte/${ep.id}?v=${marca.arte}`, sizes: "640x360", type: "image/jpeg" });
+    artwork.push({ src: "/iconos/icono-512.png", sizes: "512x512", type: "image/png" });
+    ms.metadata = new MediaMetadata({
+      title: `${codigo(ep)} ${ep.titulo}`,
+      artist: "Los Simuladores",
+      album: `temporada ${ep.temporada}`,
+      artwork,
+    });
+    return () => {
+      ms.metadata = null;
+    };
+  }, [ep, marca.arte]);
+
+  useEffect(() => {
+    const ms = typeof navigator !== "undefined" ? navigator.mediaSession : undefined;
+    if (!ms) return;
+    // Un navegador puede no conocer alguna acción y tirar: se prueba de a una.
+    const poner = (accion: MediaSessionAction, h: MediaSessionActionHandler | null) => {
+      try {
+        ms.setActionHandler(accion, h);
+      } catch {
+        // acción desconocida
+      }
+    };
+    const ir = (id: string) => {
+      guardarAhora();
+      router.push(`/ver/${id}`);
+    };
+    poner("play", () => video.current?.play().catch(() => {}));
+    poner("pause", () => video.current?.pause());
+    poner("seekbackward", (d) => saltar(-(d.seekOffset ?? 10)));
+    poner("seekforward", (d) => saltar(d.seekOffset ?? 10));
+    poner("seekto", (d) => {
+      const v = video.current;
+      if (!v || d.seekTime === undefined || d.seekTime === null) return;
+      if (d.fastSeek && typeof v.fastSeek === "function") v.fastSeek(d.seekTime);
+      else v.currentTime = d.seekTime;
+      setTiempo(v.currentTime);
+    });
+    // Sin anterior o sin siguiente, el botón directamente no aparece.
+    poner("previoustrack", ant ? () => ir(ant.id) : null);
+    poner("nexttrack", sig ? () => ir(sig.id) : null);
+    return () => {
+      for (const a of ["play", "pause", "seekbackward", "seekforward", "seekto", "previoustrack", "nexttrack"] as const) poner(a, null);
+    };
+  }, [sig, ant, router, guardarAhora, saltar]);
+
+  /** Le cuenta al sistema dónde va el capítulo, para que la pantalla de bloqueo dibuje la barra. */
+  const informarPosicion = useCallback(() => {
+    const ms = typeof navigator !== "undefined" ? navigator.mediaSession : undefined;
+    const v = video.current;
+    if (!ms || typeof ms.setPositionState !== "function" || !v) return;
+    const duration = v.duration;
+    if (!Number.isFinite(duration) || duration <= 0) return;
+    try {
+      ms.setPositionState({ duration, playbackRate: v.playbackRate || 1, position: Math.min(duration, Math.max(0, v.currentTime)) });
+    } catch {
+      // valores que el navegador no acepta: se deja la anterior
+    }
+  }, []);
+
   const alError = async () => {
     const v = video.current;
     if (!v) return;
@@ -521,7 +592,10 @@ export default function Reproductor({ ep, sig, ant }: Props) {
     const v = video.current;
     if (!v) return;
     if (!arrastrando) setTiempo(v.currentTime);
-    if (Date.now() - ultimoGuardado.current > CADA_MS) guardarAhora();
+    if (Date.now() - ultimoGuardado.current > CADA_MS) {
+      guardarAhora();
+      informarPosicion();
+    }
     // Portada automática: una vez por visita, si no hay.
     if (
       marcasCargadas &&
@@ -644,19 +718,27 @@ export default function Reproductor({ ep, sig, ant }: Props) {
         onDragStart={(e) => e.preventDefault()}
         crossOrigin={conCors ? "anonymous" : undefined}
         src={`/api/stream/${ep.id}`}
-        onLoadedMetadata={(e) => setDuracion(e.currentTarget.duration || 0)}
+        onLoadedMetadata={(e) => {
+          setDuracion(e.currentTarget.duration || 0);
+          informarPosicion();
+        }}
         onDurationChange={(e) => setDuracion(e.currentTarget.duration || 0)}
+        onSeeked={informarPosicion}
         onTimeUpdate={alAvanzar}
         onProgress={alProgresar}
         onPlaying={revisarImagen}
         onPause={() => {
           setReproduciendo(false);
           guardarAhora();
+          informarPosicion();
+          if (navigator.mediaSession) navigator.mediaSession.playbackState = "paused";
         }}
         onPlay={() => {
           empezo.current = true;
           setReproduciendo(true);
           setFase("viendo");
+          informarPosicion();
+          if (navigator.mediaSession) navigator.mediaSession.playbackState = "playing";
         }}
         onEnded={() => {
           setReproduciendo(false);
