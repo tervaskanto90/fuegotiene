@@ -574,7 +574,11 @@ está fijado en `tests/reparto.test.ts`: los cuatro que más vuelven —Ricci,
 Dioguardi, Sureda y Jorge D'Elía— son los cuatro de la Brigada B, y tres de
 ellos habían sido clientes en los capítulos 2, 3 y 4.
 
-`duracion` está en 0 hasta que alguien la cargue; mientras, la tarjeta usa la
-duración que el navegador vio la última vez que se reprodujo el capítulo.
+`duracion` tiene los segundos de cada capítulo, leídos del índice del mp4 en
+el bucket (lo mismo que muestra `/estado`), así la tarjeta dice cuánto dura y
+dibuja el progreso aunque nunca se haya reproducido en ese navegador. Si se
+reemplaza un archivo por otro de distinta duración, se corrige acá (o con
+`npm run upload`, que la completa con ffprobe). Si alguna quedara en 0, la
+tarjeta usa la que el navegador vio la última vez.
 
 Ver `TAREAS.md`.

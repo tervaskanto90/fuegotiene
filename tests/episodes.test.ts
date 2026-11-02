@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-type Ep = { id: string; temporada: number; numero: number; titulo: string; emision: string; key: string };
+type Ep = { id: string; temporada: number; numero: number; titulo: string; emision: string; key: string; duracion: number };
 
 const datos = JSON.parse(readFileSync(path.join(import.meta.dirname, "..", "data", "episodes.json"), "utf8")) as Ep[];
 
@@ -27,5 +27,14 @@ test("ids, keys y numeración consistentes", () => {
   for (const t of [1, 2]) {
     const numeros = datos.filter((e) => e.temporada === t).map((e) => e.numero).sort((a, b) => a - b);
     assert.deepEqual(numeros, numeros.map((_, i) => i + 1), `temporada ${t} con huecos`);
+  }
+});
+
+test("cada capítulo trae su duración en segundos", () => {
+  // Salen del índice de cada mp4 del bucket (lo que lee /api/estado/[id]).
+  // Con 0 la tarjeta no dice cuánto dura hasta que alguien lo reproduce.
+  for (const e of datos) {
+    assert.ok(Number.isInteger(e.duracion), `${e.id} duración no entera: ${e.duracion}`);
+    assert.ok(e.duracion >= 20 * 60 && e.duracion <= 120 * 60, `${e.id} duración rara: ${e.duracion}`);
   }
 });
