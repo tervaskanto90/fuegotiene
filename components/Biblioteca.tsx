@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Arte from "@/components/Arte";
 import Tarjeta from "@/components/Tarjeta";
-import { codigo, fechaCorta, tiempoTexto, type Episodio } from "@/lib/episodes";
+import { codigo, duracionTexto, fechaCorta, quedaTexto, tiempoTexto, type Episodio } from "@/lib/episodes";
 import type { Marcas } from "@/lib/marcas";
 import { ultimoEmpezado, useProgreso } from "@/lib/progress";
 import { useEffect, useState } from "react";
@@ -43,15 +43,15 @@ export default function Biblioteca({ episodios }: Props) {
   }
 
   // Destacado: lo último que quedó a medias; si no hay, el primero sin ver.
-  let destacado: { ep: Episodio; desde: number | null } | null = null;
+  let destacado: { ep: Episodio; desde: number | null; duracion: number } | null = null;
   if (listo) {
     const ultimo = ultimoEmpezado(mapa);
     const ep = ultimo ? episodios.find((e) => e.id === ultimo.id) : undefined;
     if (ultimo && ep) {
-      destacado = { ep, desde: ultimo.p.t };
+      destacado = { ep, desde: ultimo.p.t, duracion: ep.duracion || ultimo.p.d };
     } else {
       const primero = episodios.find((e) => !mapa[e.id]?.visto);
-      if (primero) destacado = { ep: primero, desde: null };
+      if (primero) destacado = { ep: primero, desde: null, duracion: primero.duracion || mapa[primero.id]?.d || 0 };
     }
   }
 
@@ -79,7 +79,18 @@ export default function Biblioteca({ episodios }: Props) {
                 </span>
                 {destacado.ep.titulo}
               </h1>
-              {destacado.ep.emision && <span className="muted">emitido el {fechaCorta(destacado.ep.emision)}</span>}
+              {(() => {
+                // Cuánto dura, o cuánto le queda si quedó a medias.
+                const meta = [
+                  destacado.ep.emision ? `emitido el ${fechaCorta(destacado.ep.emision)}` : "",
+                  destacado.desde !== null
+                    ? quedaTexto(destacado.desde, destacado.duracion)
+                    : duracionTexto(destacado.duracion),
+                ]
+                  .filter(Boolean)
+                  .join(" · ");
+                return meta && <span className="muted">{meta}</span>;
+              })()}
               <div className="destacado__acciones">
                 <Link
                   className="boton boton--acento"

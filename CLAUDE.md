@@ -576,7 +576,8 @@ ellos habían sido clientes en los capítulos 2, 3 y 4.
 
 `duracion` tiene los segundos de cada capítulo, leídos del índice del mp4 en
 el bucket (lo mismo que muestra `/estado`), así la tarjeta dice cuánto dura y
-dibuja el progreso aunque nunca se haya reproducido en ese navegador. Si se
+dibuja el progreso aunque nunca se haya reproducido en ese navegador, y el
+destacado de la portada dice cuánto dura o, si quedó a medias, cuánto queda. Si se
 reemplaza un archivo por otro de distinta duración, se corrige acá (o con
 `npm run upload`, que la completa con ffprobe). Si alguna quedara en 0, la
 tarjeta usa la que el navegador vio la última vez.

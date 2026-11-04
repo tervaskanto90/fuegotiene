@@ -67,6 +67,13 @@ export function duracionTexto(segundos: number): string {
   return `${Math.round(segundos / 60)} min`;
 }
 
+/** "quedan 23 min", "queda 1 min", o "" si no se sabe cuánto dura */
+export function quedaTexto(visto: number, duracion: number): string {
+  if (!duracion || duracion <= 0 || visto >= duracion) return "";
+  const min = Math.max(1, Math.round((duracion - visto) / 60));
+  return min === 1 ? "queda 1 min" : `quedan ${min} min`;
+}
+
 /** "12:41" o "1:02:03" */
 export function tiempoTexto(segundos: number): string {
   const s = Math.max(0, Math.floor(segundos));

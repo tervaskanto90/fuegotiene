@@ -108,9 +108,10 @@ datos" es el mismo que usa `pases.json`:
       semana antes (jueves) que IMDb y la cuenta de fans (miércoles). Quedaron
       las de IMDb, que coinciden con el día de emisión de la época. Son datos
       decorativos: sólo aparecen como "emitido el …".
-- [ ] `duracion` está en 0 en los 24. Se llena a mano, o corriendo
-      `npm run upload`, que la lee con ffprobe. Mientras, la tarjeta usa la
-      duración que vio el navegador la última vez que reprodujo el capítulo.
+- [x] `duracion` cargada en los 24, leída del índice de cada mp4 en el
+      bucket: las tarjetas y el destacado dicen cuánto dura (o cuánto queda)
+      aunque nunca se haya reproducido. Si se cambia un archivo por otro de
+      distinta duración, se corrige en `data/episodes.json`.
 - [ ] `sinopsis` vacía a propósito. Si se quieren, se escriben, se cargan en
       `data/episodes.json` y la tarjeta las muestra (hoy no las lee: agregar
       cuando existan).
