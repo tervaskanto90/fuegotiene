@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Cabecera from "@/components/Cabecera";
+
+export const metadata: Metadata = { title: "no existe" };
 
 export default function NoEncontrado() {
   return (
