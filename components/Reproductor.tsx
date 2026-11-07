@@ -367,7 +367,9 @@ export default function Reproductor({ ep, sig, ant }: Props) {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       if (objetivo && ["BUTTON", "A"].includes(objetivo.tagName) && (e.key === " " || e.key === "Enter")) return;
       despertar();
-      switch (e.key) {
+      // Con Bloq Mayús o Shift las letras llegan en mayúscula: "K" pausa igual que "k".
+      const tecla = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+      switch (tecla) {
         case " ":
         case "k":
           e.preventDefault();
@@ -417,8 +419,8 @@ export default function Reproductor({ ep, sig, ant }: Props) {
           }
           break;
         default:
-          if (/^[0-9]$/.test(e.key) && v.duration) {
-            v.currentTime = (Number(e.key) / 10) * v.duration;
+          if (/^[0-9]$/.test(tecla) && v.duration) {
+            v.currentTime = (Number(tecla) / 10) * v.duration;
             setTiempo(v.currentTime);
           }
       }
