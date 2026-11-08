@@ -40,6 +40,8 @@ export default function Juego({ puerta }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [paso, setPaso] = useState(0);
   const area = useRef<HTMLTextAreaElement>(null);
+  const titulo = useRef<HTMLHeadingElement>(null);
+  const pestanas = useRef<(HTMLButtonElement | null)[]>([]);
   const router = useRouter();
 
   const caso = casos.find((c) => c.id === casoId)!;
@@ -52,6 +54,12 @@ export default function Juego({ puerta }: Props) {
     setPaso(0);
     const t = setInterval(() => setPaso((p) => (p + 1) % MIENTRAS.length), 1400);
     return () => clearInterval(t);
+  }, [fase]);
+
+  // El área y el botón desaparecen al mandar el plan: sin esto el foco cae al
+  // <body> y un lector de pantalla no se entera de que llegó el desenlace.
+  useEffect(() => {
+    if (fase === "resultado") titulo.current?.focus();
   }, [fase]);
 
   const poner = async () => {
@@ -89,6 +97,26 @@ export default function Juego({ puerta }: Props) {
     setError(null);
   };
 
+  // Los casos son pestañas: las flechas pasan de una a otra (dando la vuelta),
+  // Inicio y Fin van a las puntas, y Tab sale de la lista en vez de recorrerla.
+  const moverEntreCasos = (e: React.KeyboardEvent, i: number) => {
+    const n = casos.length;
+    const destino =
+      e.key === "ArrowRight" || e.key === "ArrowDown"
+        ? (i + 1) % n
+        : e.key === "ArrowLeft" || e.key === "ArrowUp"
+          ? (i - 1 + n) % n
+          : e.key === "Home"
+            ? 0
+            : e.key === "End"
+              ? n - 1
+              : null;
+    if (destino === null) return;
+    e.preventDefault();
+    elegirCaso(casos[destino].id);
+    pestanas.current[destino]?.focus();
+  };
+
   return (
     <>
       <section className="intro">
@@ -122,9 +150,16 @@ export default function Juego({ puerta }: Props) {
         {casos.map((c, i) => (
           <button
             key={c.id}
+            ref={(b) => {
+              pestanas.current[i] = b;
+            }}
+            id={`caso-${c.id}`}
             type="button"
             role="tab"
             aria-selected={c.id === casoId}
+            aria-controls="caso"
+            tabIndex={c.id === casoId ? 0 : -1}
+            onKeyDown={(e) => moverEntreCasos(e, i)}
             className={`caso-chip${c.id === casoId ? " caso-chip--activo" : ""}`}
             style={{ "--i": i } as React.CSSProperties}
             onClick={() => elegirCaso(c.id)}
@@ -134,7 +169,8 @@ export default function Juego({ puerta }: Props) {
         ))}
       </div>
 
-      <article className="carpeta" key={caso.id}>
+      {/* div y no article: un article no puede ser tabpanel. */}
+      <div className="carpeta" key={caso.id} id="caso" role="tabpanel" aria-labelledby={`caso-${caso.id}`}>
         <header className="carpeta__cabeza">
           <span className="carpeta__etiqueta narrow">encargo</span>
           <h2>{caso.titulo}</h2>
@@ -163,7 +199,7 @@ export default function Juego({ puerta }: Props) {
             </dd>
           </div>
         </dl>
-      </article>
+      </div>
 
       {fase !== "resultado" && (
         <section className="plan">
@@ -210,7 +246,9 @@ export default function Juego({ puerta }: Props) {
       {fase === "resultado" && resultado && (
         <section className="desenlace" aria-live="polite">
           <header className={`desenlace__cabeza desenlace__cabeza--${COLOR[resultado.veredicto]}`}>
-            <h2>{resultado.titulo}</h2>
+            <h2 ref={titulo} tabIndex={-1}>
+              {resultado.titulo}
+            </h2>
             {resultado.veredicto !== "vacio" && (
               <div className="desenlace__puntaje">
                 <span className="num">{resultado.puntaje}</span>

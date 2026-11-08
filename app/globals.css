@@ -1999,6 +1999,11 @@ kbd {
   font-weight: 600;
   letter-spacing: -0.01em;
 }
+/* Recibe el foco al llegar el desenlace (para el lector de pantalla), pero no
+   se toca: un recuadro alrededor de un título confunde. */
+.desenlace__cabeza h2:focus {
+  outline: none;
+}
 .desenlace__cabeza--ok {
   border-left-color: var(--mint);
 }
