@@ -1,10 +1,13 @@
 import { codigo, episodios } from "@/lib/episodes";
+import Link from "next/link";
+import DondeAparece from "@/components/DondeAparece";
 import { recurrentes, repartoDe, totalDeNombres } from "@/lib/reparto";
 
 /**
  * La parte de biblioteca del expediente: quién actuó en cada capítulo y, sobre
  * todo, quiénes vuelven. Es todo `<details>` nativo — sin JavaScript, cada
- * capítulo se abre solo y la página no pesa nada.
+ * capítulo y cada cara se abren solos y la página no pesa nada. Cada cara
+ * abierta dice en qué capítulos aparece, con enlace a cada uno.
  */
 export default function Reparto() {
   const vuelven = recurrentes(3);
@@ -21,14 +24,20 @@ export default function Reparto() {
           Los Simuladores no repartía invitados sueltos: armaba un barrio. El cliente de un capítulo reaparece dos
           después recomendándole el grupo a otro, y así la serie encadena los veinticuatro. Los cuatro que más
           vuelven no son casualidad: terminaron formando la Brigada B, el equipo paralelo de la segunda temporada, y
-          tres de ellos habían empezado siendo clientes en los capítulos 2, 3 y 4.
+          tres de ellos habían empezado siendo clientes en los capítulos 2, 3 y 4. Tocá un nombre para ver en
+          qué capítulos aparece.
         </p>
         <ul className="caras">
           {vuelven.map((r) => (
             <li key={r.actor}>
-              <span className="caras__n narrow">{r.capitulos}</span>
-              <span className="caras__actor">{r.actor}</span>
-              {r.personaje && <span className="caras__personaje">{r.personaje}</span>}
+              <details className="caras__cara">
+                <summary>
+                  <span className="caras__n narrow">{r.capitulos}</span>
+                  <span className="caras__actor">{r.actor}</span>
+                  {r.personaje && <span className="caras__personaje">{r.personaje}</span>}
+                </summary>
+                <DondeAparece ids={r.ids} />
+              </details>
             </li>
           ))}
         </ul>
@@ -70,6 +79,11 @@ export default function Reparto() {
                       <span className="reparto__rotulo narrow">también</span> {r.tambien.join(" · ")}
                     </p>
                   )}
+                  <p className="reparto__ver">
+                    <Link className="boton" href={`/ver/${e.id}`}>
+                      ver el {codigo(e)}
+                    </Link>
+                  </p>
                 </div>
               </details>
             );

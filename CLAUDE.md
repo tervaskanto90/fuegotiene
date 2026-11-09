@@ -301,6 +301,8 @@ components/Reproductor.tsx reproductor a pantalla entera: controles propios,
 components/Iconos.tsx     íconos SVG del reproductor
 components/Expediente.tsx las cuatro fichas y el legajo que se abre
 components/Reparto.tsx    las caras que vuelven + el reparto por capítulo
+components/DondeAparece.tsx en qué capítulos aparece cada cara (enlaces al
+                          reproductor; en menta los ya vistos en ese navegador)
 components/Juego.tsx      el juego: caso, plan y desenlace
 components/Revelar.tsx    deja aparecer una sección cuando entra en pantalla
 components/Estado.tsx     tabla de /estado, revisa de a tres
@@ -569,7 +571,9 @@ remakes de España y México. Si hace falta ampliar estos datos, el camino es
 el mismo: que el dueño pase el material, no que Claude lo busque de memoria.
 Los nombres son datos; las sinopsis de esa misma fuente no se copian.
 
-La sección los muestra en `/expediente`. El dato lindo, que sale de contar y
+La sección los muestra en `/expediente`: cada cara que vuelve se abre y
+dice en qué capítulos aparece, con enlace a cada uno, y cada capítulo del
+reparto termina con un botón para verlo. El dato lindo, que sale de contar y
 está fijado en `tests/reparto.test.ts`: los cuatro que más vuelven —Ricci,
 Dioguardi, Sureda y Jorge D'Elía— son los cuatro de la Brigada B, y tres de
 ellos habían sido clientes en los capítulos 2, 3 y 4.

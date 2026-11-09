@@ -32,6 +32,8 @@ export type Recurrente = {
   personaje: string;
   /** en cuántos de los 24 aparece */
   capitulos: number;
+  /** en cuáles, en el orden de emisión */
+  ids: string[];
 };
 
 /**
@@ -41,21 +43,22 @@ export type Recurrente = {
  * algunos terminan trabajando con ellos en la Brigada B.
  */
 export function recurrentes(minimo = 3): Recurrente[] {
-  const cuenta = new Map<string, number>();
+  const donde = new Map<string, string[]>();
+  const anotar = (actor: string, id: string) => donde.set(actor, [...(donde.get(actor) ?? []), id]);
   const personaje = new Map<string, string>();
   for (const id of episodios.map((e) => e.id)) {
     const r = repartoDe(id);
     for (const i of r.invitados) {
-      cuenta.set(i.actor, (cuenta.get(i.actor) ?? 0) + 1);
+      anotar(i.actor, id);
       // El primer personaje con nombre propio que se le conoce queda pegado.
       if (i.personaje && /^[A-ZÁÉÍÓÚÑ]/.test(i.personaje) && !personaje.has(i.actor)) {
         personaje.set(i.actor, i.personaje);
       }
     }
-    for (const a of r.tambien) cuenta.set(a, (cuenta.get(a) ?? 0) + 1);
+    for (const a of r.tambien) anotar(a, id);
   }
-  return [...cuenta.entries()]
-    .filter(([, n]) => n >= minimo)
-    .map(([actor, capitulos]) => ({ actor, personaje: personaje.get(actor) ?? "", capitulos }))
+  return [...donde.entries()]
+    .filter(([, ids]) => ids.length >= minimo)
+    .map(([actor, ids]) => ({ actor, personaje: personaje.get(actor) ?? "", capitulos: ids.length, ids }))
     .sort((a, b) => b.capitulos - a.capitulos || a.actor.localeCompare(b.actor, "es"));
 }

@@ -1525,12 +1525,62 @@ kbd {
   border-radius: var(--radio);
   overflow: hidden;
 }
-.caras li {
+.caras > li {
+  background: var(--ink-2);
+}
+.caras__cara summary {
   display: flex;
   align-items: baseline;
   gap: 10px;
   padding: 11px 14px;
-  background: var(--ink-2);
+  cursor: pointer;
+  list-style: none;
+  transition: background 160ms ease;
+}
+.caras__cara summary::-webkit-details-marker {
+  display: none;
+}
+.caras__cara summary:hover {
+  background: color-mix(in srgb, var(--line) 30%, var(--ink-2));
+}
+.caras__cara[open] summary {
+  background: color-mix(in srgb, var(--line) 22%, var(--ink-2));
+}
+/* en qué capítulos aparece: códigos que llevan al reproductor */
+.donde {
+  padding: 4px 14px 14px;
+}
+.donde__caps {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.donde__cap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5ch;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radio);
+  color: var(--bone);
+  font-size: 14px;
+  text-decoration: none;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+.donde__cap:hover {
+  border-color: var(--line-2);
+  background: var(--ink);
+}
+.donde__cap--visto {
+  color: var(--mint);
+}
+.donde__vistos {
+  margin: 10px 0 0;
+  font-size: 13px;
 }
 .caras__n {
   min-width: 2ch;
@@ -1618,6 +1668,9 @@ kbd {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--line-2);
+}
+.reparto__ver {
+  margin: 14px 0 0;
 }
 .reparto__fuente {
   margin-top: 16px;
@@ -2261,6 +2314,8 @@ kbd {
   .boton,
   .caso-chip,
   .reparto__cap summary,
+  .caras__cara summary,
+  .donde__cap,
   .wordmark {
     min-height: 44px;
   }
