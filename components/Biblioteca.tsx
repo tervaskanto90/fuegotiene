@@ -62,7 +62,14 @@ export default function Biblioteca({ episodios }: Props) {
       <section className="seccion" style={{ marginTop: 0 }} aria-live="polite">
         {destacado ? (
           <div className="destacado">
-            <Link href={`/ver/${destacado.ep.id}`} aria-label={`ver ${destacado.ep.titulo}`}>
+            {/* La imagen lleva al mismo lugar que el botón principal: se toca con
+                el mouse o el dedo, pero no es otra parada de Tab ni otro enlace
+                para el lector de pantalla (el botón ya dice qué hace). */}
+            <Link
+              href={`/ver/${destacado.ep.id}${destacado.desde !== null ? "?seguir=1" : ""}`}
+              tabIndex={-1}
+              aria-hidden
+            >
               <Arte
                 ep={destacado.ep}
                 grande

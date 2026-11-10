@@ -63,3 +63,28 @@ test("la Brigada B es la gente que más vuelve", () => {
     "cambió quiénes son los cuatro que más vuelven: revisá el texto de la sección",
   );
 });
+
+test("recurrentes() dice en qué capítulos aparece cada cara, en orden de emisión", async () => {
+  const { recurrentes } = await import("../lib/reparto.ts");
+  const orden = eps.map((e) => e.id);
+  const lista = recurrentes();
+  assert.ok(lista.length > 0);
+  for (const r of lista) {
+    assert.equal(r.ids.length, r.capitulos, `${r.actor}: la cuenta no coincide con los ids`);
+    assert.ok(r.capitulos >= 3, `${r.actor} aparece en menos de 3`);
+    assert.equal(new Set(r.ids).size, r.ids.length, `${r.actor} tiene un capítulo repetido`);
+    const posiciones = r.ids.map((id) => orden.indexOf(id));
+    assert.ok(posiciones.every((p) => p >= 0), `${r.actor} nombra un capítulo que no existe`);
+    assert.deepEqual(posiciones, [...posiciones].sort((a, b) => a - b), `${r.actor}: los capítulos no van en orden`);
+    for (const id of r.ids) {
+      const nombres = [...datos[id].invitados.map((i) => i.actor), ...datos[id].tambien];
+      assert.ok(nombres.includes(r.actor), `${r.actor} no está en el reparto de ${id}`);
+    }
+  }
+  // Ordenadas de más a menos: arriba los cuatro de la Brigada B.
+  for (let i = 1; i < lista.length; i++) assert.ok(lista[i - 1].capitulos >= lista[i].capitulos);
+  assert.deepEqual(
+    lista.slice(0, 4).map((r) => r.actor).sort(),
+    ["Fernando Sureda", "Jorge D'Elía", "Juan Carlos Ricci", "Pasta Dioguardi"],
+  );
+});

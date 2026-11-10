@@ -1,4 +1,4 @@
-import datos from "@/data/episodes.json";
+import datos from "../data/episodes.json" with { type: "json" };
 
 export type Episodio = {
   /** s01e01 */

@@ -9,8 +9,8 @@
 // el personaje cuando se lo pudo atar; `tambien` es el resto del reparto, que
 // en esta serie es larguísimo: hay capítulos con más de veinte nombres.
 
-import datos from "@/data/reparto.json";
-import { episodios } from "@/lib/episodes";
+import datos from "../data/reparto.json" with { type: "json" };
+import { episodios } from "./episodes.ts";
 
 export type Invitado = { actor: string; personaje: string };
 export type RepartoCapitulo = { invitados: Invitado[]; tambien: string[] };
