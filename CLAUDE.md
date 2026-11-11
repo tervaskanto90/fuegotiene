@@ -277,6 +277,9 @@ lib/reparto.ts            quién actuó en cada capítulo + las caras que vuelve
 data/reparto.json         463 nombres, de la lista de Wikipedia. Datos, no texto.
 lib/origen.ts             el relato de por qué existe el sitio. Cinco capítulos.
 lib/simulacro.ts          casos del juego + motor que puntúa y narra
+lib/mejores.ts            el mejor puntaje de cada caso, en el localStorage de
+                          ese navegador (ft.mejores). Sólo un recordatorio: el
+                          pase lo decide el servidor.
 lib/puerta.ts             las reglas de la puerta: cuánto hay que sacar, cómo
                           se anota y qué pide cada ruta (decidirPuerta).
                           No importa nada: se testea solo.
@@ -524,7 +527,9 @@ de la variable.
 El mínimo es 70 y se cambia con `PUNTAJE_PARA_ENTRAR` sin tocar código. Se
 puede intentar las veces que uno quiera, con cualquiera de los seis casos, y
 el pase se queda con el mejor puntaje: nadie pierde la entrada por volver a
-jugar y salir peor.
+jugar y salir peor. Cada chip de caso muestra además el mejor puntaje que
+sacó ese navegador ahí (menta si alcanzó el mínimo); vive en `localStorage`,
+como el progreso, y no decide nada.
 
 **`/api/simulacro` es pública**, porque es la puerta: cualquiera que abra el
 sitio la llama sin tener nada. Por eso no puede hacer nada que cueste plata

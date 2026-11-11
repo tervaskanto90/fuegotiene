@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { anotarMejor, guardarMejores, leerMejores, type Mejores } from "@/lib/mejores";
 import type { EstadoPuerta } from "@/lib/puerta";
 import { casos, contarPalabras, MAX_PLAN, type Resultado } from "@/lib/simulacro";
 
@@ -39,6 +40,9 @@ export default function Juego({ puerta }: Props) {
   const [abierta, setAbierta] = useState(puerta.paso);
   const [error, setError] = useState<string | null>(null);
   const [paso, setPaso] = useState(0);
+  // El mejor puntaje de cada caso en este navegador. Se lee después de montar
+  // para que el HTML del servidor y el primer render del cliente coincidan.
+  const [mejores, setMejores] = useState<Mejores>({});
   const area = useRef<HTMLTextAreaElement>(null);
   const titulo = useRef<HTMLHeadingElement>(null);
   const pestanas = useRef<(HTMLButtonElement | null)[]>([]);
@@ -48,6 +52,10 @@ export default function Juego({ puerta }: Props) {
   const puntajeLogrado = resultado?.puerta?.paso ? resultado.puerta.puntaje : puerta.puntaje;
   const plan = planes[casoId] ?? "";
   const palabras = contarPalabras(plan);
+
+  useEffect(() => {
+    setMejores(leerMejores());
+  }, []);
 
   useEffect(() => {
     if (fase !== "montando") return;
@@ -77,6 +85,13 @@ export default function Juego({ puerta }: Props) {
       if (!res.ok) throw new Error(d.error ?? `El sitio respondió ${res.status}.`);
       const r = d as Respuesta;
       setResultado(r);
+      if (r.veredicto !== "vacio") {
+        // Se relee por si otra pestaña anotó algo mientras tanto.
+        const antes = leerMejores();
+        const despues = anotarMejor(antes, casoId, r.puntaje);
+        if (despues !== antes) guardarMejores(despues);
+        setMejores(despues);
+      }
       if (r.puerta?.paso) {
         setAbierta(true);
         // La cabecera se arma en el servidor: sin esto el candado se queda
@@ -147,26 +162,35 @@ export default function Juego({ puerta }: Props) {
       </aside>
 
       <div className="casos" role="tablist" aria-label="casos">
-        {casos.map((c, i) => (
-          <button
-            key={c.id}
-            ref={(b) => {
-              pestanas.current[i] = b;
-            }}
-            id={`caso-${c.id}`}
-            type="button"
-            role="tab"
-            aria-selected={c.id === casoId}
-            aria-controls="caso"
-            tabIndex={c.id === casoId ? 0 : -1}
-            onKeyDown={(e) => moverEntreCasos(e, i)}
-            className={`caso-chip${c.id === casoId ? " caso-chip--activo" : ""}`}
-            style={{ "--i": i } as React.CSSProperties}
-            onClick={() => elegirCaso(c.id)}
-          >
-            {c.titulo}
-          </button>
-        ))}
+        {casos.map((c, i) => {
+          const mejor = mejores[c.id];
+          return (
+            <button
+              key={c.id}
+              ref={(b) => {
+                pestanas.current[i] = b;
+              }}
+              id={`caso-${c.id}`}
+              type="button"
+              role="tab"
+              aria-selected={c.id === casoId}
+              aria-controls="caso"
+              tabIndex={c.id === casoId ? 0 : -1}
+              onKeyDown={(e) => moverEntreCasos(e, i)}
+              className={`caso-chip${c.id === casoId ? " caso-chip--activo" : ""}`}
+              style={{ "--i": i } as React.CSSProperties}
+              onClick={() => elegirCaso(c.id)}
+            >
+              {c.titulo}
+              {mejor !== undefined && (
+                <span className={`caso-chip__mejor num${mejor >= puerta.minimo ? " caso-chip__mejor--paso" : ""}`}>
+                  <span className="solo-lector">, tu mejor puntaje: </span>
+                  {mejor}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* div y no article: un article no puede ser tabpanel. */}
