@@ -529,7 +529,10 @@ puede intentar las veces que uno quiera, con cualquiera de los seis casos, y
 el pase se queda con el mejor puntaje: nadie pierde la entrada por volver a
 jugar y salir peor. Cada chip de caso muestra además el mejor puntaje que
 sacó ese navegador ahí (menta si alcanzó el mínimo); vive en `localStorage`,
-como el progreso, y no decide nada.
+como el progreso, y no decide nada. Con eso mismo, "otro caso" (al pie del
+desenlace) lleva al siguiente que ese navegador todavía no pasó
+(`siguienteCaso`), o al siguiente en orden si ya los pasó todos, y deja el
+foco en su pestaña.
 
 **`/api/simulacro` es pública**, porque es la puerta: cualquiera que abra el
 sitio la llama sin tener nada. Por eso no puede hacer nada que cueste plata

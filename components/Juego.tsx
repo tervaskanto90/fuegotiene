@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { anotarMejor, guardarMejores, leerMejores, type Mejores } from "@/lib/mejores";
+import { anotarMejor, guardarMejores, leerMejores, siguienteCaso, type Mejores } from "@/lib/mejores";
 import type { EstadoPuerta } from "@/lib/puerta";
 import { casos, contarPalabras, MAX_PLAN, type Resultado } from "@/lib/simulacro";
 
@@ -360,8 +360,21 @@ export default function Juego({ puerta }: Props) {
               className="boton"
               type="button"
               onClick={() => {
-                const i = casos.findIndex((c) => c.id === casoId);
-                elegirCaso(casos[(i + 1) % casos.length].id);
+                // Al siguiente que todavía no pasaste en este navegador; el foco
+                // va a su pestaña, porque este botón desaparece con el desenlace.
+                // La lista se acomoda debajo de la cabecera fija: el scroll
+                // propio del foco la dejaba tapada en la compu.
+                const ids = casos.map((c) => c.id);
+                const destino = siguienteCaso(ids, casoId, mejores, puerta.minimo);
+                elegirCaso(destino);
+                setTimeout(() => {
+                  const chip = pestanas.current[ids.indexOf(destino)];
+                  if (!chip) return;
+                  chip.focus({ preventScroll: true });
+                  const lista = chip.closest(".casos") ?? chip;
+                  const cabecera = document.querySelector(".cabecera")?.getBoundingClientRect().height ?? 0;
+                  window.scrollTo({ top: lista.getBoundingClientRect().top + window.scrollY - cabecera - 16 });
+                }, 60);
               }}
             >
               otro caso

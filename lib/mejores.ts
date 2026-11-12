@@ -42,3 +42,18 @@ export function guardarMejores(mapa: Mejores) {
     // sin espacio o modo privado: se sigue sin guardar
   }
 }
+
+/**
+ * El caso al que lleva "otro caso": el siguiente en orden (dando la vuelta)
+ * que este navegador todavía no pasó con el mínimo. Si ya los pasó todos, o
+ * si sólo falta el que está abierto, el siguiente en orden y listo.
+ */
+export function siguienteCaso(ids: string[], actual: string, mapa: Mejores, minimo: number): string {
+  const n = ids.length;
+  const i = ids.indexOf(actual);
+  for (let k = 1; k < n; k++) {
+    const id = ids[(i + k + n) % n];
+    if ((mapa[id] ?? -1) < minimo) return id;
+  }
+  return ids[(i + 1 + n) % n];
+}
