@@ -224,7 +224,7 @@ porque cada capítulo va envuelto en su propio `Revelar`).
 ```bash
 npm run dev                      # local en :3000
 npm run build                    # verificar que compila antes de deployar
-npm test                         # tests de auth, puerta, r2, mp4, marcas, simulacro, serie, reparto y episodes.json
+npm test                         # tests de auth, puerta, r2, mp4, marcas, simulacro, serie, reparto, progreso y episodes.json
 npm run prepare-videos -- <dir>  # ffmpeg: normaliza, cuadros, srt->vtt (requiere ffmpeg)
 npm run upload -- ./listos       # sube a R2 con multipart (requiere las variables)
 npm run demo                     # regenera public/demo/muestra.mp4 (requiere ffmpeg)
@@ -296,7 +296,8 @@ app/api/stream/[id]       firma la URL de R2 y redirige (302)
 app/api/stream/[id]/sub   subtítulos .vtt, devueltos desde acá
 app/api/estado            prueba el bucket y lista los archivos sueltos
 app/api/estado/[id]       HEAD + lectura parcial del archivo -> JSON
-components/Biblioteca.tsx destacado + grilla por temporada
+components/Biblioteca.tsx destacado, "también quedaron a medias" (hasta cuatro
+                          más, de aMedias() en lib/progress.ts) + grilla por temporada
 components/Tarjeta.tsx    una tarjeta de capítulo
 components/Arte.tsx       imagen del capítulo o trama con el número
 components/Reproductor.tsx reproductor a pantalla entera: controles propios,

@@ -67,6 +67,14 @@ export function reanudable(p: Progreso | undefined): boolean {
   return true;
 }
 
+/** Los capítulos a medias (los que se pueden seguir), del más reciente al más viejo. */
+export function aMedias(mapa: MapaProgreso): { id: string; p: Progreso }[] {
+  return Object.entries(mapa)
+    .filter(([, p]) => reanudable(p))
+    .map(([id, p]) => ({ id, p }))
+    .sort((a, b) => b.p.en - a.p.en);
+}
+
 /** El capítulo empezado más recientemente que no está terminado. */
 export function ultimoEmpezado(mapa: MapaProgreso): { id: string; p: Progreso } | null {
   let mejor: { id: string; p: Progreso } | null = null;

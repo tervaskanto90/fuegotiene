@@ -5,10 +5,13 @@ import Arte from "@/components/Arte";
 import Tarjeta from "@/components/Tarjeta";
 import { codigo, duracionTexto, fechaCorta, quedaTexto, tiempoTexto, type Episodio } from "@/lib/episodes";
 import type { Marcas } from "@/lib/marcas";
-import { ultimoEmpezado, useProgreso } from "@/lib/progress";
+import { aMedias, ultimoEmpezado, useProgreso } from "@/lib/progress";
 import { useEffect, useState } from "react";
 
 type Props = { episodios: Episodio[] };
+
+/** Cuántos a medias se muestran además del destacado: una fila, no otra grilla. */
+const MAX_TAMBIEN = 4;
 
 export default function Biblioteca({ episodios }: Props) {
   const { mapa, listo } = useProgreso();
@@ -56,6 +59,16 @@ export default function Biblioteca({ episodios }: Props) {
   }
 
   const vistos = episodios.filter((e) => mapa[e.id]?.visto).length;
+
+  // Los otros capítulos que quedaron a medias, además del destacado: el
+  // destacado dice sólo el último, y quien dejó dos o tres empezados no los
+  // tenía que buscar en la grilla.
+  const otrosAMedias = listo
+    ? aMedias(mapa)
+        .map(({ id }) => episodios.find((e) => e.id === id))
+        .filter((e): e is Episodio => !!e && e.id !== destacado?.ep.id)
+    : [];
+  const tambien = otrosAMedias.slice(0, MAX_TAMBIEN);
 
   return (
     <>
@@ -119,6 +132,24 @@ export default function Biblioteca({ episodios }: Props) {
           </div>
         )}
       </section>
+
+      {tambien.length > 0 && (
+        <section className="seccion" aria-labelledby="tambien-titulo">
+          <h2 className="seccion__titulo seccion__titulo--linea" id="tambien-titulo">
+            {tambien.length === 1 ? "también quedó a medias" : "también quedaron a medias"}
+            <span className="num">
+              {otrosAMedias.length > tambien.length
+                ? `${tambien.length} de ${otrosAMedias.length}`
+                : tambien.length}
+            </span>
+          </h2>
+          <div className="grilla">
+            {tambien.map((ep, i) => (
+              <Tarjeta key={ep.id} ep={ep} progreso={mapa[ep.id]} indice={i} foto={fotoDe(ep.id)} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {[...temporadas.entries()].map(([temporada, lista]) => (
         <section className="seccion" key={temporada}>
