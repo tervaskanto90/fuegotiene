@@ -535,6 +535,10 @@ desenlace) lleva al siguiente que ese navegador todavía no pasó
 (`siguienteCaso`), o al siguiente en orden si ya los pasó todos, y deja el
 foco en su pestaña.
 
+Al tocar "corregir el plan" el desenlace se va, pero lo que le faltó al último
+plan de ese caso queda debajo del texto (`.repaso`, en memoria: se pierde al
+recargar) para corregir sin tener que acordarse.
+
 **`/api/simulacro` es pública**, porque es la puerta: cualquiera que abra el
 sitio la llama sin tener nada. Por eso no puede hacer nada que cueste plata
 ni que tarde: evalúa con una función local y contesta. Si alguna vez se le

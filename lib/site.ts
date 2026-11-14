@@ -2,7 +2,7 @@
 export const sitio = {
   nombre: "fuego tiene?",
   bajada: "los simuladores, desde tus archivos",
-  descripcion: "Sitio privado para ver Los Simuladores.",
+  descripcion: "Los Simuladores, desde tus archivos. Se entra jugando.",
   /** La dirección pública: sólo para las URL absolutas de la tarjeta de compartir. */
   direccion: "https://fuegotiene.vercel.app",
 };

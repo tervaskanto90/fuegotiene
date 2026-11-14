@@ -57,7 +57,8 @@ a:hover {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
   color: inherit;
 }
@@ -2033,6 +2034,33 @@ kbd {
 .plan__area:focus {
   outline: none;
   border-color: var(--bone);
+}
+/* Lo que le faltó al último plan de este caso, debajo del texto mientras se corrige. */
+.repaso {
+  padding: 2px 0 2px 14px;
+  border-left: 2px solid var(--line-2);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+  animation: aparecer 240ms ease both;
+}
+.repaso__rotulo {
+  margin: 0 0 4px;
+}
+.repaso__rotulo .num {
+  color: var(--bone);
+}
+.repaso__lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 0;
+}
+.repaso__lista li + li::before {
+  content: "·";
+  padding: 0 8px;
 }
 .plan__pie {
   display: flex;

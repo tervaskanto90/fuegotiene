@@ -14,6 +14,9 @@ type Respuesta = Resultado & { puerta?: Puerta };
 
 type Props = { puerta: EstadoPuerta };
 
+/** Lo que dejó el último desenlace de un caso, para tenerlo a la vista al corregir. */
+type Repaso = { puntaje: number; vacio: boolean; falto: string[] };
+
 const MIENTRAS = [
   "Medina sale a averiguar quién es el otro…",
   "Lamponne consigue el lugar y los papeles…",
@@ -43,6 +46,9 @@ export default function Juego({ puerta }: Props) {
   // El mejor puntaje de cada caso en este navegador. Se lee después de montar
   // para que el HTML del servidor y el primer render del cliente coincidan.
   const [mejores, setMejores] = useState<Mejores>({});
+  // Al tocar "corregir el plan" el desenlace se va, y con él la lista de lo que
+  // le faltó: se guarda por caso para mostrarla debajo del texto mientras se corrige.
+  const [repasos, setRepasos] = useState<Record<string, Repaso>>({});
   const area = useRef<HTMLTextAreaElement>(null);
   const titulo = useRef<HTMLHeadingElement>(null);
   const pestanas = useRef<(HTMLButtonElement | null)[]>([]);
@@ -52,6 +58,7 @@ export default function Juego({ puerta }: Props) {
   const puntajeLogrado = resultado?.puerta?.paso ? resultado.puerta.puntaje : puerta.puntaje;
   const plan = planes[casoId] ?? "";
   const palabras = contarPalabras(plan);
+  const repaso = repasos[casoId];
 
   useEffect(() => {
     setMejores(leerMejores());
@@ -85,6 +92,7 @@ export default function Juego({ puerta }: Props) {
       if (!res.ok) throw new Error(d.error ?? `El sitio respondió ${res.status}.`);
       const r = d as Respuesta;
       setResultado(r);
+      setRepasos((p) => ({ ...p, [casoId]: { puntaje: r.puntaje, vacio: r.veredicto === "vacio", falto: r.falto } }));
       if (r.veredicto !== "vacio") {
         // Se relee por si otra pestaña anotó algo mientras tanto.
         const antes = leerMejores();
@@ -244,6 +252,24 @@ export default function Juego({ puerta }: Props) {
             }}
             rows={10}
           />
+          {fase === "escribiendo" && repaso && repaso.falto.length > 0 && (
+            <aside className="repaso" aria-label="lo que le faltó al plan la vez pasada">
+              <p className="repaso__rotulo">
+                {repaso.vacio ? (
+                  "la vez pasada no hubo operativo; le faltó"
+                ) : (
+                  <>
+                    la vez pasada sacó <span className="num">{repaso.puntaje}</span>; le faltó
+                  </>
+                )}
+              </p>
+              <ul className="repaso__lista">
+                {repaso.falto.map((t) => (
+                  <li key={t}>{t}</li>
+                ))}
+              </ul>
+            </aside>
+          )}
           <div className="plan__pie">
             <span className="muted num">
               {palabras} {palabras === 1 ? "palabra" : "palabras"}
