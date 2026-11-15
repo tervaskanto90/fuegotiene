@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { anotarMejor, guardarMejores, leerMejores, siguienteCaso, type Mejores } from "@/lib/mejores";
+import { anotarMejor, cuentaCasos, guardarMejores, leerMejores, siguienteCaso, textoCuenta, type Mejores } from "@/lib/mejores";
 import type { EstadoPuerta } from "@/lib/puerta";
 import { casos, contarPalabras, MAX_PLAN, type Resultado } from "@/lib/simulacro";
 
@@ -58,6 +58,14 @@ export default function Juego({ puerta }: Props) {
   const puntajeLogrado = resultado?.puerta?.paso ? resultado.puerta.puntaje : puerta.puntaje;
   const plan = planes[casoId] ?? "";
   const palabras = contarPalabras(plan);
+  const cuenta = textoCuenta(
+    cuentaCasos(
+      casos.map((c) => c.id),
+      mejores,
+      puerta.minimo,
+    ),
+    puerta.minimo,
+  );
   const repaso = repasos[casoId];
 
   useEffect(() => {
@@ -200,6 +208,8 @@ export default function Juego({ puerta }: Props) {
           );
         })}
       </div>
+
+      {cuenta && <p className="casos-cuenta">{cuenta}</p>}
 
       {/* div y no article: un article no puede ser tabpanel. */}
       <div className="carpeta" key={caso.id} id="caso" role="tabpanel" aria-labelledby={`caso-${caso.id}`}>

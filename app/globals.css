@@ -1940,6 +1940,13 @@ kbd {
 .caso-chip__mejor--paso {
   color: var(--mint);
 }
+/* "Pasaste 3 de los seis casos…": la suma de los chips, en una línea gris
+   debajo de ellos (lib/mejores.ts, textoCuenta). Sólo si se jugó alguno. */
+.casos-cuenta {
+  margin: -8px 0 18px;
+  color: var(--muted);
+  font-size: 13px;
+}
 /* Para lectores de pantalla: está en el nombre del botón, no en pantalla. */
 .solo-lector {
   position: absolute;

@@ -533,7 +533,9 @@ sacó ese navegador ahí (menta si alcanzó el mínimo); vive en `localStorage`,
 como el progreso, y no decide nada. Con eso mismo, "otro caso" (al pie del
 desenlace) lleva al siguiente que ese navegador todavía no pasó
 (`siguienteCaso`), o al siguiente en orden si ya los pasó todos, y deja el
-foco en su pestaña.
+foco en su pestaña. Debajo de los chips, una línea gris suma lo mismo
+("Pasaste 3 de los seis casos con 70 o más; quedan 3.", `textoCuenta`); no
+aparece si ese navegador todavía no jugó ninguno.
 
 Al tocar "corregir el plan" el desenlace se va, pero lo que le faltó al último
 plan de ese caso queda debajo del texto (`.repaso`, en memoria: se pierde al

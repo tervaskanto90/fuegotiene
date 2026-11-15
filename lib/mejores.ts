@@ -57,3 +57,36 @@ export function siguienteCaso(ids: string[], actual: string, mapa: Mejores, mini
   }
   return ids[(i + 1 + n) % n];
 }
+
+/** Cuántos de los casos jugó este navegador y cuántos pasó con el mínimo. */
+export function cuentaCasos(ids: string[], mapa: Mejores, minimo: number) {
+  let jugados = 0;
+  let pasados = 0;
+  for (const id of ids) {
+    if (mapa[id] === undefined) continue;
+    jugados++;
+    if (mapa[id] >= minimo) pasados++;
+  }
+  return { jugados, pasados, total: ids.length };
+}
+
+const NUMEROS = ["cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez"];
+
+/**
+ * La línea que va debajo de los casos. Vacía si este navegador no jugó
+ * ninguno: ahí no hay nada que contar y el cartel de la puerta ya dice el trato.
+ */
+export function textoCuenta(c: { jugados: number; pasados: number; total: number }, minimo: number): string {
+  if (c.jugados === 0) return "";
+  const total = NUMEROS[c.total] ?? String(c.total);
+  if (c.pasados === c.total) return `Pasaste los ${total} casos.`;
+  if (c.pasados === 0) {
+    return c.jugados === 1
+      ? `Jugaste uno de los ${total} casos; todavía no llegó a ${minimo}.`
+      : `Jugaste ${c.jugados} de los ${total} casos; todavía ninguno llegó a ${minimo}.`;
+  }
+  const faltan = c.total - c.pasados;
+  return `Pasaste ${c.pasados} de los ${total} casos con ${minimo} o más; ${
+    faltan === 1 ? "queda uno" : `quedan ${faltan}`
+  }.`;
+}
