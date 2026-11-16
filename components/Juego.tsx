@@ -153,9 +153,8 @@ export default function Juego({ puerta }: Props) {
       <section className="intro">
         <h1 className="intro__titulo">el juego</h1>
         <p className="intro__texto">
-          Ponete en el lugar de Santos. Llega un cliente con un problema que ya intentó resolver por las buenas,
-          escribís el operativo y se simula cómo sale. No hay respuesta correcta: hay planes que se sostienen y planes
-          que se caen a la mitad.
+          Ponete en el lugar de Santos: llega un cliente que ya probó por las buenas, escribís el operativo y se
+          simula cómo sale. No hay respuesta correcta; hay planes que se sostienen y planes que&nbsp;se&nbsp;caen.
         </p>
       </section>
 
@@ -170,9 +169,8 @@ export default function Juego({ puerta }: Props) {
           </p>
         ) : (
           <p>
-            Los 24 capítulos y el expediente de los cuatro se abren cuando armás un operativo que salga bien:{" "}
-            <b className="num">{puerta.minimo}</b> sobre 100 o más, en cualquiera de los seis casos. No hay contraseña
-            ni hay que registrarse, y podés intentar las veces que quieras.
+            Los 24 capítulos y el expediente se abren con un operativo que saque <b className="num">{puerta.minimo}</b> sobre{" "}
+            100 o más, en cualquiera de los seis casos. Sin contraseña ni registro, y con todos los intentos que quieras.
           </p>
         )}
       </aside>
