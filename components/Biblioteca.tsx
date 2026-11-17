@@ -5,8 +5,8 @@ import Arte from "@/components/Arte";
 import Tarjeta from "@/components/Tarjeta";
 import { codigo, duracionTexto, fechaCorta, quedaTexto, tiempoTexto, type Episodio } from "@/lib/episodes";
 import type { Marcas } from "@/lib/marcas";
-import { aMedias, ultimoEmpezado, useProgreso } from "@/lib/progress";
-import { useEffect, useState } from "react";
+import { aMedias, ultimoEmpezado, useProgreso, type Progreso } from "@/lib/progress";
+import { useEffect, useRef, useState } from "react";
 
 type Props = { episodios: Episodio[] };
 
@@ -14,7 +14,19 @@ type Props = { episodios: Episodio[] };
 const MAX_TAMBIEN = 4;
 
 export default function Biblioteca({ episodios }: Props) {
-  const { mapa, listo } = useProgreso();
+  const { mapa, listo, marcar, reponer } = useProgreso();
+  // El último que se marcó como visto desde el destacado, con cómo estaba
+  // antes: alcanza para deshacerlo sin perder la posición.
+  const [marcado, setMarcado] = useState<{ ep: Episodio; previo: Progreso | undefined } | null>(null);
+  const deshacerRef = useRef<HTMLButtonElement>(null);
+  const foco = useRef(false);
+
+  // Al marcar, el botón que se tocó desaparece con el destacado viejo: el
+  // foco pasa a "deshacer" para que el teclado no caiga al principio.
+  useEffect(() => {
+    if (marcado && foco.current) deshacerRef.current?.focus();
+    foco.current = false;
+  }, [marcado]);
   const [marcas, setMarcas] = useState<Marcas>({});
   const [marcasListas, setMarcasListas] = useState(false);
 
@@ -123,6 +135,20 @@ export default function Biblioteca({ episodios }: Props) {
                     empezar de nuevo
                   </Link>
                 )}
+                {/* Para el que quedó a medias a propósito o el que ya se vio en
+                    otro lado: si no, el destacado queda trabado ahí. */}
+                <button
+                  type="button"
+                  className="boton"
+                  onClick={() => {
+                    const ep = destacado!.ep;
+                    foco.current = true;
+                    setMarcado({ ep, previo: mapa[ep.id] });
+                    marcar(ep.id);
+                  }}
+                >
+                  marcar como visto
+                </button>
               </div>
             </div>
           </div>
@@ -130,6 +156,24 @@ export default function Biblioteca({ episodios }: Props) {
           <div className="destacado destacado--vacio" aria-hidden={!listo || undefined}>
             {listo ? "Ya viste los 24. Elegí cualquiera para volver a verlo." : " "}
           </div>
+        )}
+        {marcado && (
+          <p className="aviso-visto muted">
+            <span>
+              Anotaste el <span className="num">{codigo(marcado.ep)}</span> como visto.
+            </span>
+            <button
+              type="button"
+              ref={deshacerRef}
+              className="boton boton--chico"
+              onClick={() => {
+                reponer(marcado.ep.id, marcado.previo);
+                setMarcado(null);
+              }}
+            >
+              deshacer
+            </button>
+          </p>
         )}
       </section>
 
@@ -159,7 +203,7 @@ export default function Biblioteca({ episodios }: Props) {
               {lista.length} capítulos
               {listo && (() => {
                 const v = lista.filter((e) => mapa[e.id]?.visto).length;
-                return v > 0 ? `, ${v} vistos` : "";
+                return v > 0 ? `, ${v} ${v === 1 ? "visto" : "vistos"}` : "";
               })()}
             </span>
           </h2>

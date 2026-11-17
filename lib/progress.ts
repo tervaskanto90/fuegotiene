@@ -59,6 +59,24 @@ export function marcarVisto(id: string, visto = true): MapaProgreso {
   return mapa;
 }
 
+/**
+ * Devuelve el mapa con `id` vuelto a como estaba (`previo`), o sin él si no
+ * tenía nada. Es el "deshacer" de marcar como visto: recupera la posición
+ * exacta, que `marcarVisto(id, false)` perdería.
+ */
+export function conPrevio(mapa: MapaProgreso, id: string, previo: Progreso | undefined): MapaProgreso {
+  const nuevo = { ...mapa };
+  if (previo) nuevo[id] = { ...previo };
+  else delete nuevo[id];
+  return nuevo;
+}
+
+export function reponerProgreso(id: string, previo: Progreso | undefined): MapaProgreso {
+  const mapa = conPrevio(leerProgreso(), id, previo);
+  escribir(mapa);
+  return mapa;
+}
+
 /** ¿Se puede ofrecer "seguir desde"? */
 export function reanudable(p: Progreso | undefined): boolean {
   if (!p || p.visto) return false;
@@ -107,5 +125,9 @@ export function useProgreso() {
     setMapa(marcarVisto(id, visto));
   }, []);
 
-  return { mapa, listo, guardar, marcar };
+  const reponer = useCallback((id: string, previo: Progreso | undefined) => {
+    setMapa(reponerProgreso(id, previo));
+  }, []);
+
+  return { mapa, listo, guardar, marcar, reponer };
 }

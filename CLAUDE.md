@@ -296,8 +296,10 @@ app/api/stream/[id]       firma la URL de R2 y redirige (302)
 app/api/stream/[id]/sub   subtítulos .vtt, devueltos desde acá
 app/api/estado            prueba el bucket y lista los archivos sueltos
 app/api/estado/[id]       HEAD + lectura parcial del archivo -> JSON
-components/Biblioteca.tsx destacado, "también quedaron a medias" (hasta cuatro
-                          más, de aMedias() en lib/progress.ts) + grilla por temporada
+components/Biblioteca.tsx destacado (con "marcar como visto" y su "deshacer",
+                          que repone la posición exacta: conPrevio() en
+                          lib/progress.ts), "también quedaron a medias" (hasta
+                          cuatro más, de aMedias()) + grilla por temporada
 components/Tarjeta.tsx    una tarjeta de capítulo
 components/Arte.tsx       imagen del capítulo o trama con el número
 components/Reproductor.tsx reproductor a pantalla entera: controles propios,

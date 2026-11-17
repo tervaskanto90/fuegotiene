@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { aMedias, ultimoEmpezado, type MapaProgreso } from "../lib/progress.ts";
+import { aMedias, conPrevio, ultimoEmpezado, type MapaProgreso } from "../lib/progress.ts";
 
 test("aMedias: sólo los que se pueden seguir, del más reciente al más viejo", () => {
   const mapa: MapaProgreso = {
@@ -17,4 +17,19 @@ test("aMedias: sólo los que se pueden seguir, del más reciente al más viejo",
   );
   assert.equal(ultimoEmpezado(mapa)?.id, aMedias(mapa)[0].id, "el primero es el del destacado");
   assert.deepEqual(aMedias({}), []);
+});
+
+test("conPrevio: deshacer \"marcar como visto\" devuelve la posición exacta", () => {
+  const previo = { t: 1200, d: 2700, en: 200, visto: false };
+  const marcado: MapaProgreso = {
+    "s01e04": { t: 2700, d: 2700, en: 900, visto: true },
+    "s01e05": { t: 30, d: 2700, en: 100, visto: false },
+  };
+  const vuelto = conPrevio(marcado, "s01e04", previo);
+  assert.deepEqual(vuelto["s01e04"], previo);
+  assert.equal(ultimoEmpezado(vuelto)?.id, "s01e04", "vuelve a ser el destacado");
+  assert.deepEqual(vuelto["s01e05"], marcado["s01e05"], "no toca los demás");
+  assert.equal(marcado["s01e04"].visto, true, "no muta el mapa que recibe");
+  // Si no había nada antes (el "para empezar"), deshacer lo saca del mapa.
+  assert.equal("s01e04" in conPrevio(marcado, "s01e04", undefined), false);
 });
