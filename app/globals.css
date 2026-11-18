@@ -2411,6 +2411,25 @@ kbd {
     inset: -13px -8px;
   }
 
+  /* El destacado: con tres botones, uno abajo del otro cada uno de su
+     ancho quedaba desparejo y alto. El principal ocupa el renglón entero y
+     los otros dos se reparten el de abajo, iguales. Si en algún ancho no
+     entran de a dos (360 px), cada uno baja a su renglón, también entero. */
+  .destacado {
+    padding: 14px;
+  }
+  .destacado__acciones .boton {
+    flex: 1 1 0;
+    min-width: max-content;
+    justify-content: center;
+    padding-left: 12px;
+    padding-right: 12px;
+    font-size: 15px;
+  }
+  .destacado__acciones--tres .boton--acento {
+    flex-basis: 100%;
+  }
+
   /* el juego */
   .plan__pie {
     flex-wrap: wrap;

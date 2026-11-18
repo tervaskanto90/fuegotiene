@@ -123,7 +123,9 @@ export default function Biblioteca({ episodios }: Props) {
                   .join(" · ");
                 return meta && <span className="muted">{meta}</span>;
               })()}
-              <div className="destacado__acciones">
+              <div
+                className={`destacado__acciones${destacado.desde !== null ? " destacado__acciones--tres" : ""}`}
+              >
                 <Link
                   className="boton boton--acento"
                   href={`/ver/${destacado.ep.id}${destacado.desde !== null ? "?seguir=1" : ""}`}
