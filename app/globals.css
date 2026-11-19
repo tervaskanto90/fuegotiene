@@ -1591,6 +1591,9 @@ kbd {
   margin: 10px 0 0;
   font-size: 13px;
 }
+.donde__proximo {
+  margin: 10px 0 0;
+}
 .caras__n {
   min-width: 2ch;
   text-align: right;

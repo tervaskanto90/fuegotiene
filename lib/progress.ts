@@ -93,6 +93,20 @@ export function aMedias(mapa: MapaProgreso): { id: string; p: Progreso }[] {
     .sort((a, b) => b.p.en - a.p.en);
 }
 
+/**
+ * De una lista de capítulos en orden de emisión, el primero que todavía no se
+ * vio. Si quedó a medias, `desde` trae dónde seguir; si no, es `null`.
+ */
+export function proximoSinVer(ids: string[], mapa: MapaProgreso): { id: string; desde: number | null } | null {
+  for (const id of ids) {
+    const p = mapa[id];
+    if (p?.visto) continue;
+    if (p && p.d > 0 && p.t / p.d >= UMBRAL_VISTO) continue;
+    return { id, desde: reanudable(p) ? p!.t : null };
+  }
+  return null;
+}
+
 /** El capítulo empezado más recientemente que no está terminado. */
 export function ultimoEmpezado(mapa: MapaProgreso): { id: string; p: Progreso } | null {
   let mejor: { id: string; p: Progreso } | null = null;

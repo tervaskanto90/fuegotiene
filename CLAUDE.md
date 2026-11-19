@@ -309,6 +309,8 @@ components/Expediente.tsx las cuatro fichas y el legajo que se abre
 components/Reparto.tsx    las caras que vuelven + el reparto por capítulo
 components/DondeAparece.tsx en qué capítulos aparece cada cara (enlaces al
                           reproductor; en menta los ya vistos en ese navegador)
+                          y, si ya vio alguno, el próximo que le falta con su
+                          botón (proximoSinVer() en lib/progress.ts)
 components/Juego.tsx      el juego: caso, plan y desenlace
 components/Revelar.tsx    deja aparecer una sección cuando entra en pantalla
 components/Estado.tsx     tabla de /estado, revisa de a tres

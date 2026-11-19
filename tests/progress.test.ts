@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { aMedias, conPrevio, ultimoEmpezado, type MapaProgreso } from "../lib/progress.ts";
+import { aMedias, conPrevio, proximoSinVer, ultimoEmpezado, type MapaProgreso } from "../lib/progress.ts";
 
 test("aMedias: sólo los que se pueden seguir, del más reciente al más viejo", () => {
   const mapa: MapaProgreso = {
@@ -32,4 +32,21 @@ test("conPrevio: deshacer \"marcar como visto\" devuelve la posición exacta", (
   assert.equal(marcado["s01e04"].visto, true, "no muta el mapa que recibe");
   // Si no había nada antes (el "para empezar"), deshacer lo saca del mapa.
   assert.equal("s01e04" in conPrevio(marcado, "s01e04", undefined), false);
+});
+
+test("proximoSinVer: el primero en orden que falta, con dónde seguir si quedó a medias", () => {
+  const ids = ["s01e02", "s01e05", "s01e09", "s02e03"];
+  const mapa: MapaProgreso = {
+    "s01e02": { t: 2700, d: 2700, en: 100, visto: true },
+    "s01e05": { t: 2600, d: 2700, en: 200, visto: false }, // pasó el 92 %: cuenta como visto
+    "s01e09": { t: 761, d: 2700, en: 300, visto: false },
+  };
+  assert.deepEqual(proximoSinVer(ids, mapa), { id: "s01e09", desde: 761 });
+  mapa["s01e09"] = { t: 2700, d: 2700, en: 400, visto: true };
+  assert.deepEqual(proximoSinVer(ids, mapa), { id: "s02e03", desde: null });
+  mapa["s02e03"] = { t: 5, d: 2700, en: 500, visto: false }; // menos de 15 s: se empieza de cero
+  assert.deepEqual(proximoSinVer(ids, mapa), { id: "s02e03", desde: null });
+  mapa["s02e03"] = { t: 2700, d: 2700, en: 600, visto: true };
+  assert.equal(proximoSinVer(ids, mapa), null, "los vio todos");
+  assert.deepEqual(proximoSinVer(ids, {}), { id: "s01e02", desde: null });
 });
