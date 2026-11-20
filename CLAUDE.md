@@ -408,7 +408,9 @@ pelear con la especificidad.
   renglón, así que el área se estira con un `::after` de posición absoluta
   que no ocupa lugar.
 - **El menú no parte palabras.** Sin `white-space: nowrap`, "el expediente"
-  caía en dos renglones y quedaba ilegible.
+  caía en dos renglones y quedaba ilegible. Y entra en un renglón desde
+  360 px aun con los dos candados: abajo de 390 px el espacio entre enlaces
+  baja a 10 px. Si se agrega una sección, medir sin pase a 360.
 - **Los atajos de teclado siguen funcionando** (espacio, flechas, j/l, m, c, f,
   n, p y 0-9), lo que se sacó es la lista que los mostraba. En una compu se
   descubren solos o no se descubren, y ese era el precio de tener un panel

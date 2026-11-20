@@ -2380,6 +2380,18 @@ kbd {
   .wordmark {
     font-size: 22px;
   }
+  /* Sin pase, los dos candados suman 28 px y a 360 y 375 px "el origen"
+     bajaba solo a un segundo renglón: la cabecera fija pasaba de 109 a 153
+     px justo en /juego, la primera pantalla que ve cualquiera. Con menos
+     aire entre enlaces entran los cuatro en uno (a 320 px sigue bajando). */
+  @media (max-width: 389px) {
+    .nav {
+      gap: 0 10px;
+    }
+    .candado {
+      margin-left: 4px;
+    }
+  }
 
   /* lo que se toca, tamaño de dedo */
   .boton,
