@@ -50,3 +50,16 @@ test("proximoSinVer: el primero en orden que falta, con dónde seguir si quedó 
   assert.equal(proximoSinVer(ids, mapa), null, "los vio todos");
   assert.deepEqual(proximoSinVer(ids, {}), { id: "s01e02", desde: null });
 });
+
+test("vistoElTexto: hoy, ayer, el día del mes, y el año sólo si es otro", async () => {
+  const { vistoElTexto } = await import("../lib/episodes.ts");
+  const ahora = new Date(2026, 10, 21, 0, 30).getTime(); // 21 nov, recién pasada la medianoche
+  assert.equal(vistoElTexto(new Date(2026, 10, 21, 0, 5).getTime(), ahora), "visto hoy");
+  assert.equal(vistoElTexto(new Date(2026, 10, 20, 23, 50).getTime(), ahora), "visto ayer", "cuenta días, no horas");
+  assert.equal(vistoElTexto(new Date(2026, 10, 18, 22, 0).getTime(), ahora), "visto el 18 nov");
+  assert.equal(vistoElTexto(new Date(2026, 0, 2, 12, 0).getTime(), ahora), "visto el 2 ene");
+  assert.equal(vistoElTexto(new Date(2025, 11, 31, 12, 0).getTime(), ahora), "visto el 31 dic 2025");
+  assert.equal(vistoElTexto(0, ahora), "", "sin fecha no inventa una");
+  assert.equal(vistoElTexto(Number.NaN, ahora), "");
+  assert.equal(vistoElTexto(ahora + 86_400_000 * 3, ahora), "", "un reloj adelantado no dice nada");
+});

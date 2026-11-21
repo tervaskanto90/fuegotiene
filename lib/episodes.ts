@@ -61,6 +61,23 @@ export function fechaCorta(iso: string): string {
   return `${Number(m[3])} ${MESES[Number(m[2]) - 1] ?? ""} ${m[1]}`;
 }
 
+/**
+ * "visto hoy", "visto ayer", "visto el 18 nov" o, de otro año, "visto el 18 nov
+ * 2025". `en` es la última vez que se guardó el progreso (ms); los días se
+ * cuentan en la hora del navegador. Sin fecha válida, "".
+ */
+export function vistoElTexto(en: number, ahora: number = Date.now()): string {
+  if (!Number.isFinite(en) || en <= 0 || en > ahora + 60_000) return "";
+  const f = new Date(en);
+  const hoy = new Date(ahora);
+  const dia = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const dias = Math.round((dia(hoy) - dia(f)) / 86_400_000);
+  if (dias <= 0) return "visto hoy";
+  if (dias === 1) return "visto ayer";
+  const anio = f.getFullYear() === hoy.getFullYear() ? "" : ` ${f.getFullYear()}`;
+  return `visto el ${f.getDate()} ${MESES[f.getMonth()]}${anio}`;
+}
+
 /** "47 min" */
 export function duracionTexto(segundos: number): string {
   if (!segundos || segundos <= 0) return "";

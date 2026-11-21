@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Arte from "@/components/Arte";
-import { codigo, duracionTexto, fechaCorta, type Episodio } from "@/lib/episodes";
+import { codigo, duracionTexto, fechaCorta, vistoElTexto, type Episodio } from "@/lib/episodes";
 import type { Progreso } from "@/lib/progress";
 
 type Props = { ep: Episodio; progreso?: Progreso; indice?: number; foto?: string };
@@ -9,6 +9,7 @@ export default function Tarjeta({ ep, progreso, indice = 0, foto }: Props) {
   const duracion = ep.duracion || progreso?.d || 0;
   const porcentaje =
     progreso && !progreso.visto && duracion > 0 ? Math.min(100, Math.round((progreso.t / duracion) * 100)) : 0;
+  const vistoEl = progreso?.visto ? vistoElTexto(progreso.en) : "";
   const meta = [fechaCorta(ep.emision), duracionTexto(duracion)].filter(Boolean).join(" · ");
 
   return (
@@ -28,6 +29,7 @@ export default function Tarjeta({ ep, progreso, indice = 0, foto }: Props) {
         <div className="tarjeta__linea">
           <span className="num">{codigo(ep)}</span>
           {porcentaje > 0 && <span className="mint num">{porcentaje}%</span>}
+          {vistoEl && <span className="mint tarjeta__visto">{vistoEl}</span>}
         </div>
         <div className="tarjeta__titulo">{ep.titulo}</div>
         {meta && <div className="tarjeta__meta">{meta}</div>}

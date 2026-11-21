@@ -411,8 +411,9 @@ main {
 }
 .tarjeta__linea {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 8px;
+  gap: 0 8px;
   color: var(--muted);
   font-size: 13px;
 }
@@ -421,6 +422,10 @@ main {
   font-size: 15px;
   line-height: 1.25;
 }
+.tarjeta__visto {
+  white-space: nowrap; /* "visto el 18 nov" baja entero abajo del número, no partido */
+}
+
 .tarjeta__meta {
   color: var(--muted);
   font-size: 13px;

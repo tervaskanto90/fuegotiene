@@ -300,7 +300,9 @@ components/Biblioteca.tsx destacado (con "marcar como visto" y su "deshacer",
                           que repone la posición exacta: conPrevio() en
                           lib/progress.ts), "también quedaron a medias" (hasta
                           cuatro más, de aMedias()) + grilla por temporada
-components/Tarjeta.tsx    una tarjeta de capítulo
+components/Tarjeta.tsx    una tarjeta de capítulo; si está vista, dice cuándo ("visto
+                          ayer", "visto el 18 nov": vistoElTexto() en lib/episodes.ts,
+                          con el `en` de ft.progreso, la última vez que se miró)
 components/Arte.tsx       imagen del capítulo o trama con el número
 components/Reproductor.tsx reproductor a pantalla entera: controles propios,
                           progreso, siguiente, errores. Sin panel de ajustes
