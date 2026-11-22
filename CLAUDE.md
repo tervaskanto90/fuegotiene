@@ -440,6 +440,13 @@ pelear con la especificidad.
 - **Muescas y barra de gestos**: el layout va con `viewportFit: "cover"` para
   que el fondo llegue al borde, y los márgenes del contenido y los controles
   del reproductor se corren con `env(safe-area-inset-*)`.
+- **Lo que cambia tiene que verse.** En `/expediente` las cuatro fichas van
+  una abajo de la otra y el legajo queda fuera de la pantalla: al tocar una
+  ficha, si la cabeza del legajo no se ve, la página baja hasta ella (debajo
+  de la cabecera fija; sin animación con `prefers-reduced-motion`). En la
+  compu, con el legajo a la vista, no se mueve nada.
+- En `/juego`, "con ctrl + enter también arranca" se esconde con
+  `hover: none` y `pointer: coarse`: en un teléfono no hay ctrl.
 - `/estado` tiene la única tabla ancha del sitio. Va envuelta en
   `.tabla-ancha`, que scrollea sola en vez de empujar la página entera.
 

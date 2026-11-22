@@ -282,7 +282,7 @@ export default function Juego({ puerta }: Props) {
             <span className="muted num">
               {palabras} {palabras === 1 ? "palabra" : "palabras"}
             </span>
-            <span className="muted">
+            <span className="muted plan__atajo">
               con <kbd>ctrl</kbd> + <kbd>enter</kbd> también arranca
             </span>
             <span className="espacio" />

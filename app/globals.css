@@ -2531,6 +2531,14 @@ kbd {
   }
 }
 
+/* "con ctrl + enter también arranca" no le sirve a quien escribe con el dedo:
+   en un teléfono no hay ctrl. Con un teclado o un mouse conectado vuelve. */
+@media (hover: none) and (pointer: coarse) {
+  .plan__atajo {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
