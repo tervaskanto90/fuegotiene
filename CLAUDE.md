@@ -277,6 +277,9 @@ lib/reparto.ts            quién actuó en cada capítulo + las caras que vuelve
 data/reparto.json         463 nombres, de la lista de Wikipedia. Datos, no texto.
 lib/origen.ts             el relato de por qué existe el sitio. Cinco capítulos.
 lib/simulacro.ts          casos del juego + motor que puntúa y narra
+lib/compartir.ts          el texto para compartir un resultado del juego (caso y
+                          puntaje, nunca el plan) y compartir(): hoja del sistema
+                          o portapapeles
 lib/mejores.ts            el mejor puntaje de cada caso, en el localStorage de
                           ese navegador (ft.mejores). Sólo un recordatorio: el
                           pase lo decide el servidor.
@@ -551,6 +554,12 @@ desenlace) lleva al siguiente que ese navegador todavía no pasó
 foco en su pestaña. Debajo de los chips, una línea gris suma lo mismo
 ("Pasaste 3 de los seis casos con 70 o más; quedan 3.", `textoCuenta`); no
 aparece si ese navegador todavía no jugó ninguno.
+
+Al pie del desenlace, "compartir el resultado" abre la hoja de compartir del
+sistema (en la compu, si el navegador no la tiene, "copiar el resultado" lo
+copia y lo dice debajo). Va el caso, el puntaje, cuánto faltó si no llegó y la
+dirección de `/juego`; **el plan no va**, que es lo que el otro tiene que
+pensar. No aparece si no hubo operativo.
 
 Al tocar "corregir el plan" el desenlace se va, pero lo que le faltó al último
 plan de ese caso queda debajo del texto (`.repaso`, en memoria: se pierde al

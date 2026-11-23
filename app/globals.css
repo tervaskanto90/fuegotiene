@@ -2233,6 +2233,13 @@ kbd {
   flex-wrap: wrap;
   margin-top: 22px;
 }
+.compartido {
+  margin: 12px 0 0;
+  font-size: 14px;
+}
+.compartido:empty {
+  margin: 0;
+}
 
 @media (max-width: 720px) {
   .szifron {

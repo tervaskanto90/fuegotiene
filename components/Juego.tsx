@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { compartir, textoCompartir, type Compartido } from "@/lib/compartir";
 import { anotarMejor, cuentaCasos, guardarMejores, leerMejores, siguienteCaso, textoCuenta, type Mejores } from "@/lib/mejores";
 import type { EstadoPuerta } from "@/lib/puerta";
 import { casos, contarPalabras, MAX_PLAN, type Resultado } from "@/lib/simulacro";
@@ -49,6 +50,10 @@ export default function Juego({ puerta }: Props) {
   // Al tocar "corregir el plan" el desenlace se va, y con él la lista de lo que
   // le faltó: se guarda por caso para mostrarla debajo del texto mientras se corrige.
   const [repasos, setRepasos] = useState<Record<string, Repaso>>({});
+  // Si el navegador tiene la hoja de compartir del sistema el botón la abre;
+  // si no, copia el texto. Se sabe recién en el cliente.
+  const [puedeCompartir, setPuedeCompartir] = useState(false);
+  const [compartido, setCompartido] = useState<Compartido | null>(null);
   const area = useRef<HTMLTextAreaElement>(null);
   const titulo = useRef<HTMLHeadingElement>(null);
   const pestanas = useRef<(HTMLButtonElement | null)[]>([]);
@@ -70,7 +75,13 @@ export default function Juego({ puerta }: Props) {
 
   useEffect(() => {
     setMejores(leerMejores());
+    setPuedeCompartir(typeof navigator.share === "function");
   }, []);
+
+  // Cada desenlace nuevo arranca sin el aviso del anterior.
+  useEffect(() => {
+    setCompartido(null);
+  }, [resultado]);
 
   useEffect(() => {
     if (fase !== "montando") return;
@@ -413,9 +424,32 @@ export default function Juego({ puerta }: Props) {
             >
               otro caso
             </button>
+            {resultado.veredicto !== "vacio" && (
+              <button
+                className="boton"
+                type="button"
+                onClick={async () => {
+                  setCompartido(null);
+                  const r = await compartir({
+                    titulo: "fuego tiene?",
+                    texto: textoCompartir(caso.titulo, resultado.puntaje, puerta.minimo),
+                    url: `${window.location.origin}/juego`,
+                  });
+                  setCompartido(r);
+                }}
+              >
+                {puedeCompartir ? "compartir el resultado" : "copiar el resultado"}
+              </button>
+            )}
             <span className="espacio" />
             <span className="muted narrow">simulador local</span>
           </div>
+          {/* Siempre en la página, para que el lector de pantalla anuncie el cambio. */}
+          <p className="compartido muted" role="status">
+            {compartido === "copiado" && "Copiado: el caso, el puntaje y la dirección. Pegalo donde quieras; el plan no va."}
+            {compartido === "fallo" &&
+              "No se pudo copiar: el navegador no dejó usar el portapapeles. Mandá la dirección del sitio y contá cuánto sacaste."}
+          </p>
         </section>
       )}
     </>
