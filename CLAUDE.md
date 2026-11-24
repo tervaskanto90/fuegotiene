@@ -302,7 +302,9 @@ app/api/estado/[id]       HEAD + lectura parcial del archivo -> JSON
 components/Biblioteca.tsx destacado (con "marcar como visto" y su "deshacer",
                           que repone la posición exacta: conPrevio() en
                           lib/progress.ts), "también quedaron a medias" (hasta
-                          cuatro más, de aMedias()) + grilla por temporada
+                          cuatro más, de aMedias()) + grilla por temporada,
+                          con "ir a la temporada 2" en la cabeza de la 1 (un
+                          ancla común; scroll-margin por la cabecera fija)
 components/Tarjeta.tsx    una tarjeta de capítulo; si está vista, dice cuándo ("visto
                           ayer", "visto el 18 nov": vistoElTexto() en lib/episodes.ts,
                           con el `en` de ft.progreso, la última vez que se miró)
@@ -448,6 +450,11 @@ pelear con la especificidad.
   ficha, si la cabeza del legajo no se ve, la página baja hasta ella (debajo
   de la cabecera fija; sin animación con `prefers-reduced-motion`). En la
   compu, con el legajo a la vista, no se mueve nada.
+- **La temporada 2 queda a casi 2000 px** de scroll en la portada, debajo de
+  trece tarjetas. La cabeza de la temporada 1 lleva "ir a la temporada 2", un
+  ancla sin JS; el `scroll-margin-top` de `.seccion--temporada` la deja
+  debajo de la cabecera fija (109 px en el teléfono, 153 a 320 px, donde el
+  menú baja de renglón). Si la cabecera cambia de alto, se corrige ahí.
 - En `/juego`, "con ctrl + enter también arranca" se esconde con
   `hover: none` y `pointer: coarse`: en un teléfono no hay ctrl.
 - `/estado` tiene la única tabla ancha del sitio. Va envuelta en

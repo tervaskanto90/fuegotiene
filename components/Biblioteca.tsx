@@ -197,18 +197,29 @@ export default function Biblioteca({ episodios }: Props) {
         </section>
       )}
 
-      {[...temporadas.entries()].map(([temporada, lista]) => (
-        <section className="seccion" key={temporada}>
-          <h2 className="seccion__titulo seccion__titulo--linea">
-            temporada {temporada}
-            <span className="num">
-              {lista.length} capítulos
-              {listo && (() => {
-                const v = lista.filter((e) => mapa[e.id]?.visto).length;
-                return v > 0 ? `, ${v} ${v === 1 ? "visto" : "vistos"}` : "";
-              })()}
-            </span>
-          </h2>
+      {[...temporadas.entries()].map(([temporada, lista], n, todas) => (
+        <section className="seccion seccion--temporada" id={`temporada-${temporada}`} key={temporada}>
+          <div className="seccion__cabeza">
+            <h2 className="seccion__titulo seccion__titulo--linea">
+              temporada {temporada}
+              <span className="num">
+                {lista.length} capítulos
+                {listo && (() => {
+                  const v = lista.filter((e) => mapa[e.id]?.visto).length;
+                  return v > 0 ? `, ${v} ${v === 1 ? "visto" : "vistos"}` : "";
+                })()}
+              </span>
+            </h2>
+            {/* En el teléfono la temporada 2 queda a casi 2000 px de scroll,
+                debajo de trece tarjetas: desde la cabeza de la temporada 1 se
+                salta. Es un ancla común, sin JS; el scroll-margin del CSS la
+                deja debajo de la cabecera fija. */}
+            {n < todas.length - 1 && (
+              <a className="seccion__salto" href={`#temporada-${todas[n + 1][0]}`}>
+                ir a la temporada {todas[n + 1][0]}
+              </a>
+            )}
+          </div>
           <div className="grilla">
             {lista.map((ep, i) => (
               <Tarjeta key={ep.id} ep={ep} progreso={mapa[ep.id]} indice={i} foto={fotoDe(ep.id)} />

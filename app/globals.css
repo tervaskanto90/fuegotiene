@@ -293,6 +293,40 @@ main {
 .seccion__titulo .num {
   font-size: 14px;
 }
+/* la cabeza de una temporada: el título con su línea y, si hay otra
+   temporada después, el salto a ella */
+.seccion__cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 16px;
+  margin-bottom: 14px;
+}
+/* el título no se parte: si con "13 capítulos, 13 vistos" no entra al lado
+   del salto, el salto baja a su propio renglón */
+.seccion__cabeza .seccion__titulo {
+  flex: 1 1 auto;
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+.seccion__salto {
+  font-size: 14px;
+  color: var(--muted);
+  white-space: nowrap;
+  text-decoration: underline;
+  text-decoration-color: var(--line-2);
+  text-underline-offset: 3px;
+  transition: color 150ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.seccion__salto:hover {
+  color: var(--bone);
+  text-decoration-color: currentColor;
+}
+/* el ancla cae debajo de la cabecera fija (71 px en la compu) */
+.seccion--temporada {
+  scroll-margin-top: 88px;
+}
+
 .seccion__titulo--linea::after {
   content: "";
   flex: 1;
@@ -2403,6 +2437,23 @@ kbd {
     .candado {
       margin-left: 4px;
     }
+  }
+
+  /* la cabecera fija mide 109 px en el teléfono */
+  .seccion--temporada {
+    scroll-margin-top: 120px;
+  }
+  /* a 320 px el menú baja a un segundo renglón y la cabecera mide 153 */
+  @media (max-width: 359px) {
+    .seccion--temporada {
+      scroll-margin-top: 164px;
+    }
+  }
+  .seccion__salto {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin: -14px 0;
   }
 
   /* lo que se toca, tamaño de dedo */
