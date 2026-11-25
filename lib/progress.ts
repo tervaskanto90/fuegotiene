@@ -107,6 +107,27 @@ export function proximoSinVer(ids: string[], mapa: MapaProgreso): { id: string; 
   return null;
 }
 
+/** De una lista de capítulos, los que todavía no se vieron (en el mismo orden). */
+export function sinVer(ids: string[], mapa: MapaProgreso): string[] {
+  return ids.filter((id) => {
+    const p = mapa[id];
+    if (p?.visto) return false;
+    return !(p && p.d > 0 && p.t / p.d >= UMBRAL_VISTO);
+  });
+}
+
+/**
+ * Uno cualquiera de la lista, salvo `excepto` (el que se acaba de ver): para
+ * quien ya vio los 24 y quiere volver a alguno sin elegir. `azar` va de 0 a 1
+ * y se pasa en los tests; en el sitio es `Math.random()`.
+ */
+export function unoCualquiera(ids: string[], excepto: string | null = null, azar: number = Math.random()): string | null {
+  const opciones = ids.filter((id) => id !== excepto);
+  if (opciones.length === 0) return null;
+  const i = Math.min(opciones.length - 1, Math.max(0, Math.floor(azar * opciones.length)));
+  return opciones[i];
+}
+
 /** El capítulo empezado más recientemente que no está terminado. */
 export function ultimoEmpezado(mapa: MapaProgreso): { id: string; p: Progreso } | null {
   let mejor: { id: string; p: Progreso } | null = null;

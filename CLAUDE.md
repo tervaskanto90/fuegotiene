@@ -304,13 +304,18 @@ components/Biblioteca.tsx destacado (con "marcar como visto" y su "deshacer",
                           lib/progress.ts), "también quedaron a medias" (hasta
                           cuatro más, de aMedias()) + grilla por temporada,
                           con "ir a la temporada 2" en la cabeza de la 1 (un
-                          ancla común; scroll-margin por la cabecera fija)
+                          ancla común; scroll-margin por la cabecera fija).
+                          Con los 24 vistos, "ver uno cualquiera" en lugar del
+                          destacado (unoCualquiera() en lib/progress.ts)
 components/Tarjeta.tsx    una tarjeta de capítulo; si está vista, dice cuándo ("visto
                           ayer", "visto el 18 nov": vistoElTexto() en lib/episodes.ts,
                           con el `en` de ft.progreso, la última vez que se miró)
 components/Arte.tsx       imagen del capítulo o trama con el número
 components/Reproductor.tsx reproductor a pantalla entera: controles propios,
-                          progreso, siguiente, errores. Sin panel de ajustes
+                          progreso, siguiente, errores. Sin panel de ajustes.
+                          Al terminar el 2x11 dice cuántos faltan en ese
+                          navegador y ofrece el primero (sinVer()); si vio los
+                          24, "ver uno cualquiera"
 components/Iconos.tsx     íconos SVG del reproductor
 components/Expediente.tsx las cuatro fichas y el legajo que se abre
 components/Reparto.tsx    las caras que vuelven + el reparto por capítulo

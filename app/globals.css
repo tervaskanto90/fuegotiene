@@ -380,6 +380,15 @@ main {
   min-height: 0;
   color: var(--muted);
 }
+/* Con los 24 vistos, la frase es el título de la portada (el h1 del
+   destacado no está), pero se ve como el texto de siempre. */
+.destacado__frase {
+  margin: 0 0 14px;
+  font-size: inherit;
+  font-weight: 400;
+  line-height: inherit;
+  color: inherit;
+}
 
 .grilla {
   display: grid;

@@ -16,9 +16,9 @@ import {
   Subtitulos,
   Volumen,
 } from "@/components/Iconos";
-import { codigo, fechaCorta, tiempoTexto, type Episodio } from "@/lib/episodes";
+import { codigo, episodios, fechaCorta, tiempoTexto, type Episodio } from "@/lib/episodes";
 import type { Marca, Marcas } from "@/lib/marcas";
-import { reanudable, useProgreso } from "@/lib/progress";
+import { reanudable, sinVer, unoCualquiera, useProgreso } from "@/lib/progress";
 
 type Props = { ep: Episodio; sig: Episodio | null; ant: Episodio | null };
 type Fase = "cargando" | "viendo" | "terminado" | "error";
@@ -926,12 +926,66 @@ export default function Reproductor({ ep, sig, ant }: Props) {
             </>
           ) : (
             <>
-              <p className="muted">Era el último. Se terminaron los Simuladores.</p>
-              <div className="capa__acciones">
-                <Link className="boton" href="/">
-                  volver a los capítulos
-                </Link>
-              </div>
+              {/* Al final del 2x11: quien saltó capítulos se entera de cuáles
+                  le faltan en este navegador; quien vio los 24 vuelve a uno
+                  sin tener que elegir. */}
+              {(() => {
+                const faltan = sinVer(
+                  episodios.map((e) => e.id),
+                  mapa,
+                ).filter((id) => id !== ep.id);
+                const primero = faltan.length > 0 ? episodios.find((e) => e.id === faltan[0]) : undefined;
+                if (primero) {
+                  return (
+                    <>
+                      <p className="muted">
+                        Era el último, pero en este navegador{" "}
+                        {faltan.length === 1 ? (
+                          <>
+                            te falta uno: el <span className="num">{codigo(primero)}</span>, {primero.titulo}.
+                          </>
+                        ) : (
+                          <>
+                            te faltan {faltan.length}. El primero es el{" "}
+                            <span className="num">{codigo(primero)}</span>, {primero.titulo}.
+                          </>
+                        )}
+                      </p>
+                      <div className="capa__acciones">
+                        <Link className="boton boton--acento" href={`/ver/${primero.id}`}>
+                          ver el {codigo(primero)}
+                        </Link>
+                        <Link className="boton" href="/">
+                          volver a los capítulos
+                        </Link>
+                      </div>
+                    </>
+                  );
+                }
+                return (
+                  <>
+                    <p className="muted">Era el último. Viste los 24: se terminaron los Simuladores.</p>
+                    <div className="capa__acciones">
+                      <button
+                        type="button"
+                        className="boton boton--acento"
+                        onClick={() => {
+                          const id = unoCualquiera(
+                            episodios.map((e) => e.id),
+                            ep.id,
+                          );
+                          if (id) router.push(`/ver/${id}`);
+                        }}
+                      >
+                        ver uno cualquiera
+                      </button>
+                      <Link className="boton" href="/">
+                        volver a los capítulos
+                      </Link>
+                    </div>
+                  </>
+                );
+              })()}
             </>
           )}
         </div>

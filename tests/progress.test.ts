@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { aMedias, conPrevio, proximoSinVer, ultimoEmpezado, type MapaProgreso } from "../lib/progress.ts";
+import { aMedias, conPrevio, proximoSinVer, sinVer, ultimoEmpezado, unoCualquiera, type MapaProgreso } from "../lib/progress.ts";
 
 test("aMedias: sólo los que se pueden seguir, del más reciente al más viejo", () => {
   const mapa: MapaProgreso = {
@@ -49,6 +49,30 @@ test("proximoSinVer: el primero en orden que falta, con dónde seguir si quedó 
   mapa["s02e03"] = { t: 2700, d: 2700, en: 600, visto: true };
   assert.equal(proximoSinVer(ids, mapa), null, "los vio todos");
   assert.deepEqual(proximoSinVer(ids, {}), { id: "s01e02", desde: null });
+});
+
+test("sinVer: los que faltan, en orden; el 92 % cuenta como visto", () => {
+  const ids = ["s01e01", "s01e02", "s01e03", "s02e11"];
+  const mapa: MapaProgreso = {
+    "s01e01": { t: 2700, d: 2700, en: 100, visto: true },
+    "s01e02": { t: 2600, d: 2700, en: 200, visto: false }, // pasó el 92 %
+    "s01e03": { t: 900, d: 2700, en: 300, visto: false }, // a medias: falta
+  };
+  assert.deepEqual(sinVer(ids, mapa), ["s01e03", "s02e11"]);
+  assert.deepEqual(sinVer(ids, {}), ids);
+  mapa["s01e03"].visto = true;
+  mapa["s02e11"] = { t: 2700, d: 2700, en: 400, visto: true };
+  assert.deepEqual(sinVer(ids, mapa), []);
+});
+
+test("unoCualquiera: nunca el que se acaba de ver, y no se sale de la lista", () => {
+  const ids = ["s01e01", "s01e02", "s02e11"];
+  assert.equal(unoCualquiera(ids, "s02e11", 0), "s01e01");
+  assert.equal(unoCualquiera(ids, "s02e11", 0.99), "s01e02");
+  assert.equal(unoCualquiera(ids, "s02e11", 1), "s01e02", "1 no se pasa del final");
+  assert.equal(unoCualquiera(ids, null, 0.5), "s01e02");
+  for (let i = 0; i < 50; i++) assert.notEqual(unoCualquiera(ids, "s01e02"), "s01e02");
+  assert.equal(unoCualquiera(["s02e11"], "s02e11", 0.3), null);
 });
 
 test("vistoElTexto: hoy, ayer, el día del mes, y el año sólo si es otro", async () => {

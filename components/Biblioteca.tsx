@@ -5,7 +5,8 @@ import Arte from "@/components/Arte";
 import Tarjeta from "@/components/Tarjeta";
 import { codigo, duracionTexto, fechaCorta, quedaTexto, tiempoTexto, type Episodio } from "@/lib/episodes";
 import type { Marcas } from "@/lib/marcas";
-import { aMedias, ultimoEmpezado, useProgreso, type Progreso } from "@/lib/progress";
+import { aMedias, ultimoEmpezado, unoCualquiera, useProgreso, type Progreso } from "@/lib/progress";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 type Props = { episodios: Episodio[] };
@@ -15,6 +16,7 @@ const MAX_TAMBIEN = 4;
 
 export default function Biblioteca({ episodios }: Props) {
   const { mapa, listo, marcar, reponer } = useProgreso();
+  const router = useRouter();
   // El último que se marcó como visto desde el destacado, con cómo estaba
   // antes: alcanza para deshacerlo sin perder la posición.
   const [marcado, setMarcado] = useState<{ ep: Episodio; previo: Progreso | undefined } | null>(null);
@@ -156,7 +158,23 @@ export default function Biblioteca({ episodios }: Props) {
           </div>
         ) : (
           <div className="destacado destacado--vacio" aria-hidden={!listo || undefined}>
-            {listo ? "Ya viste los 24. Elegí cualquiera para volver a verlo." : " "}
+            {listo ? (
+              <>
+                <h1 className="destacado__frase">Ya viste los 24. Elegí cualquiera para volver a verlo, o dejá que salga uno.</h1>
+                <button
+                  type="button"
+                  className="boton boton--acento"
+                  onClick={() => {
+                    const id = unoCualquiera(episodios.map((e) => e.id));
+                    if (id) router.push(`/ver/${id}`);
+                  }}
+                >
+                  ver uno cualquiera
+                </button>
+              </>
+            ) : (
+              " "
+            )}
           </div>
         )}
         {marcado && (
