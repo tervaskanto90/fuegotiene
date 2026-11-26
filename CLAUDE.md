@@ -315,7 +315,9 @@ components/Reproductor.tsx reproductor a pantalla entera: controles propios,
                           progreso, siguiente, errores. Sin panel de ajustes.
                           Al terminar el 2x11 dice cuántos faltan en ese
                           navegador y ofrece el primero (sinVer()); si vio los
-                          24, "ver uno cualquiera"
+                          24, "ver uno cualquiera". Si el que sigue ya está
+                          visto, la capa lo dice y ofrece el próximo que falta
+                          (proximoDespues()); la cuenta regresiva no cambia
 components/Iconos.tsx     íconos SVG del reproductor
 components/Expediente.tsx las cuatro fichas y el legajo que se abre
 components/Reparto.tsx    las caras que vuelven + el reparto por capítulo

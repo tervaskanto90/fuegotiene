@@ -18,7 +18,7 @@ import {
 } from "@/components/Iconos";
 import { codigo, episodios, fechaCorta, tiempoTexto, type Episodio } from "@/lib/episodes";
 import type { Marca, Marcas } from "@/lib/marcas";
-import { reanudable, sinVer, unoCualquiera, useProgreso } from "@/lib/progress";
+import { proximoDespues, reanudable, sinVer, unoCualquiera, useProgreso } from "@/lib/progress";
 
 type Props = { ep: Episodio; sig: Episodio | null; ant: Episodio | null };
 type Fase = "cargando" | "viendo" | "terminado" | "error";
@@ -898,32 +898,60 @@ export default function Reproductor({ ep, sig, ant }: Props) {
           )}
           <p className="capa__titulo">Terminó.</p>
           {sig ? (
-            <>
-              <p className="muted">
-                Sigue {codigo(sig)}, {sig.titulo}
-                {cuenta !== null ? `, en ${cuenta}` : ""}.
-              </p>
-              <div className="capa__acciones">
-                <Link className="boton boton--acento" href={`/ver/${sig.id}`}>
-                  ver {codigo(sig)}
-                </Link>
-                <button className="boton" onClick={() => setCuenta(null)}>
-                  quedarme acá
-                </button>
-                <button
-                  className="boton"
-                  onClick={() => {
-                    const v = video.current;
-                    if (!v) return;
-                    v.currentTime = 0;
-                    setFase("viendo");
-                    v.play().catch(() => {});
-                  }}
-                >
-                  verlo de nuevo
-                </button>
-              </div>
-            </>
+            (() => {
+              // Si el que sigue ya se vio en este navegador, la capa lo dice y
+              // ofrece el próximo que falta. La cuenta regresiva no cambia:
+              // sigue yendo al de orden de emisión.
+              const yaVisto = sinVer([sig.id], mapa).length === 0;
+              const otroId = yaVisto
+                ? proximoDespues(
+                    episodios.map((e) => e.id),
+                    ep.id,
+                    mapa,
+                    [sig.id],
+                  )
+                : null;
+              const otro = otroId ? episodios.find((e) => e.id === otroId) : undefined;
+              return (
+                <>
+                  <p className="muted">
+                    Sigue {codigo(sig)}, {sig.titulo}
+                    {yaVisto ? ", que ya viste" : ""}
+                    {cuenta !== null ? `, en ${cuenta}` : ""}.
+                    {otro && (
+                      <>
+                        {" "}El próximo que te falta es el <span className="num">{codigo(otro)}</span>, {otro.titulo}.
+                      </>
+                    )}
+                  </p>
+                  <div className="capa__acciones">
+                    <Link className="boton boton--acento" href={`/ver/${sig.id}`}>
+                      ver {codigo(sig)}
+                    </Link>
+                    {otro && (
+                      <Link className="boton" href={`/ver/${otro.id}`}>
+                        ver el {codigo(otro)}
+                      </Link>
+                    )}
+                    <button className="boton" onClick={() => setCuenta(null)}>
+                      quedarme acá
+                    </button>
+                    <button
+                      className="boton"
+                      onClick={() => {
+                        const v = video.current;
+                        if (!v) return;
+                        v.currentTime = 0;
+                        setFase("viendo");
+                        v.play().catch(() => {});
+                      }}
+                    >
+                      verlo de nuevo
+                    </button>
+                  </div>
+                </>
+              );
+            })()
           ) : (
             <>
               {/* Al final del 2x11: quien saltó capítulos se entera de cuáles

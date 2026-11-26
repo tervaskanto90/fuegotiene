@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { aMedias, conPrevio, proximoSinVer, sinVer, ultimoEmpezado, unoCualquiera, type MapaProgreso } from "../lib/progress.ts";
+import { aMedias, conPrevio, proximoDespues, proximoSinVer, sinVer, ultimoEmpezado, unoCualquiera, type MapaProgreso } from "../lib/progress.ts";
 
 test("aMedias: sólo los que se pueden seguir, del más reciente al más viejo", () => {
   const mapa: MapaProgreso = {
@@ -86,4 +86,15 @@ test("vistoElTexto: hoy, ayer, el día del mes, y el año sólo si es otro", asy
   assert.equal(vistoElTexto(0, ahora), "", "sin fecha no inventa una");
   assert.equal(vistoElTexto(Number.NaN, ahora), "");
   assert.equal(vistoElTexto(ahora + 86_400_000 * 3, ahora), "", "un reloj adelantado no dice nada");
+});
+
+test("proximoDespues: el primero sin ver después del actual, y si no, desde el principio", () => {
+  const ids = ["s01e01", "s01e02", "s01e03", "s01e04", "s01e05"];
+  const visto = { t: 2400, d: 2400, en: 1, visto: true };
+  const mapa: MapaProgreso = { s01e01: visto, s01e03: visto, s01e04: { t: 2300, d: 2400, en: 1, visto: false } };
+  assert.equal(proximoDespues(ids, "s01e02", mapa), "s01e05", "el 3 está visto y el 4 pasó el 92 %");
+  assert.equal(proximoDespues(ids, "s01e05", mapa), "s01e02", "después del último vuelve a empezar, sin el actual");
+  assert.equal(proximoDespues(ids, "s01e05", mapa, ["s01e02"]), null);
+  assert.equal(proximoDespues(ids, "s01e02", { ...mapa, s01e05: visto }), null, "sin contar el actual");
+  assert.equal(proximoDespues(ids, "s01e09", {}), "s01e01", "un actual que no está en la lista no rompe");
 });

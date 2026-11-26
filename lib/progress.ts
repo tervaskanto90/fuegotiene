@@ -117,6 +117,24 @@ export function sinVer(ids: string[], mapa: MapaProgreso): string[] {
 }
 
 /**
+ * El primer capítulo sin ver que viene después de `actual` (sin contar a
+ * `actual` ni a los de `salvo`); si no queda ninguno después, vuelve a
+ * empezar por el principio. Para la capa de fin de capítulo cuando el que
+ * sigue ya se vio: quien está repasando saltos se entera de dónde retomar.
+ */
+export function proximoDespues(
+  ids: string[],
+  actual: string,
+  mapa: MapaProgreso,
+  salvo: string[] = [],
+): string | null {
+  const i = ids.indexOf(actual);
+  const orden = i < 0 ? ids : [...ids.slice(i + 1), ...ids.slice(0, i)];
+  const faltan = sinVer(orden, mapa).filter((id) => id !== actual && !salvo.includes(id));
+  return faltan[0] ?? null;
+}
+
+/**
  * Uno cualquiera de la lista, salvo `excepto` (el que se acaba de ver): para
  * quien ya vio los 24 y quiere volver a alguno sin elegir. `azar` va de 0 a 1
  * y se pasa en los tests; en el sitio es `Math.random()`.
