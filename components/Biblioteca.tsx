@@ -5,7 +5,18 @@ import Arte from "@/components/Arte";
 import Tarjeta from "@/components/Tarjeta";
 import { codigo, duracionTexto, fechaCorta, quedaTexto, tiempoTexto, type Episodio } from "@/lib/episodes";
 import type { Marcas } from "@/lib/marcas";
-import { aMedias, ultimoEmpezado, unoCualquiera, useProgreso, type Progreso } from "@/lib/progress";
+import {
+  aMedias,
+  filtroVigente,
+  guardarFiltro,
+  leerFiltro,
+  sinVer,
+  ultimoEmpezado,
+  unoCualquiera,
+  useProgreso,
+  type Filtro,
+  type Progreso,
+} from "@/lib/progress";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -29,6 +40,10 @@ export default function Biblioteca({ episodios }: Props) {
     if (marcado && foco.current) deshacerRef.current?.focus();
     foco.current = false;
   }, [marcado]);
+  // Todos o sólo los que faltan: se lee después de montar, como el progreso,
+  // para que el HTML del servidor y el primer render coincidan.
+  const [filtroGuardado, setFiltroGuardado] = useState<Filtro>("todos");
+  useEffect(() => setFiltroGuardado(leerFiltro()), []);
   const [marcas, setMarcas] = useState<Marcas>({});
   const [marcasListas, setMarcasListas] = useState(false);
 
@@ -73,6 +88,15 @@ export default function Biblioteca({ episodios }: Props) {
   }
 
   const vistos = episodios.filter((e) => mapa[e.id]?.visto).length;
+  const faltan = new Set(listo ? sinVer(episodios.map((e) => e.id), mapa) : episodios.map((e) => e.id));
+  // Lo que cuenta como visto para el filtro es lo mismo que cuenta sinVer
+  // (el 92 % también): así el número del botón y la grilla nunca discuten.
+  const vistosFiltro = episodios.length - faltan.size;
+  const filtro = listo ? filtroVigente(filtroGuardado, vistosFiltro, episodios.length) : "todos";
+  const elegirFiltro = (f: Filtro) => {
+    setFiltroGuardado(f);
+    guardarFiltro(f);
+  };
 
   // Los otros capítulos que quedaron a medias, además del destacado: el
   // destacado dice sólo el último, y quien dejó dos o tres empezados no los
@@ -215,15 +239,42 @@ export default function Biblioteca({ episodios }: Props) {
         </section>
       )}
 
-      {[...temporadas.entries()].map(([temporada, lista], n, todas) => (
+      {/* Quien ya vio una parte busca lo que le falta entre tarjetas vistas:
+          el filtro esconde las vistas. Sólo aparece si hay algo de cada lado. */}
+      {listo && vistosFiltro > 0 && faltan.size > 0 && (
+        <div className="filtro" role="group" aria-label="qué capítulos mostrar">
+          <button
+            type="button"
+            className={`filtro__opcion${filtro === "todos" ? " filtro__opcion--activa" : ""}`}
+            aria-pressed={filtro === "todos"}
+            onClick={() => elegirFiltro("todos")}
+          >
+            todos <span className="num filtro__cuenta">{episodios.length}</span>
+          </button>
+          <button
+            type="button"
+            className={`filtro__opcion${filtro === "faltan" ? " filtro__opcion--activa" : ""}`}
+            aria-pressed={filtro === "faltan"}
+            onClick={() => elegirFiltro("faltan")}
+          >
+            {faltan.size === 1 ? "el que me falta" : "los que me faltan"}{" "}
+            <span className="num filtro__cuenta">{faltan.size}</span>
+          </button>
+        </div>
+      )}
+
+      {[...temporadas.entries()].map(([temporada, todosDeLaTemporada], n, todas) => {
+        const lista =
+          filtro === "faltan" ? todosDeLaTemporada.filter((e) => faltan.has(e.id)) : todosDeLaTemporada;
+        return (
         <section className="seccion seccion--temporada" id={`temporada-${temporada}`} key={temporada}>
           <div className="seccion__cabeza">
             <h2 className="seccion__titulo seccion__titulo--linea">
               temporada {temporada}
               <span className="num">
-                {lista.length} capítulos
+                {todosDeLaTemporada.length} capítulos
                 {listo && (() => {
-                  const v = lista.filter((e) => mapa[e.id]?.visto).length;
+                  const v = todosDeLaTemporada.filter((e) => mapa[e.id]?.visto).length;
                   return v > 0 ? `, ${v} ${v === 1 ? "visto" : "vistos"}` : "";
                 })()}
               </span>
@@ -232,19 +283,26 @@ export default function Biblioteca({ episodios }: Props) {
                 debajo de trece tarjetas: desde la cabeza de la temporada 1 se
                 salta. Es un ancla común, sin JS; el scroll-margin del CSS la
                 deja debajo de la cabecera fija. */}
-            {n < todas.length - 1 && (
+            {n < todas.length - 1 && lista.length > 0 && (
               <a className="seccion__salto" href={`#temporada-${todas[n + 1][0]}`}>
                 ir a la temporada {todas[n + 1][0]}
               </a>
             )}
           </div>
-          <div className="grilla">
-            {lista.map((ep, i) => (
-              <Tarjeta key={ep.id} ep={ep} progreso={mapa[ep.id]} indice={i} foto={fotoDe(ep.id)} />
-            ))}
-          </div>
+          {lista.length > 0 ? (
+            <div className="grilla">
+              {lista.map((ep, i) => (
+                <Tarjeta key={ep.id} ep={ep} progreso={mapa[ep.id]} indice={i} foto={fotoDe(ep.id)} />
+              ))}
+            </div>
+          ) : (
+            <p className="muted filtro__completa">
+              De esta temporada ya viste los {todosDeLaTemporada.length}.
+            </p>
+          )}
         </section>
-      ))}
+        );
+      })}
     </>
   );
 }

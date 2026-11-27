@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { aMedias, conPrevio, proximoDespues, proximoSinVer, sinVer, ultimoEmpezado, unoCualquiera, type MapaProgreso } from "../lib/progress.ts";
+import { aMedias, conPrevio, filtroVigente, proximoDespues, proximoSinVer, sinVer, ultimoEmpezado, unoCualquiera, type MapaProgreso } from "../lib/progress.ts";
 
 test("aMedias: sólo los que se pueden seguir, del más reciente al más viejo", () => {
   const mapa: MapaProgreso = {
@@ -97,4 +97,11 @@ test("proximoDespues: el primero sin ver después del actual, y si no, desde el 
   assert.equal(proximoDespues(ids, "s01e05", mapa, ["s01e02"]), null);
   assert.equal(proximoDespues(ids, "s01e02", { ...mapa, s01e05: visto }), null, "sin contar el actual");
   assert.equal(proximoDespues(ids, "s01e09", {}), "s01e01", "un actual que no está en la lista no rompe");
+});
+
+test("filtroVigente: 'faltan' sólo con algo visto y algo por ver", () => {
+  assert.equal(filtroVigente("faltan", 0, 24), "todos");
+  assert.equal(filtroVigente("faltan", 24, 24), "todos");
+  assert.equal(filtroVigente("faltan", 3, 24), "faltan");
+  assert.equal(filtroVigente("todos", 3, 24), "todos");
 });

@@ -322,6 +322,43 @@ main {
   color: var(--bone);
   text-decoration-color: currentColor;
 }
+/* Todos o sólo los que faltan, arriba de las temporadas (Biblioteca.tsx,
+   filtroVigente en lib/progress.ts). Sin ladrillo: no es la acción de la
+   pantalla. La opción elegida se marca con el borde y el fondo levantado. */
+.filtro {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 36px 0 -12px;
+}
+.filtro__opcion {
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radio);
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+.filtro__opcion:hover {
+  color: var(--bone);
+  border-color: var(--line-2);
+}
+.filtro__opcion--activa {
+  color: var(--bone);
+  border-color: var(--bone);
+  background: var(--ink-2);
+}
+.filtro__cuenta {
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.filtro__completa {
+  margin: 0;
+  padding: 14px 0 4px;
+}
 /* el ancla cae debajo de la cabecera fija (71 px en la compu) */
 .seccion--temporada {
   scroll-margin-top: 88px;
@@ -2468,6 +2505,7 @@ kbd {
   /* lo que se toca, tamaño de dedo */
   .boton,
   .caso-chip,
+  .filtro__opcion,
   .reparto__cap summary,
   .caras__cara summary,
   .donde__cap,
@@ -2478,7 +2516,8 @@ kbd {
     display: inline-flex;
     align-items: center;
   }
-  .caso-chip {
+  .caso-chip,
+  .filtro__opcion {
     display: inline-flex;
     align-items: center;
   }

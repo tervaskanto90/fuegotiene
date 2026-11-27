@@ -306,7 +306,10 @@ components/Biblioteca.tsx destacado (con "marcar como visto" y su "deshacer",
                           con "ir a la temporada 2" en la cabeza de la 1 (un
                           ancla común; scroll-margin por la cabecera fija).
                           Con los 24 vistos, "ver uno cualquiera" en lugar del
-                          destacado (unoCualquiera() en lib/progress.ts)
+                          destacado (unoCualquiera() en lib/progress.ts).
+                          Arriba de las temporadas, "todos / los que me faltan"
+                          (aria-pressed), sólo si hay vistos y faltantes; se
+                          acuerda en ft.filtro (filtroVigente() en lib/progress.ts)
 components/Tarjeta.tsx    una tarjeta de capítulo; si está vista, dice cuándo ("visto
                           ayer", "visto el 18 nov": vistoElTexto() en lib/episodes.ts,
                           con el `en` de ft.progreso, la última vez que se miró)

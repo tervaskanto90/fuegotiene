@@ -184,3 +184,41 @@ export function useProgreso() {
 
   return { mapa, listo, guardar, marcar, reponer };
 }
+
+/**
+ * La grilla de la portada puede mostrar todos los capítulos o sólo los que
+ * faltan en ese navegador. La preferencia vive en `ft.filtro`; no decide
+ * nada más que qué tarjetas se dibujan.
+ */
+export const CLAVE_FILTRO = "ft.filtro";
+
+export type Filtro = "todos" | "faltan";
+
+export function leerFiltro(): Filtro {
+  if (typeof window === "undefined") return "todos";
+  try {
+    return window.localStorage.getItem(CLAVE_FILTRO) === "faltan" ? "faltan" : "todos";
+  } catch {
+    return "todos";
+  }
+}
+
+export function guardarFiltro(f: Filtro) {
+  try {
+    if (f === "faltan") window.localStorage.setItem(CLAVE_FILTRO, "faltan");
+    else window.localStorage.removeItem(CLAVE_FILTRO);
+  } catch {
+    // modo privado: el filtro dura lo que dura la página
+  }
+}
+
+/**
+ * El filtro sólo tiene sentido si ya se vio alguno y todavía falta alguno:
+ * sin vistos los dos modos son iguales, y con los 24 vistos "los que faltan"
+ * dejaría la portada vacía. Fuera de eso, se muestran todos aunque se haya
+ * guardado "faltan".
+ */
+export function filtroVigente(guardado: Filtro, vistos: number, total: number): Filtro {
+  if (vistos <= 0 || vistos >= total) return "todos";
+  return guardado;
+}
