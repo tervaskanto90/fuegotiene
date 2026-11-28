@@ -49,6 +49,19 @@ a {
 a:hover {
   text-decoration-color: var(--line-2);
 }
+/* Un enlace en medio de un texto tiene que verse como enlace sin pasarle el
+   mouse por encima: con el subrayado transparente, "ver los capítulos" del
+   cartel de la puerta y "armá un operativo en el juego" de /entrar parecían
+   texto suelto. Mismo trato que el salto a la temporada 2. Los enlaces con
+   clase (botones, tarjetas, menú) tienen el suyo. */
+p a:not([class]),
+li a:not([class]) {
+  text-decoration-color: var(--line-2);
+}
+p a:not([class]):hover,
+li a:not([class]):hover {
+  text-decoration-color: currentColor;
+}
 
 :focus-visible {
   outline: 2px solid var(--bone);
@@ -2524,17 +2537,20 @@ kbd {
   /* Un enlace en medio de un párrafo no se agranda con min-height: eso
      parte el renglón. Se le estira el área de toque con un pseudo, que no
      ocupa lugar. (Por eso `audit-movil` los saltea: miden menos de 44 px
-     pero se tocan bien.) */
+     pero se tocan bien.) El subrayado es el de cualquier enlace en un
+     texto (arriba, `p a:not([class])`). Sobre un renglón de 17 px, 14 de
+     cada lado dan 45. */
   .puerta a,
+  .entrar p a,
   .relato__texto a {
     position: relative;
-    text-decoration: underline;
   }
   .puerta a::after,
+  .entrar p a::after,
   .relato__texto a::after {
     content: "";
     position: absolute;
-    inset: -13px -8px;
+    inset: -14px -8px;
   }
 
   /* El destacado: con tres botones, uno abajo del otro cada uno de su

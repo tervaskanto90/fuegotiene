@@ -423,7 +423,9 @@ pelear con la especificidad.
   los botones, los chips de los casos y los capítulos del reparto. La
   excepción son los enlaces en medio de un párrafo: ahí `min-height` parte el
   renglón, así que el área se estira con un `::after` de posición absoluta
-  que no ocupa lugar.
+  que no ocupa lugar. Y se ven como enlace sin pasarles el mouse: todo
+  enlace sin clase dentro de un `<p>` o un `<li>` va subrayado en
+  `--line-2` (en la compu "ver los capítulos" de la puerta parecía texto).
 - **El menú no parte palabras.** Sin `white-space: nowrap`, "el expediente"
   caía en dos renglones y quedaba ilegible. Y entra en un renglón desde
   360 px aun con los dos candados: abajo de 390 px el espacio entre enlaces
